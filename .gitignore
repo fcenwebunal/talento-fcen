@@ -1,0 +1,25 @@
+# Secrets: never commit
+.env
+.env.*
+!.env.example
+
+# Dependencies and builds
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Supabase local state
+supabase/.branches/
+supabase/.temp/
+
+# Firebase
+.firebase/
+firebase-debug.log*
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.vscode/
