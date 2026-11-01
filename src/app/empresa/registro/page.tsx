@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { Building2 } from "lucide-react";
 import { requireRole } from "@/lib/session";
+import { PageHeader } from "@/components/ui/page-header";
 import { CompanyForm } from "./company-form";
 
 export const metadata: Metadata = { title: "Registrar empresa" };
@@ -11,12 +13,16 @@ export default async function CompanyRegisterPage() {
   if (session.company) redirect("/empresa");
 
   return (
-    <div className="wrap max-w-3xl py-10">
-      <h1 className="display text-3xl text-azul-oscuro">Registre su organización</h1>
-      <p className="mt-2 text-suave">
-        Con el registro puede buscar perfiles anónimos. Después podrá solicitar la autorización de la Facultad para ver datos de contacto.
-      </p>
-      <CompanyForm defaultEmail={session.email} />
-    </div>
+    <>
+      <PageHeader
+        kicker="Paso 1 de 2"
+        icon={Building2}
+        title="Registre su organización"
+        description="Con el registro puede buscar perfiles anónimos. Después podrá solicitar la autorización de la Facultad para ver datos de contacto."
+      />
+      <div className="wrap -mt-4 max-w-4xl">
+        <CompanyForm defaultEmail={session.email} />
+      </div>
+    </>
   );
 }

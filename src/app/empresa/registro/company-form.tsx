@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Building2, Loader2, ShieldCheck, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export function CompanyForm({ defaultEmail }: { defaultEmail: string }) {
@@ -36,7 +37,8 @@ export function CompanyForm({ defaultEmail }: { defaultEmail: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="card mt-8 space-y-5">
+    <form onSubmit={submit} className="card page-in space-y-6 p-6 md:p-8">
+      <h2 className="flex items-center gap-2 font-black text-azul-oscuro"><span className="icon-tile h-9 w-9"><Building2 className="!h-4 !w-4" /></span> Datos de la organización</h2>
       <div className="grid gap-4 md:grid-cols-2">
         <label className="field md:col-span-2">
           <span>Razón social</span>
@@ -78,7 +80,7 @@ export function CompanyForm({ defaultEmail }: { defaultEmail: string }) {
       </div>
 
       <div className="border-t border-borde pt-5">
-        <h2 className="font-bold text-azul-oscuro">Persona de contacto</h2>
+        <h2 className="flex items-center gap-2 font-black text-azul-oscuro"><span className="icon-tile icon-tile-verde h-9 w-9"><UserRound className="!h-4 !w-4" /></span> Persona de contacto</h2>
         <div className="mt-3 grid gap-4 md:grid-cols-2">
           <label className="field">
             <span>Nombre completo</span>
@@ -99,7 +101,8 @@ export function CompanyForm({ defaultEmail }: { defaultEmail: string }) {
         </div>
       </div>
 
-      <label className="flex items-start gap-3 rounded-lg bg-superficie p-4 text-sm">
+      <label className="flex items-start gap-3 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] border border-azul/15 bg-celeste p-4 text-sm">
+        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-azul" aria-hidden="true" />
         <input type="checkbox" name="terms" required className="mt-1" />
         <span>
           Acepto usar los datos de los estudiantes solo para seleccionar practicantes, no cederlos a terceros y eliminar los listados
@@ -113,6 +116,7 @@ export function CompanyForm({ defaultEmail }: { defaultEmail: string }) {
 
       {error && <p className="text-sm text-naranja">{error}</p>}
       <button className="btn btn-primary" disabled={loading}>
+        {loading ? <Loader2 className="animate-spin" /> : <Building2 />}
         {loading ? "Registrando…" : "Registrar organización"}
       </button>
     </form>

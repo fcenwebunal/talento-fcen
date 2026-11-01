@@ -10,11 +10,15 @@
     "typecheck": "tsc --noEmit",
     "auth:configure": "node --env-file=.env.local scripts/configure-auth.mjs",
     "test:smoke": "node --env-file=.env.local scripts/smoke-test.mjs",
-    "role": "node --env-file=.env.local scripts/set-role.mjs"
+    "role": "node --env-file=.env.local scripts/set-role.mjs",
+    "demo:seed": "node --env-file=.env.local scripts/demo-seed.mjs",
+    "demo:clean": "node --env-file=.env.local scripts/demo-seed.mjs --clean",
+    "demo:passwords": "node --env-file=.env.local scripts/demo-seed.mjs --passwords"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
+    "lucide-react": "^1.66.0",
     "next": "^16.2.10",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

@@ -47,7 +47,7 @@ export default async function AdminStudent({ params }: { params: Promise<{ id: s
       <div className="grid gap-6 lg:grid-cols-3">
         <form action={verifyProgress} className="card space-y-3">
           <input type="hidden" name="student_id" value={id} />
-          <h2 className="font-bold text-azul-oscuro">Verificar avance</h2>
+          <h2 className="font-black text-azul-oscuro">Verificar avance</h2>
           <p className="text-sm text-suave">Compáralo con la historia académica y guarda el valor verificado.</p>
           <input name="progress_pct" type="number" step="0.1" min="0" max="100" defaultValue={detail.progress_pct ?? ""} className="input" />
           <button className="btn btn-primary">Marcar como verificado</button>
@@ -55,7 +55,7 @@ export default async function AdminStudent({ params }: { params: Promise<{ id: s
 
         <form action={setStudentAvailability} className="card space-y-3">
           <input type="hidden" name="student_id" value={id} />
-          <h2 className="font-bold text-azul-oscuro">Estado</h2>
+          <h2 className="font-black text-azul-oscuro">Estado</h2>
           <select name="availability" defaultValue={detail.availability} className="input">
             {(Object.keys(AVAILABILITY_LABEL) as Availability[]).map((k) => (
               <option key={k} value={k}>
@@ -74,7 +74,7 @@ export default async function AdminStudent({ params }: { params: Promise<{ id: s
         </form>
 
         <div className="card text-sm">
-          <h2 className="font-bold text-azul-oscuro">Solo para la Facultad</h2>
+          <h2 className="font-black text-azul-oscuro">Solo para la Facultad</h2>
           <dl className="mt-2 space-y-1">
             <Item k="Documento" v={[priv?.doc_type, priv?.doc_number].filter(Boolean).join(" ")} />
             <Item k="Nacimiento" v={formatDate(priv?.birth_date ?? null)} />
@@ -82,7 +82,7 @@ export default async function AdminStudent({ params }: { params: Promise<{ id: s
             <Item k="EPS" v={priv?.eps} />
             <Item k="Emergencia" v={[priv?.emergency_name, priv?.emergency_relation, priv?.emergency_phone].filter(Boolean).join(" · ")} />
           </dl>
-          <h3 className="mt-4 font-bold text-azul-oscuro">Documentos</h3>
+          <h3 className="mt-4 font-black text-azul-oscuro">Documentos</h3>
           <ul className="mt-1 space-y-1">
             {signed.map((d, i) => (
               <li key={i}>
@@ -101,7 +101,7 @@ export default async function AdminStudent({ params }: { params: Promise<{ id: s
         </div>
       </div>
 
-      <StudentDetailView detail={detail} />
+      <StudentDetailView detail={detail} photoUrl={signed.find((d) => d.kind === "foto")?.url ?? null} />
     </div>
   );
 }

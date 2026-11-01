@@ -1,5 +1,18 @@
 import type { Metadata } from "next";
+import { Atom, BarChart3, Blocks, Code2, Dna, Presentation, Sigma, Wrench } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/ui/page-header";
+import { Reveal } from "@/components/ui/reveal";
+
+const DOMAIN_ICON: Record<string, typeof Blocks> = {
+  "Datos y estadística": BarChart3,
+  Computación: Code2,
+  "Matemáticas aplicadas": Sigma,
+  "Física aplicada e instrumentación": Atom,
+  "Biología y bioprocesos": Dna,
+  Herramientas: Wrench,
+  "Docencia y divulgación": Presentation,
+};
 
 export const metadata: Metadata = { title: "Habilidades de la Facultad" };
 export const dynamic = "force-dynamic";
@@ -14,17 +27,23 @@ export default async function SkillsPage() {
   const counts = new Map(((stats as { top_skills: { skill: string; count: number }[] } | null)?.top_skills ?? []).map((s) => [s.skill, s.count]));
 
   return (
-    <div className="wrap py-12">
-      <p className="text-sm font-bold uppercase tracking-wider text-verde-tinta">Catálogo</p>
-      <h1 className="display mt-1 text-4xl text-azul-oscuro">Habilidades de la Facultad</h1>
-      <p className="mt-3 max-w-2xl text-suave">
-        Las habilidades que los estudiantes de la FCEN pueden declarar en su perfil, agrupadas por área. Las que muestran un número son
-        las más declaradas en la plataforma.
-      </p>
+    <>
+      <PageHeader
+        kicker="Catálogo"
+        icon={Blocks}
+        title="Habilidades de la Facultad"
+        description="Las habilidades que los estudiantes de la FCEN pueden declarar en su perfil, agrupadas por área. Las resaltadas son las más declaradas."
+      />
+    <div className="wrap -mt-4">
       <div className="mt-8 grid gap-5 md:grid-cols-2">
-        {(domains ?? []).map((d) => (
-          <section key={d.id} className="card">
-            <h2 className="font-bold text-azul-oscuro">{d.name}</h2>
+        {(domains ?? []).map((d, i) => {
+          const Icon = DOMAIN_ICON[d.name] ?? Blocks;
+          return (
+          <Reveal as="section" key={d.id} index={i} className="card card-hover">
+            <h2 className="flex items-center gap-3 font-black text-azul-oscuro">
+              <span className={`icon-tile ${i % 2 ? "icon-tile-verde" : ""}`}><Icon /></span>
+              {d.name}
+            </h2>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {(skills ?? [])
                 .filter((s) => s.domain_id === d.id)
@@ -35,9 +54,11 @@ export default async function SkillsPage() {
                   </span>
                 ))}
             </div>
-          </section>
-        ))}
+          </Reveal>
+          );
+        })}
       </div>
     </div>
+    </>
   );
 }

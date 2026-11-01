@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { KeyRound, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { Avatar } from "@/components/ui/avatar";
+import { AdminTitle } from "../admin-title";
 import { getSession } from "@/lib/session";
 import { setRole } from "../actions";
 
@@ -19,16 +22,20 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
 
   return (
     <div>
-      <h1 className="display text-3xl text-azul-oscuro">Roles</h1>
-      <p className="mt-1 text-suave">
+      <AdminTitle icon={KeyRound} title="Roles" />
+      <p className="text-sm text-suave">
         Las personas de la Facultad entran con su cuenta @unal.edu.co y quedan como estudiantes; aquí se les asigna el rol «Facultad».
         {!isAdmin && " Solo un administrador puede cambiar roles."}
       </p>
       <form method="get" className="mt-4 flex gap-2">
-        <input name="q" defaultValue={q} placeholder="Buscar por correo" className="input max-w-sm" />
+        <div className="input-icon max-w-sm flex-1">
+          <Search aria-hidden="true" />
+          <input name="q" defaultValue={q} placeholder="Buscar por correo" className="input" />
+        </div>
         <button className="btn btn-secondary">Buscar</button>
       </form>
-      <table className="table-fcen mt-6">
+      <div className="table-wrap mt-6">
+      <table className="table-fcen">
         <thead>
           <tr>
             <th>Correo</th>
@@ -39,7 +46,12 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
         <tbody>
           {(data ?? []).map((u) => (
             <tr key={u.id}>
-              <td>{u.email}</td>
+              <td>
+                <span className="flex items-center gap-3">
+                  <Avatar name={u.full_name ?? u.email} seed={u.id} size={32} />
+                  {u.email}
+                </span>
+              </td>
               <td>{u.full_name}</td>
               <td>
                 {isAdmin && u.id !== session?.userId ? (
@@ -60,6 +72,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

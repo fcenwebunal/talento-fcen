@@ -52,7 +52,7 @@ export function ReadinessChecker() {
             <span key={c} className={`h-3 w-3 rounded-full ${tone === c ? bg : "bg-borde"}`} />
           ))}
         </span>
-        <p className="font-bold">{message}</p>
+        <p className="font-black">{message}</p>
       </div>
     </div>
   );
@@ -92,7 +92,7 @@ export function DateCalculator() {
       <ol className="mt-5 grid gap-3 sm:grid-cols-5">
         {milestones.map((m, i) => (
           <li key={m.what} className={`rounded-lg border p-3 ${i === milestones.length - 1 ? "border-verde bg-verde/10" : "border-borde bg-superficie"}`}>
-            <p className="text-xs font-bold uppercase tracking-wide text-azul">{fmt(m.when)}</p>
+            <p className="text-xs font-black uppercase tracking-wide text-azul">{fmt(m.when)}</p>
             <p className="mt-1 text-sm">{m.what}</p>
           </li>
         ))}
@@ -116,8 +116,8 @@ export function FlipCards({ items }: { items: { myth: string; fact: string }[] }
             onClick={() => setOpen(flipped ? open.filter((x) => x !== i) : [...open, i])}
             className={`min-h-36 rounded-xl border p-4 text-left transition ${flipped ? "border-verde bg-verde/10" : "border-borde bg-white hover:border-azul"}`}
           >
-            <p className="text-xs font-bold uppercase tracking-wide text-suave">{flipped ? "Realidad" : "Mito"}</p>
-            <p className="mt-2 font-bold">{flipped ? it.fact : it.myth}</p>
+            <p className="text-xs font-black uppercase tracking-wide text-suave">{flipped ? "Realidad" : "Mito"}</p>
+            <p className="mt-2 font-black">{flipped ? it.fact : it.myth}</p>
             {!flipped && <p className="mt-3 text-xs text-azul-medio">Toca para ver la realidad</p>}
           </button>
         );

@@ -57,7 +57,7 @@ export default async function AdminCompany({ params }: { params: Promise<{ id: s
               Verificar el NIT en el RUES
             </a>
           </p>
-          <h2 className="mt-6 font-bold text-azul-oscuro">Personas de contacto</h2>
+          <h2 className="mt-6 font-black text-azul-oscuro">Personas de contacto</h2>
           <ul className="mt-2 space-y-2">
             {(members ?? []).map((m, i) => (
               <li key={i}>
@@ -71,7 +71,7 @@ export default async function AdminCompany({ params }: { params: Promise<{ id: s
         <div className="space-y-4">
           <form action={setCompanyStatus} className="card space-y-3">
             <input type="hidden" name="company_id" value={c.id} />
-            <h2 className="font-bold text-azul-oscuro">Decisión</h2>
+            <h2 className="font-black text-azul-oscuro">Decisión</h2>
             <label className="field">
               <span>Nota (se muestra a la empresa si se rechaza o suspende)</span>
               <textarea name="note" className="input" defaultValue={c.review_note ?? ""} />
@@ -92,9 +92,9 @@ export default async function AdminCompany({ params }: { params: Promise<{ id: s
             </div>
           </form>
           <div className="card text-sm">
-            <h2 className="font-bold text-azul-oscuro">Actividad</h2>
+            <h2 className="font-black text-azul-oscuro">Actividad</h2>
             <p className="mt-2">Consultas de contacto y descargas: <strong>{views ?? 0}</strong></p>
-            <p className="mt-2 font-bold">Exportaciones</p>
+            <p className="mt-2 font-black">Exportaciones</p>
             <ul className="mt-1 space-y-1 text-suave">
               {(exportsLog ?? []).map((e, i) => (
                 <li key={i}>
@@ -103,7 +103,7 @@ export default async function AdminCompany({ params }: { params: Promise<{ id: s
               ))}
               {(exportsLog ?? []).length === 0 && <li>Ninguna</li>}
             </ul>
-            <p className="mt-3 font-bold">Historial</p>
+            <p className="mt-3 font-black">Historial</p>
             <ul className="mt-1 space-y-1 text-suave">
               {(history ?? []).map((h, i) => (
                 <li key={i}>
@@ -123,7 +123,7 @@ function Item({ k, v }: { k: string; v: string | null }) {
   return (
     <div>
       <dt className="text-suave">{k}</dt>
-      <dd className="font-bold">{v || "No indicado"}</dd>
+      <dd className="font-black">{v || "No indicado"}</dd>
     </div>
   );
 }

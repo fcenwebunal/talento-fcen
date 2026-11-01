@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { ArrowLeft, FileDown, Lock } from "lucide-react";
 import { requireRole } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { StudentDetailView } from "@/components/student-detail";
@@ -20,34 +21,40 @@ export default async function CompanyStudentPage({ params }: { params: Promise<{
   if (error || !data) notFound();
   const detail = data as StudentDetail;
 
-  const { data: fav } = await supabase.from("favorites").select("student_id").eq("company_id", session.company.id).eq("student_id", id).maybeSingle();
+  const [{ data: fav }, photos] = await Promise.all([
+    supabase.from("favorites").select("student_id").eq("company_id", session.company.id).eq("student_id", id).maybeSingle(),
+    detail.contact_visible ? supabase.storage.from("documentos").list(`${id}/foto`, { limit: 1, sortBy: { column: "created_at", order: "desc" } }) : Promise.resolve({ data: null }),
+  ]);
+  const photoFile = photos.data?.[0];
+  const photoUrl = photoFile ? (await supabase.storage.from("documentos").createSignedUrl(`${id}/foto/${photoFile.name}`, 3600)).data?.signedUrl : null;
 
   return (
-    <div className="wrap py-10">
-      <Link href="/empresa/buscar" className="text-sm text-suave hover:text-azul">
-        ← Volver a la búsqueda
-      </Link>
-      <div className="mt-4">
+    <div className="bg-dots">
+      <div className="wrap py-8">
+        <Link href="/empresa/buscar" className="mb-4 inline-flex items-center gap-2 text-sm font-black text-suave hover:text-azul">
+          <ArrowLeft className="h-4 w-4" /> Volver a la búsqueda
+        </Link>
         <StudentDetailView
           detail={detail}
+          photoUrl={photoUrl}
           actions={
             <>
               <FavoriteButton studentId={id} isFavorite={!!fav} />
               {detail.contact?.cv_path && (
                 <a href={`/empresa/estudiantes/${id}/hoja-de-vida`} target="_blank" className="btn btn-primary">
-                  Descargar hoja de vida
+                  <FileDown /> Descargar hoja de vida
                 </a>
               )}
             </>
           }
         />
+        {session.level < 2 && (
+          <p className="mt-6 flex gap-3 rounded-[1rem_1rem_1rem_0.25rem] border border-borde bg-white p-4 text-sm text-suave shadow-sm">
+            <Lock className="h-5 w-5 shrink-0 text-azul-medio" aria-hidden="true" />
+            Está viendo el perfil sin datos de contacto. Cuando la Facultad autorice a su organización, verá el nombre, el contacto y la hoja de vida de quienes lo permitieron.
+          </p>
+        )}
       </div>
-      {session.level < 2 && (
-        <p className="mt-6 rounded-lg bg-superficie p-4 text-sm text-suave">
-          Está viendo el perfil sin datos de contacto. Cuando la Facultad autorice a su organización, verá el nombre, el contacto y la
-          hoja de vida de quienes lo permitieron.
-        </p>
-      )}
     </div>
   );
 }

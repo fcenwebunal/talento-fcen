@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { ListChecks, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { AdminTitle } from "../admin-title";
 import { addSkill, toggleSkill } from "../actions";
 
 export const metadata: Metadata = { title: "Catálogo de habilidades" };
@@ -16,7 +18,7 @@ export default async function AdminCatalog() {
 
   return (
     <div className="space-y-6">
-      <h1 className="display text-3xl text-azul-oscuro">Catálogo de habilidades</h1>
+      <AdminTitle icon={ListChecks} title="Catálogo de habilidades" description="Las habilidades que los estudiantes pueden declarar. El número indica cuántos la tienen." />
       <form action={addSkill} className="card flex flex-wrap items-end gap-3">
         <label className="field min-w-56 flex-1">
           <span>Nueva habilidad</span>
@@ -32,12 +34,14 @@ export default async function AdminCatalog() {
             ))}
           </select>
         </label>
-        <button className="btn btn-primary">Agregar</button>
+        <button className="btn btn-primary">
+          <Plus /> Agregar
+        </button>
       </form>
       <div className="grid gap-4 md:grid-cols-2">
         {(domains ?? []).map((d) => (
           <div key={d.id} className="card">
-            <h2 className="font-bold text-azul-oscuro">{d.name}</h2>
+            <h2 className="font-black text-azul-oscuro">{d.name}</h2>
             <ul className="mt-3 space-y-1 text-sm">
               {(skills ?? [])
                 .filter((s) => s.domain_id === d.id)

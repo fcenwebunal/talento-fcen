@@ -18,6 +18,7 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 | Configurar Auth (sitio, retornos, Google, sin confirmación por correo) | `npm run auth:configure` |
 | Prueba completa de niveles de visibilidad (crea y borra cuentas de prueba) | `npm run test:smoke` |
 | Dar un rol (la persona debe haber ingresado una vez) | `npm run role -- correo@unal.edu.co admin` |
+| Datos de demostración: crear (reemplaza los anteriores), borrar, fijar contraseña | `npm run demo:seed`, `npm run demo:clean`, `npm run demo:passwords` (usa `DEMO_PASSWORD` de `.env.local`) |
 | Compilar | `npx tsc --noEmit` y `npx next build` |
 | Servidor local | `exec node node_modules/next/dist/bin/next start -p 3000` en segundo plano. Con `npx next start` el proceso de Node queda huérfano al detener la tarea |
 
@@ -28,6 +29,14 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 - Las cuentas de Google deben ser `@unal.edu.co` (disparador `handle_new_user`) y quedan como estudiantes; las de correo y contraseña son empresas. El rol «Facultad» se da en `/admin/usuarios` o con `npm run role`.
 - Archivos en Storage: bucket privado `documentos` (`<uid>/<tipo>/<archivo>`) y público `logos`.
 - La prueba `test:smoke` no puede simular un ingreso real con Google (la API de administración crea cuentas de correo): el rechazo de cuentas que no son `@unal.edu.co` se verifica con un ingreso real.
+
+## Diseño (2026-11-01)
+
+Identidad UNAL (Ancizar Sans, paleta institucional) con un sistema propio en `src/app/globals.css`: esquinas mixtas (redondeadas con una recta), `card`, `card-dark`, `notch`, `icon-tile`, chips con puntos de nivel, fondos decorativos (`bg-hero`, `bg-dots`, `bg-grid`), animaciones (`page-in`, `stagger`, `reveal` con `components/ui/reveal.tsx`, esqueletos y barra de carga en los `loading.tsx`) que respetan `prefers-reduced-motion`. Íconos de `lucide-react` (sin íconos de marcas: la versión instalada no los tiene). Componentes en `src/components/ui/`: `PageHeader`, `HelpTip` (ayudas «?» discretas), `Counter`, `ProgressRing`, `Avatar`, `Stat`, `EmptyState`, decoraciones SVG. Buscador rápido Ctrl+K (`command-palette.tsx`, destinos por rol en `nav-items.ts`).
+
+## Datos de demostración
+
+`scripts/demo-seed.mjs` crea 22 estudiantes ficticios (pregrado, posgrado y egresados, en todos los estados de disponibilidad) con foto ilustrada, hoja de vida e historia académica en PDF, y 9 empresas ficticias con logo en todos los estados, con favoritos, consultas y exportaciones. Marcas: correos de estudiantes `demo.*@unal.edu.co`, de empresas `demo.*@example.com`, NIT `DEMO-*`. **Se borran con `npm run demo:clean` antes de abrir la beta a usuarios reales.**
 
 ## Estado (2026-10-31)
 

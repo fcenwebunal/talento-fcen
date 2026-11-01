@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { AlertTriangle } from "lucide-react";
 import { getSession, homeFor } from "@/lib/session";
 import { LoginPanel } from "./login-panel";
 
@@ -17,14 +18,16 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { como, error } = await searchParams;
 
   return (
-    <div className="wrap max-w-4xl py-12">
-      <h1 className="display text-3xl text-azul-oscuro">Ingresar a Talento FCEN</h1>
-      {error && (
-        <p className="mt-4 rounded-lg border border-naranja/30 bg-naranja/5 p-3 text-sm text-naranja">
-          {ERRORS[error] ?? ERRORS.auth}
-        </p>
-      )}
-      <LoginPanel initial={como === "empresa" ? "empresa" : "estudiante"} />
+    <div className="bg-dots relative">
+      <div className="wrap py-10 md:py-16">
+        {error && (
+          <p className="page-in mx-auto mb-6 flex max-w-5xl items-center gap-3 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] border border-naranja/30 bg-white p-4 text-sm text-naranja shadow-sm">
+            <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden="true" />
+            {ERRORS[error] ?? ERRORS.auth}
+          </p>
+        )}
+        <LoginPanel initial={como === "empresa" ? "empresa" : "estudiante"} />
+      </div>
     </div>
   );
 }

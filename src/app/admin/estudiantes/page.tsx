@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Filter, Search, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { Avatar } from "@/components/ui/avatar";
+import { AdminTitle } from "../admin-title";
 import { AVAILABILITY_LABEL, VERIFIED_LABEL, formatDate } from "@/lib/labels";
 import type { Availability } from "@/lib/types";
 
@@ -38,9 +41,12 @@ export default async function AdminStudents({ searchParams }: { searchParams: Pr
 
   return (
     <div>
-      <h1 className="display text-3xl text-azul-oscuro">Estudiantes</h1>
-      <form className="mt-4 flex flex-wrap gap-2" method="get">
-        <input name="q" defaultValue={q} placeholder="Nombre o correo" className="input max-w-xs" />
+      <AdminTitle icon={Users} title="Estudiantes" description={`${rows.length} perfiles con los filtros actuales`} />
+      <form className="card flex flex-wrap items-center gap-3" method="get">
+        <div className="input-icon max-w-xs flex-1">
+          <Search aria-hidden="true" />
+          <input name="q" defaultValue={q} placeholder="Nombre o correo" className="input" />
+        </div>
         <select name="estado" defaultValue={estado ?? ""} className="input max-w-xs">
           <option value="">Todos los estados</option>
           {(Object.keys(AVAILABILITY_LABEL) as Availability[]).map((k) => (
@@ -52,9 +58,11 @@ export default async function AdminStudents({ searchParams }: { searchParams: Pr
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="verificar" value="1" defaultChecked={!!verificar} /> Avance por verificar
         </label>
-        <button className="btn btn-secondary">Filtrar</button>
+        <button className="btn btn-primary">
+          <Filter /> Filtrar
+        </button>
       </form>
-      <div className="mt-6 overflow-x-auto">
+      <div className="table-wrap mt-6">
         <table className="table-fcen">
           <thead>
             <tr>
@@ -70,13 +78,20 @@ export default async function AdminStudents({ searchParams }: { searchParams: Pr
             {rows.map((r) => (
               <tr key={r.id}>
                 <td>
-                  <Link href={`/admin/estudiantes/${r.id}`} className="font-bold text-azul-medio underline underline-offset-2">
-                    {r.profiles?.full_name || "Sin nombre"}
+                  <Link href={`/admin/estudiantes/${r.id}`} className="group flex items-center gap-3">
+                    <Avatar name={r.profiles?.full_name ?? r.profiles?.email} seed={r.id} size={36} />
+                    <span className="min-w-0">
+                      <span className="block font-black text-azul-oscuro group-hover:text-azul-medio">{r.profiles?.full_name || "Sin nombre"}</span>
+                      <span className="block truncate text-xs text-suave">{r.profiles?.email}</span>
+                    </span>
                   </Link>
-                  <p className="text-xs text-suave">{r.profiles?.email}</p>
                 </td>
                 <td>{r.programs?.name ?? "Sin programa"}</td>
-                <td>{AVAILABILITY_LABEL[r.availability]}</td>
+                <td>
+                  <span className={`chip ${r.availability === "disponible" ? "chip-verde" : r.availability === "sin_confirmar" ? "chip-amarillo" : r.availability === "en_practica" || r.availability === "en_proceso" ? "chip-azul" : ""}`}>
+                    {AVAILABILITY_LABEL[r.availability]}
+                  </span>
+                </td>
                 <td>
                   {r.progress_pct !== null ? `${r.progress_pct}%` : "—"}
                   <p className="text-xs text-suave">{VERIFIED_LABEL[r.progress_verified]}</p>

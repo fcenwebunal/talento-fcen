@@ -3,9 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  ArrowLeft, Briefcase, CalendarDays, Check, CheckCircle2, FileText, FileUp, GraduationCap, Loader2, Lock, Save,
+  ShieldCheck, Sparkles, Trash2, TriangleAlert, UserRound, type LucideIcon,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Area, Program, Skill, SkillDomain, SoftSkill } from "@/lib/types";
 import { LEVEL_LABEL, VERIFIED_LABEL } from "@/lib/labels";
+import { HelpTip } from "@/components/ui/help-tip";
 import { ListEditor } from "./list-editor";
 import { SkillsPicker, type StudentSkill } from "./skills-picker";
 
@@ -78,16 +83,16 @@ export type ProfileData = {
   catalogs: { programs: Program[]; skills: Skill[]; domains: SkillDomain[]; softSkills: SoftSkill[]; areas: Area[] };
 };
 
-const SECTIONS = [
-  { id: "personales", label: "1. Datos personales" },
-  { id: "academico", label: "2. Información académica" },
-  { id: "perfil", label: "3. Perfil y competencias" },
-  { id: "experiencia", label: "4. Experiencia, proyectos e idiomas" },
-  { id: "disponibilidad", label: "5. Intereses y disponibilidad" },
-  { id: "documentos", label: "6. Documentos y autorización" },
+const SECTIONS: readonly { id: string; label: string; short: string; icon: LucideIcon; intro: string }[] = [
+  { id: "personales", label: "Datos personales", short: "Personales", icon: UserRound, intro: "Quién eres y cómo contactarte. Lo sensible solo lo ve la Facultad." },
+  { id: "academico", label: "Información académica", short: "Académico", icon: GraduationCap, intro: "Tu programa, tu avance y las asignaturas que te preparan para la práctica." },
+  { id: "perfil", label: "Perfil y competencias", short: "Competencias", icon: Sparkles, intro: "Lo primero que leen las empresas: tu titular, tu perfil y tus habilidades." },
+  { id: "experiencia", label: "Experiencia, proyectos e idiomas", short: "Experiencia", icon: Briefcase, intro: "La evidencia de lo que sabes hacer." },
+  { id: "disponibilidad", label: "Intereses y disponibilidad", short: "Disponibilidad", icon: CalendarDays, intro: "Cuándo, cómo y dónde puedes hacer la práctica." },
+  { id: "documentos", label: "Documentos y autorización", short: "Documentos", icon: FileText, intro: "Tu hoja de vida y quién puede ver tus datos." },
 ] as const;
 
-type SectionId = (typeof SECTIONS)[number]["id"];
+type SectionId = string;
 
 const DOC_KINDS = [
   { kind: "hoja_vida", label: "Hoja de vida en PDF (máximo 2 páginas)", help: "La ven las empresas autorizadas si aceptas compartir tu contacto." },
@@ -236,30 +241,58 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
     return acc;
   }, {});
 
+  const current = SECTIONS.find((x) => x.id === section) ?? SECTIONS[0];
+  const currentIndex = SECTIONS.indexOf(current);
+
   return (
-    <div className="mt-8 grid gap-6 lg:grid-cols-[16rem_1fr]">
-      <nav className="flex gap-2 overflow-x-auto lg:flex-col" aria-label="Secciones del perfil">
-        {SECTIONS.map((sec) => (
-          <button
-            key={sec.id}
-            onClick={() => {
-              setSection(sec.id);
-              setStatus(null);
-            }}
-            className={`shrink-0 rounded-lg px-3 py-2 text-left text-sm font-bold ${section === sec.id ? "bg-azul text-white" : "bg-superficie text-azul-oscuro hover:bg-superficie-2"}`}
-          >
-            {sec.label}
-          </button>
-        ))}
-        <Link href="/estudiante" className="shrink-0 rounded-lg px-3 py-2 text-sm text-suave hover:text-azul">
-          ← Volver a mi panel
+    <div className="grid gap-6 lg:grid-cols-[17rem_1fr]">
+      <nav className="lg:sticky lg:top-24 lg:self-start" aria-label="Secciones del perfil">
+        <div className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
+          {SECTIONS.map((sec, i) => {
+            const active = section === sec.id;
+            return (
+              <button
+                key={sec.id}
+                onClick={() => {
+                  setSection(sec.id);
+                  setStatus(null);
+                  window.history.replaceState(null, "", `?seccion=${sec.id}`);
+                }}
+                className={`group relative flex shrink-0 items-center gap-3 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] px-3 py-2.5 text-left text-sm transition-all ${active ? "bg-azul text-white shadow-lg" : "bg-white text-azul-oscuro shadow-sm hover:bg-celeste"}`}
+              >
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${active ? "bg-white/15" : "bg-celeste text-azul"}`}>
+                  <sec.icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="font-black">
+                  <span className={`mr-1 text-xs ${active ? "text-verde" : "text-suave"}`}>{i + 1}.</span>
+                  <span className="lg:hidden">{sec.short}</span>
+                  <span className="hidden lg:inline">{sec.label}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <Link href="/estudiante" className="mt-3 hidden items-center gap-2 px-3 py-2 text-sm text-suave hover:text-azul lg:flex">
+          <ArrowLeft className="h-4 w-4" /> Volver a mi panel
         </Link>
       </nav>
 
-      <div className="card">
+      <div key={section} className="card page-in p-5 md:p-8">
+        <header className="mb-6 flex items-start gap-4 border-b border-borde pb-5">
+          <span className="icon-tile h-12 w-12">
+            <current.icon />
+          </span>
+          <div>
+            <p className="text-xs font-black uppercase tracking-widest text-suave">
+              Paso {currentIndex + 1} de {SECTIONS.length}
+            </p>
+            <h2 className="display text-2xl text-azul-oscuro">{current.label}</h2>
+            <p className="text-sm text-suave">{current.intro}</p>
+          </div>
+        </header>
         {section === "personales" && (
           <div className="space-y-6">
-            <Lock text="Tu documento, fecha de nacimiento, EPS y contacto de emergencia nunca los ve una empresa: solo la Facultad, para formalizar tu práctica." />
+            <PrivacyNote text="Tu documento, fecha de nacimiento, EPS y contacto de emergencia nunca los ve una empresa: solo la Facultad, para formalizar tu práctica." />
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Nombres y apellidos completos">
                 <input className="input" value={fullName} onChange={(e) => setFullName(e.target.value)} />
@@ -306,7 +339,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               </Field>
             </div>
             <div>
-              <h3 className="font-bold text-azul-oscuro">Contacto de emergencia</h3>
+              <h3 className="font-black text-azul-oscuro">Contacto de emergencia</h3>
               <div className="mt-3 grid gap-4 md:grid-cols-3">
                 <Field label="Nombre" lock>
                   <input className="input" value={text(priv.emergency_name)} onChange={(e) => p("emergency_name", blank(e.target.value))} />
@@ -364,7 +397,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               <textarea className="input" value={text(student.honors)} onChange={(e) => s("honors", blank(e.target.value))} />
             </Field>
             <div>
-              <h3 className="font-bold text-azul-oscuro">Asignaturas más relevantes para la práctica (máximo 5)</h3>
+              <h3 className="font-black text-azul-oscuro">Asignaturas más relevantes para la práctica (máximo 5)</h3>
               <div className="mt-3">
                 <ListEditor
                   items={subjects}
@@ -391,14 +424,14 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               <textarea className="input min-h-32" maxLength={1200} value={text(student.about)} onChange={(e) => s("about", blank(e.target.value))} />
             </Field>
             <div>
-              <h3 className="font-bold text-azul-oscuro">Competencias técnicas</h3>
+              <h3 className="font-black text-azul-oscuro">Competencias técnicas</h3>
               <p className="mt-1 text-sm text-suave">Elige del catálogo e indica tu nivel. Una habilidad con evidencia vale más que una lista larga.</p>
               <div className="mt-3">
                 <SkillsPicker catalog={data.catalogs.skills} domains={data.catalogs.domains} value={skills} onChange={setSkills} />
               </div>
             </div>
             <div>
-              <h3 className="font-bold text-azul-oscuro">Competencias transversales</h3>
+              <h3 className="font-black text-azul-oscuro">Competencias transversales</h3>
               <p className="mt-1 text-sm text-suave">Marca las 3 a 5 que mejor te describen ({softSkills.length} marcadas).</p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 {data.catalogs.softSkills.map((x) => (
@@ -481,7 +514,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
         {section === "disponibilidad" && (
           <div className="space-y-6">
             <div>
-              <h3 className="font-bold text-azul-oscuro">Áreas en las que te gustaría hacer la práctica</h3>
+              <h3 className="font-black text-azul-oscuro">Áreas en las que te gustaría hacer la práctica</h3>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 {data.catalogs.areas.map((a) => (
                   <label key={a.id} className="flex items-center gap-2 text-sm">
@@ -516,7 +549,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               </Field>
             </div>
             <div>
-              <span className="text-sm font-bold">Modalidad aceptada</span>
+              <span className="text-sm font-black">Modalidad aceptada</span>
               <div className="mt-2 flex flex-wrap gap-4">
                 {[
                   ["presencial", "Presencial"],
@@ -564,42 +597,57 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
         {section === "documentos" && (
           <div className="space-y-8">
             <div className="space-y-4">
-              {DOC_KINDS.map((d) => {
-                const docs = documents.filter((x) => x.kind === d.kind);
-                return (
-                  <div key={d.kind} className="rounded-lg border border-borde p-4">
-                    <p className="font-bold">{d.label}</p>
-                    <p className="text-sm text-suave">{d.help}</p>
-                    {docs.map((doc) => (
-                      <div key={doc.id} className="mt-2 flex flex-wrap items-center gap-3 text-sm">
-                        <button type="button" className="text-azul-medio underline underline-offset-2" onClick={() => openDoc(doc)}>
-                          {doc.file_name ?? "Archivo"}
-                        </button>
-                        <button type="button" className="text-naranja hover:underline" onClick={() => removeDoc(doc)}>
-                          Quitar
-                        </button>
-                      </div>
-                    ))}
-                    <input
-                      type="file"
-                      accept={d.kind === "foto" ? "image/jpeg,image/png,image/webp" : "application/pdf,image/jpeg,image/png"}
-                      className="mt-3 block text-sm"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) upload(d.kind, file);
-                        e.target.value = "";
-                      }}
-                    />
-                  </div>
-                );
-              })}
+              <div className="grid gap-4 md:grid-cols-2">
+                {DOC_KINDS.map((d) => {
+                  const docs = documents.filter((x) => x.kind === d.kind);
+                  return (
+                    <div key={d.kind} className="rounded-[1rem_1rem_1rem_0.25rem] border border-borde bg-white p-4">
+                      <p className="flex items-center gap-2 font-black text-azul-oscuro">
+                        <FileText className="h-4 w-4 text-azul-medio" aria-hidden="true" />
+                        {d.label}
+                        <HelpTip>{d.help}</HelpTip>
+                      </p>
+                      {docs.length > 0 && (
+                        <ul className="mt-3 space-y-1.5">
+                          {docs.map((doc) => (
+                            <li key={doc.id} className="flex items-center gap-2 rounded-lg bg-verde-claro px-3 py-2 text-sm">
+                              <CheckCircle2 className="h-4 w-4 shrink-0 text-verde-tinta" aria-hidden="true" />
+                              <button type="button" className="flex-1 truncate text-left text-azul-oscuro underline-offset-2 hover:underline" onClick={() => openDoc(doc)}>
+                                {doc.file_name ?? "Archivo"}
+                              </button>
+                              <button type="button" className="rounded p-1 text-naranja hover:bg-white" onClick={() => removeDoc(doc)} aria-label="Quitar archivo">
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <label className="mt-3 flex cursor-pointer flex-col items-center gap-1 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] border-2 border-dashed border-borde px-4 py-5 text-center text-sm text-suave transition-colors hover:border-azul hover:bg-celeste">
+                        <FileUp className="h-6 w-6 text-azul" aria-hidden="true" />
+                        <span className="font-black text-azul">{docs.length ? "Subir otro archivo" : "Elegir archivo"}</span>
+                        <span className="text-xs">{d.kind === "foto" ? "JPG, PNG o WebP" : "PDF, JPG o PNG"} · máximo 5 MB</span>
+                        <input
+                          type="file"
+                          className="sr-only"
+                          accept={d.kind === "foto" ? "image/jpeg,image/png,image/webp" : "application/pdf,image/jpeg,image/png"}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) upload(d.kind, file);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
               <p className="text-xs text-suave">
                 La copia del documento de identidad y el certificado de la EPS se piden solo al formalizar la práctica.
               </p>
             </div>
 
-            <div className="space-y-3 rounded-lg bg-superficie p-4">
-              <h3 className="font-bold text-azul-oscuro">Autorización para el tratamiento de datos personales</h3>
+            <div className="space-y-3">
+              <h3 className="flex items-center gap-2 font-black text-azul-oscuro"><ShieldCheck className="h-5 w-5 text-azul" aria-hidden="true" /> Autorización para el tratamiento de datos personales</h3>
               <p className="text-sm text-suave">
                 En cumplimiento de la Ley 1581 de 2012, autorizas a la Universidad Nacional de Colombia a tratar tus datos para
                 conectarte con empresas que buscan practicantes. Puedes cambiar estas opciones cuando quieras.{" "}
@@ -608,18 +656,18 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                 </Link>
                 .
               </p>
-              <Check
+              <Consent
                 checked={student.consent_anonymous}
                 onChange={(v) => setStudent((prev) => ({ ...prev, consent_anonymous: v, consent_contact: v ? prev.consent_contact : false }))}
                 label="Acepto aparecer, sin mi nombre ni mis datos de contacto, en las búsquedas de las empresas registradas."
               />
-              <Check
+              <Consent
                 checked={student.consent_contact}
                 disabled={!student.consent_anonymous}
                 onChange={(v) => s("consent_contact", v)}
                 label="Acepto que las empresas autorizadas por la Facultad vean mi nombre, correo institucional, teléfono, enlaces y hoja de vida, y que me incluyan en sus listados exportados."
               />
-              <Check
+              <Consent
                 checked={student.truthful_declared}
                 onChange={(v) => s("truthful_declared", v)}
                 label="Declaro que la información suministrada es veraz y puede ser verificada."
@@ -628,23 +676,50 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
           </div>
         )}
 
-        <div className="mt-8 flex flex-wrap items-center gap-4 border-t border-borde pt-5">
+        <div className="sticky bottom-3 z-20 -mx-2 mt-8 flex flex-wrap items-center gap-3 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] border border-borde bg-white/95 p-3 shadow-lg backdrop-blur md:-mx-4">
           <button className="btn btn-primary" onClick={save} disabled={saving}>
+            {saving ? <Loader2 className="animate-spin" /> : <Save />}
             {saving ? "Guardando…" : "Guardar esta sección"}
           </button>
-          {status && <p className={`text-sm ${status.tone === "ok" ? "text-verde-tinta" : "text-naranja"}`}>{status.text}</p>}
+          {currentIndex < SECTIONS.length - 1 && (
+            <button
+              className="btn btn-ghost"
+              onClick={() => {
+                setSection(SECTIONS[currentIndex + 1].id);
+                setStatus(null);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              Siguiente: {SECTIONS[currentIndex + 1].short}
+            </button>
+          )}
+          {status && (
+            <p
+              className={`ml-auto flex items-center gap-2 text-sm font-black ${status.tone === "ok" ? "text-verde-tinta" : "text-naranja"}`}
+              style={{ animation: "pop 0.35s var(--ease-out) both" }}
+              role="status"
+            >
+              {status.tone === "ok" ? <CheckCircle2 className="h-4 w-4" /> : <TriangleAlert className="h-4 w-4" />}
+              {status.text}
+            </p>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function Field({ label, help, lock, children }: { label: string; help?: string; lock?: boolean; children: React.ReactNode }) {
+function Field({ label, help, tip, lock, children }: { label: string; help?: string; tip?: string; lock?: boolean; children: React.ReactNode }) {
   return (
     <label className="field">
-      <span className="flex items-center gap-2">
+      <span className="flex flex-wrap items-center gap-1.5">
         {label}
-        {lock && <span className="chip px-2 py-0 text-[0.6875rem]">Solo la Facultad</span>}
+        {tip && <HelpTip>{tip}</HelpTip>}
+        {lock && (
+          <span className="chip ml-auto px-2 py-0 text-[0.6875rem]" title="Este dato nunca lo ve una empresa">
+            <Lock /> Solo la Facultad
+          </span>
+        )}
       </span>
       {children}
       {help && <small>{help}</small>}
@@ -655,21 +730,34 @@ function Field({ label, help, lock, children }: { label: string; help?: string; 
 function Block({ title, help, children }: { title: string; help?: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="font-bold text-azul-oscuro">{title}</h3>
-      {help && <p className="mt-1 text-sm text-suave">{help}</p>}
+      <h3 className="flex items-center gap-2 font-black text-azul-oscuro">
+        <span className="h-4 w-1 rounded-r bg-verde" aria-hidden="true" />
+        {title}
+        {help && <HelpTip>{help}</HelpTip>}
+      </h3>
       <div className="mt-3">{children}</div>
     </div>
   );
 }
 
-function Lock({ text }: { text: string }) {
-  return <p className="rounded-lg border border-azul/20 bg-azul/5 p-3 text-sm text-azul-oscuro">{text}</p>;
+function PrivacyNote({ text }: { text: string }) {
+  return (
+    <p className="flex gap-3 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] border border-azul/15 bg-celeste p-4 text-sm text-azul-oscuro">
+      <ShieldCheck className="h-5 w-5 shrink-0 text-azul" aria-hidden="true" />
+      {text}
+    </p>
+  );
 }
 
-function Check({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
+function Consent({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
   return (
-    <label className={`flex items-start gap-3 text-sm ${disabled ? "opacity-50" : ""}`}>
-      <input type="checkbox" className="mt-1" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
+    <label
+      className={`flex cursor-pointer items-start gap-3 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] border p-4 text-sm transition-colors ${checked ? "border-verde bg-verde-claro" : "border-borde bg-white hover:border-azul"} ${disabled ? "pointer-events-none opacity-50" : ""}`}
+    >
+      <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 ${checked ? "border-verde bg-verde text-white" : "border-borde bg-white"}`}>
+        {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+      </span>
+      <input type="checkbox" className="sr-only" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
       <span>{label}</span>
     </label>
   );

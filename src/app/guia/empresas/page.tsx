@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Faq, GuideSection, Pending, Timeline, Toc } from "@/components/guide";
+import { Constellation, Rings, StepDivider } from "@/components/ui/decor";
 
 export const metadata: Metadata = { title: "Guía para empresas" };
 
@@ -26,24 +27,28 @@ const TALENT = [
 export default function CompanyGuide() {
   return (
     <>
-      <section className="bg-azul-oscuro text-white">
-        <div className="wrap py-12 md:py-16">
-          <p className="text-sm font-bold uppercase tracking-wider text-verde">Guía para empresas</p>
+      <section className="bg-hero relative overflow-hidden text-white">
+        <div className="bg-dots-light mask-fade-b absolute inset-0" />
+        <Rings className="animate-spin-slow absolute -right-40 -top-40 w-[34rem] text-verde" />
+        <Constellation className="animate-float-slow absolute bottom-8 right-[8%] hidden w-64 text-white md:block" />
+        <div className="wrap stagger relative pb-24 pt-12 md:pt-16">
+          <p className="kicker kicker-light">Guía para empresas</p>
           <h1 className="display mt-2 max-w-3xl text-4xl md:text-5xl">Encuentre en la FCEN el talento que su organización necesita</h1>
           <p className="mt-4 max-w-2xl text-lg text-white/85">
             Estudiantes y egresados recientes de cinco pregrados y nueve posgrados, con sus habilidades a la vista. Registrarse es gratis.
           </p>
-          <Link href="/ingresar?como=empresa" className="btn mt-8 bg-verde text-azul-oscuro">
+          <Link href="/ingresar?como=empresa" className="btn btn-accent mt-8">
             Registrar mi organización
           </Link>
         </div>
+        <StepDivider className="absolute inset-x-0 bottom-0" />
       </section>
 
       <div className="wrap grid gap-10 lg:grid-cols-[14rem_1fr]">
-        <aside className="hidden pt-10 lg:block">
+        <aside className="hidden pt-12 lg:block">
           <Toc items={TOC} />
         </aside>
-        <div className="min-w-0 max-w-3xl divide-y divide-borde">
+        <div className="min-w-0 max-w-3xl divide-y divide-dashed divide-borde">
           <GuideSection id="como-funciona" kicker="Paso a paso" title="Cómo funciona">
             <Timeline
               steps={[
@@ -60,7 +65,7 @@ export default function CompanyGuide() {
             <div className="grid gap-3 sm:grid-cols-2">
               {TALENT.map((t) => (
                 <div key={t.name} className="card">
-                  <p className="font-bold text-azul-oscuro">{t.name}</p>
+                  <p className="font-black text-azul-oscuro">{t.name}</p>
                   <p className="mt-1 text-sm text-suave">{t.items}</p>
                 </div>
               ))}

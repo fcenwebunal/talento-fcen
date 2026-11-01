@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/session";
+import Link from "next/link";
+import { Eye, PencilLine } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
 import { ProfileEditor, type ProfileData } from "./editor";
 
 export const metadata: Metadata = { title: "Editar mi perfil" };
@@ -58,13 +61,21 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   };
 
   return (
-    <div className="wrap py-10">
-      <h1 className="display text-3xl text-azul-oscuro">Editar mi perfil</h1>
-      <p className="mt-2 max-w-3xl text-suave">
-        Es la información que la Facultad comparte con las empresas para presentarte. Escribe de forma breve y profesional:
-        la empresa leerá tu perfil antes de contactarte. Guarda cada sección al terminarla.
-      </p>
-      <ProfileEditor data={data} initialSection={seccion} />
-    </div>
+    <>
+      <PageHeader
+        kicker="Mi perfil"
+        icon={PencilLine}
+        title="Editar mi perfil"
+        description="Es lo que la Facultad comparte con las empresas para presentarte. Escribe breve y profesional, y guarda cada sección al terminarla."
+        actions={
+          <Link href="/estudiante/vista-previa" className="btn btn-glass">
+            <Eye /> Ver cómo me ven
+          </Link>
+        }
+      />
+      <div className="wrap -mt-4">
+        <ProfileEditor data={data} initialSection={seccion} />
+      </div>
+    </>
   );
 }

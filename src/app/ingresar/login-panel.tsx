@@ -2,30 +2,84 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  ArrowRight, BadgeCheck, BriefcaseBusiness, Building2, Eye, FileDown, GraduationCap, KeyRound, Loader2, Mail,
+  Search, ShieldCheck, Sparkles, UserPlus,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { UNAL_DOMAIN } from "@/lib/config";
+import { HelpTip } from "@/components/ui/help-tip";
+import { Constellation, Rings } from "@/components/ui/decor";
 
 type Tab = "estudiante" | "empresa";
+
+const BENEFITS: Record<Tab, { icon: typeof Eye; title: string; text: string }[]> = {
+  estudiante: [
+    { icon: Sparkles, title: "Muestra lo que sabes hacer", text: "Habilidades con nivel y evidencia, no solo una hoja de vida." },
+    { icon: ShieldCheck, title: "Tú decides quién te contacta", text: "Tu nombre y contacto solo los ven empresas autorizadas, si lo aceptas." },
+    { icon: BadgeCheck, title: "Una guía paso a paso", text: "Todo lo que necesitas para formalizar tu práctica." },
+  ],
+  empresa: [
+    { icon: Search, title: "Busque por habilidades", text: "Filtre por programa, nivel, idioma, modalidad y ciudad." },
+    { icon: Eye, title: "Vea perfiles desde el primer día", text: "Sin nombre ni contacto hasta que la Facultad lo autorice." },
+    { icon: FileDown, title: "Exporte sus candidatos", text: "Ya autorizada, descargue listados y hojas de vida." },
+  ],
+};
 
 export function LoginPanel({ initial }: { initial: Tab }) {
   const [tab, setTab] = useState<Tab>(initial);
 
   return (
-    <div className="mt-8">
-      <div className="inline-flex rounded-lg border border-borde bg-superficie p-1" role="tablist">
-        {(["estudiante", "empresa"] as const).map((t) => (
-          <button
-            key={t}
-            role="tab"
-            aria-selected={tab === t}
-            onClick={() => setTab(t)}
-            className={`rounded-md px-4 py-2 text-sm font-bold ${tab === t ? "bg-white text-azul shadow-sm" : "text-suave"}`}
-          >
-            {t === "estudiante" ? "Estudiantes, egresados y Facultad" : "Empresas"}
-          </button>
-        ))}
+    <div className="page-in mx-auto grid max-w-5xl overflow-hidden rounded-[1.75rem_0.375rem_1.75rem_1.75rem] border border-borde bg-white shadow-xl lg:grid-cols-[1fr_1.1fr]">
+      <aside className="bg-hero relative hidden overflow-hidden p-10 text-white lg:block">
+        <div className="bg-dots-light absolute inset-0 opacity-60" />
+        <Rings className="animate-spin-slow absolute -bottom-32 -left-32 w-96 text-verde" />
+        <Constellation className="animate-float-slow absolute right-4 top-6 w-48 text-white" />
+        <div className="relative">
+          <p className="kicker kicker-light">{tab === "estudiante" ? "Para estudiantes" : "Para empresas"}</p>
+          <h1 className="display mt-3 text-3xl">
+            {tab === "estudiante" ? "Tu talento, visible para quien lo busca" : "El talento de la FCEN, a su alcance"}
+          </h1>
+          <ul key={tab} className="stagger mt-8 space-y-5">
+            {BENEFITS[tab].map((b) => (
+              <li key={b.title} className="flex gap-3">
+                <span className="icon-tile icon-tile-dark">
+                  <b.icon />
+                </span>
+                <div>
+                  <p className="font-black">{b.title}</p>
+                  <p className="text-sm text-white/70">{b.text}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+
+      <div className="p-6 sm:p-10">
+        <h2 className="display text-2xl text-azul-oscuro lg:hidden">Ingresar a Talento FCEN</h2>
+        <div className="relative mt-4 grid grid-cols-2 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] bg-superficie p-1 lg:mt-0" role="tablist">
+          <span
+            className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-[0.75rem_0.75rem_0.75rem_0.1875rem] bg-white shadow transition-transform duration-300"
+            style={{ transform: tab === "empresa" ? "translateX(calc(100% + 0.25rem))" : "translateX(0)", left: "0.25rem" }}
+          />
+          {(["estudiante", "empresa"] as const).map((t) => (
+            <button
+              key={t}
+              role="tab"
+              aria-selected={tab === t}
+              onClick={() => setTab(t)}
+              className={`relative z-10 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-black transition-colors ${tab === t ? "text-azul" : "text-suave"}`}
+            >
+              {t === "estudiante" ? <GraduationCap className="h-4 w-4" /> : <BriefcaseBusiness className="h-4 w-4" />}
+              {t === "estudiante" ? "Estudiantes y Facultad" : "Empresas"}
+            </button>
+          ))}
+        </div>
+        <div key={tab} className="page-in mt-8">
+          {tab === "estudiante" ? <StudentLogin /> : <CompanyLogin />}
+        </div>
       </div>
-      <div className="mt-6">{tab === "estudiante" ? <StudentLogin /> : <CompanyLogin />}</div>
     </div>
   );
 }
@@ -46,18 +100,27 @@ function StudentLogin() {
   }
 
   return (
-    <div className="card max-w-xl">
-      <p className="text-suave">
-        Entra con tu cuenta institucional <strong className="text-texto">@unal.edu.co</strong>. Así sabemos que eres de la
-        Universidad y no necesitas otra contraseña.
+    <div>
+      <p className="flex items-center gap-1.5 text-suave">
+        Entra con tu cuenta institucional <strong className="text-texto">@unal.edu.co</strong>.
+        <HelpTip>
+          Usamos tu cuenta de la Universidad para saber que eres de la UNAL. No necesitas otra contraseña y nunca vemos la tuya.
+        </HelpTip>
       </p>
-      <button onClick={signIn} disabled={loading} className="btn btn-primary mt-5 w-full sm:w-auto">
-        <GoogleIcon />
-        {loading ? "Abriendo Google…" : "Entrar con mi cuenta @unal.edu.co"}
+      <button onClick={signIn} disabled={loading} className="btn btn-secondary mt-6 w-full justify-center py-3.5 text-base">
+        {loading ? <Loader2 className="animate-spin" /> : <GoogleIcon />}
+        {loading ? "Abriendo Google…" : "Continuar con mi cuenta @unal.edu.co"}
       </button>
-      <p className="mt-4 text-xs text-suave">
-        El personal de la Facultad también entra por aquí; la coordinación le asigna su rol.
-      </p>
+      <div className="mt-8 grid gap-3 sm:grid-cols-2">
+        <div className="card-flat flex gap-3 p-4 text-sm">
+          <GraduationCap className="h-5 w-5 shrink-0 text-azul-medio" aria-hidden="true" />
+          <span className="text-suave">Estudiantes de pregrado y posgrado, y egresados recientes.</span>
+        </div>
+        <div className="card-flat flex gap-3 p-4 text-sm">
+          <Building2 className="h-5 w-5 shrink-0 text-azul-medio" aria-hidden="true" />
+          <span className="text-suave">El personal de la Facultad también entra aquí; la coordinación le asigna su rol.</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -89,46 +152,58 @@ function CompanyLogin() {
       setMode("login");
       return;
     }
-    router.replace(mode === "signup" ? "/empresa/registro" : "/empresa");
+    router.replace(mode === "signup" ? "/empresa/registro" : "/panel");
     router.refresh();
   }
 
   return (
-    <form onSubmit={submit} className="card max-w-xl space-y-4">
+    <form onSubmit={submit} className="space-y-4">
       <p className="text-suave">
         {mode === "login"
           ? "Ingrese con el correo y la contraseña de su organización."
-          : "Cree la cuenta de la persona que representará a su organización. Después registrará los datos de la empresa."}
+          : "Cree la cuenta de quien representará a su organización. Después registrará los datos de la empresa."}
       </p>
       <label className="field">
         <span>Correo</span>
-        <input className="input" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <div className="input-icon">
+          <Mail aria-hidden="true" />
+          <input className="input" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
       </label>
       <label className="field">
-        <span>Contraseña</span>
-        <input
-          className="input"
-          type="password"
-          required
-          minLength={8}
-          autoComplete={mode === "login" ? "current-password" : "new-password"}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        {mode === "signup" && <small>Mínimo 8 caracteres.</small>}
+        <span className="flex items-center gap-1.5">
+          Contraseña
+          {mode === "signup" && <HelpTip>Mínimo 8 caracteres. Use una que no use en otros sitios.</HelpTip>}
+        </span>
+        <div className="input-icon">
+          <KeyRound aria-hidden="true" />
+          <input
+            className="input"
+            type="password"
+            required
+            minLength={8}
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
       </label>
       {error && <p className="text-sm text-naranja">{error}</p>}
-      <div className="flex flex-wrap items-center gap-3">
-        <button className="btn btn-primary" disabled={loading}>
-          {loading ? "Un momento…" : mode === "login" ? "Ingresar" : "Crear cuenta"}
-        </button>
-        <button type="button" className="btn btn-ghost" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
+      <button className="btn btn-primary btn-arrow w-full py-3" disabled={loading}>
+        {loading ? <Loader2 className="animate-spin" /> : mode === "login" ? <ArrowRight /> : <UserPlus />}
+        {loading ? "Un momento…" : mode === "login" ? "Ingresar" : "Crear cuenta"}
+      </button>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-borde pt-4 text-sm">
+        <button type="button" className="font-black text-azul hover:underline" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
           {mode === "login" ? "Crear una cuenta de empresa" : "Ya tengo cuenta"}
         </button>
+        {mode === "login" && (
+          <span className="flex items-center gap-1 text-suave">
+            ¿Olvidó la contraseña?
+            <HelpTip align="right">Escríbale a la coordinación de la Facultad para restablecerla.</HelpTip>
+          </span>
+        )}
       </div>
-      {mode === "login" && (
-        <p className="text-xs text-suave">¿Olvidó la contraseña? Escríbale a la coordinación de la Facultad para restablecerla.</p>
-      )}
     </form>
   );
 }

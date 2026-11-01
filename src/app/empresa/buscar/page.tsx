@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ChevronLeft, ChevronRight, Download, EyeOff, Lock, SearchX, Users } from "lucide-react";
 import { requireRole } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { PAGE_SIZE, filtersFrom, toQuery, type SearchParams } from "@/lib/search";
 import { SearchFilters } from "@/components/search-filters";
 import { ResultCard } from "@/components/result-card";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { HelpTip } from "@/components/ui/help-tip";
 import type { SearchRow } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Buscar talento" };
@@ -33,62 +37,69 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const pages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className="wrap py-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="display text-3xl text-azul-oscuro">Buscar talento</h1>
-          <p className="mt-1 text-suave">
-            {total} {total === 1 ? "perfil" : "perfiles"}
-            {session.level < 2 && " · Vista anónima: solicite la autorización para ver los datos de contacto"}
-          </p>
-        </div>
-        {session.level === 2 && total > 0 && (
-          <a href={`/empresa/exportar?${toQuery(params, { pagina: null })}`} className="btn btn-secondary">
-            Exportar a CSV
-          </a>
-        )}
-      </div>
+    <>
+      <PageHeader
+        kicker={session.company.name}
+        icon={Users}
+        title="Buscar talento"
+        description={
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="chip chip-dark">
+              <Users /> {total} {total === 1 ? "perfil" : "perfiles"}
+            </span>
+            {session.level < 2 ? (
+              <span className="chip chip-dark">
+                <EyeOff /> Vista anónima
+                <HelpTip>Solicite la autorización de la Facultad en «Mi empresa» para ver nombres, contacto y hojas de vida.</HelpTip>
+              </span>
+            ) : (
+              <span className="chip chip-dark">
+                <Lock /> Empresa autorizada
+              </span>
+            )}
+          </span>
+        }
+        actions={
+          session.level === 2 &&
+          total > 0 && (
+            <a href={`/empresa/exportar?${toQuery(params, { pagina: null })}`} className="btn btn-accent">
+              <Download /> Exportar a CSV
+            </a>
+          )
+        }
+      />
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[18rem_1fr]">
-        <SearchFilters
-          action="/empresa/buscar"
-          initial={filters}
-          programs={programs.data ?? []}
-          skills={skills.data ?? []}
-          areas={areas.data ?? []}
-        />
-        <div>
+      <div className="wrap -mt-4 grid gap-6 lg:grid-cols-[19rem_1fr]">
+        <SearchFilters action="/empresa/buscar" initial={filters} programs={programs.data ?? []} skills={skills.data ?? []} areas={areas.data ?? []} />
+        <div className="min-w-0">
           {error && <p className="card text-naranja">No se pudo buscar. {error.message}</p>}
           {!error && rows.length === 0 && (
-            <div className="card text-center text-suave">
-              <p className="font-bold text-azul-oscuro">No hay perfiles con esos filtros.</p>
-              <p className="mt-1 text-sm">Pruebe con menos habilidades o sin la ciudad.</p>
-            </div>
+            <EmptyState icon={SearchX} title="No hay perfiles con esos filtros" text="Pruebe con menos habilidades, otro nivel o sin la ciudad." action={<a href="/empresa/buscar" className="btn btn-secondary">Ver todos</a>} />
           )}
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {rows.map((row) => (
-              <ResultCard key={row.student_id} row={row} href={`/empresa/estudiantes/${row.student_id}`} highlight={filters.skill_ids} />
+          <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+            {rows.map((row, i) => (
+              <ResultCard key={row.student_id} row={row} index={i} href={`/empresa/estudiantes/${row.student_id}`} highlight={filters.skill_ids} />
             ))}
           </div>
           {pages > 1 && (
-            <nav className="mt-6 flex items-center justify-center gap-2">
+            <nav className="mt-8 flex items-center justify-center gap-3">
               {page > 1 && (
                 <Link className="btn btn-secondary" href={`/empresa/buscar?${toQuery(params, { pagina: String(page - 1) })}`}>
-                  Anterior
+                  <ChevronLeft /> Anterior
                 </Link>
               )}
-              <span className="text-sm text-suave">
+              <span className="chip">
                 Página {page} de {pages}
               </span>
               {page < pages && (
                 <Link className="btn btn-secondary" href={`/empresa/buscar?${toQuery(params, { pagina: String(page + 1) })}`}>
-                  Siguiente
+                  Siguiente <ChevronRight />
                 </Link>
               )}
             </nav>
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }

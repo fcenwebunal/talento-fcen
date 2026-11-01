@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Download, Eye, History, RefreshCcw } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { AdminTitle } from "../admin-title";
 import { formatDate } from "@/lib/labels";
 
 export const metadata: Metadata = { title: "Registros" };
@@ -16,10 +18,13 @@ export default async function AdminRecords() {
 
   return (
     <div className="space-y-8">
-      <h1 className="display text-3xl text-azul-oscuro">Registros</h1>
+      <AdminTitle icon={History} title="Registros" description="Exportaciones, consultas de contacto y cambios de estado." />
       <section>
-        <h2 className="font-bold text-azul-oscuro">Exportaciones</h2>
-        <table className="table-fcen mt-3">
+        <h2 className="flex items-center gap-2 font-black text-azul-oscuro">
+          <Download className="h-4 w-4 text-azul-medio" /> Exportaciones
+        </h2>
+        <div className="table-wrap mt-3">
+        <table className="table-fcen">
           <thead>
             <tr>
               <th>Fecha</th>
@@ -37,10 +42,14 @@ export default async function AdminRecords() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
       <section>
-        <h2 className="font-bold text-azul-oscuro">Consultas de contacto y descargas de hojas de vida</h2>
-        <table className="table-fcen mt-3">
+        <h2 className="flex items-center gap-2 font-black text-azul-oscuro">
+          <Eye className="h-4 w-4 text-azul-medio" /> Consultas de contacto y descargas de hojas de vida
+        </h2>
+        <div className="table-wrap mt-3">
+        <table className="table-fcen">
           <thead>
             <tr>
               <th>Fecha</th>
@@ -64,10 +73,14 @@ export default async function AdminRecords() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
       <section>
-        <h2 className="font-bold text-azul-oscuro">Cambios de estado</h2>
-        <table className="table-fcen mt-3">
+        <h2 className="flex items-center gap-2 font-black text-azul-oscuro">
+          <RefreshCcw className="h-4 w-4 text-azul-medio" /> Cambios de estado
+        </h2>
+        <div className="table-wrap mt-3">
+        <table className="table-fcen">
           <thead>
             <tr>
               <th>Fecha</th>
@@ -88,6 +101,7 @@ export default async function AdminRecords() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
     </div>
   );

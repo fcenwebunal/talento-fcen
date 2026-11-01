@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowLeft, Eye, EyeOff, Lock, TriangleAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/session";
 import { StudentDetailView } from "@/components/student-detail";
+import { PageHeader } from "@/components/ui/page-header";
 import type { StudentDetail } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Cómo me ven las empresas" };
@@ -13,10 +15,14 @@ export default async function PreviewPage({ searchParams }: { searchParams: Prom
   const { nivel } = await searchParams;
   const authorized = nivel === "autorizada";
   const supabase = await createClient();
-  const { data } = await supabase.rpc("get_student_detail", { p_student: session.userId });
+  const [{ data }, { data: consents }, { data: photo }] = await Promise.all([
+    supabase.rpc("get_student_detail", { p_student: session.userId }),
+    supabase.from("students").select("consent_contact").eq("id", session.userId).single(),
+    supabase.from("documents").select("path").eq("student_id", session.userId).eq("kind", "foto").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+  ]);
   const detail = data as StudentDetail;
-  const { data: consents } = await supabase.from("students").select("consent_contact").eq("id", session.userId).single();
   const showContact = authorized && !!consents?.consent_contact;
+  const photoUrl = showContact && photo ? (await supabase.storage.from("documentos").createSignedUrl(photo.path, 3600)).data?.signedUrl : null;
   const shown: StudentDetail = showContact
     ? detail
     : {
@@ -28,27 +34,36 @@ export default async function PreviewPage({ searchParams }: { searchParams: Prom
       };
 
   return (
-    <div className="wrap py-10">
-      <Link href="/estudiante" className="text-sm text-suave hover:text-azul">
-        ← Volver a mi panel
-      </Link>
-      <h1 className="display mt-2 text-3xl text-azul-oscuro">Así ven tu perfil las empresas</h1>
-      <div className="mt-4 inline-flex rounded-lg border border-borde bg-superficie p-1">
-        <Link href="/estudiante/vista-previa" className={`rounded-md px-4 py-2 text-sm font-bold ${!authorized ? "bg-white text-azul shadow-sm" : "text-suave"}`}>
-          Empresa registrada
-        </Link>
-        <Link href="/estudiante/vista-previa?nivel=autorizada" className={`rounded-md px-4 py-2 text-sm font-bold ${authorized ? "bg-white text-azul shadow-sm" : "text-suave"}`}>
-          Empresa autorizada
-        </Link>
+    <>
+      <PageHeader
+        kicker="Vista previa"
+        icon={Eye}
+        title="Así ven tu perfil las empresas"
+        description="Cambia de nivel para ver qué muestra la plataforma en cada caso."
+        actions={
+          <Link href="/estudiante" className="btn btn-glass">
+            <ArrowLeft /> Mi panel
+          </Link>
+        }
+      >
+        <div className="mt-6 inline-flex rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] border border-white/15 bg-white/5 p-1">
+          <Link href="/estudiante/vista-previa" className={`flex items-center gap-2 rounded-[0.75rem_0.75rem_0.75rem_0.1875rem] px-4 py-2 text-sm font-black ${!authorized ? "bg-white text-azul" : "text-white/70 hover:text-white"}`}>
+            <EyeOff className="h-4 w-4" /> Empresa registrada
+          </Link>
+          <Link href="/estudiante/vista-previa?nivel=autorizada" className={`flex items-center gap-2 rounded-[0.75rem_0.75rem_0.75rem_0.1875rem] px-4 py-2 text-sm font-black ${authorized ? "bg-white text-azul" : "text-white/70 hover:text-white"}`}>
+            <Lock className="h-4 w-4" /> Empresa autorizada
+          </Link>
+        </div>
+      </PageHeader>
+      <div className="wrap">
+        {authorized && !consents?.consent_contact && (
+          <p className="mb-6 flex gap-2 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] bg-amarillo/15 p-4 text-sm text-amarillo-tinta">
+            <TriangleAlert className="h-5 w-5 shrink-0" aria-hidden="true" />
+            No has aceptado compartir tu contacto, así que las empresas autorizadas también ven tu perfil sin nombre ni contacto.
+          </p>
+        )}
+        <StudentDetailView detail={shown} photoUrl={photoUrl} />
       </div>
-      {authorized && !consents?.consent_contact && (
-        <p className="mt-4 rounded-lg bg-amarillo/15 p-3 text-sm text-amarillo-tinta">
-          No has aceptado compartir tu contacto, así que las empresas autorizadas también ven tu perfil sin nombre ni contacto.
-        </p>
-      )}
-      <div className="mt-6">
-        <StudentDetailView detail={shown} />
-      </div>
-    </div>
+    </>
   );
 }

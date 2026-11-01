@@ -37,7 +37,7 @@ export function SkillsPicker({
         <div className="space-y-2">
           {value.map((v) => (
             <div key={v.skill_id} className="grid items-center gap-2 rounded-lg border border-borde bg-superficie p-3 md:grid-cols-[1fr_auto_1.2fr_auto]">
-              <span className="font-bold">{byId.get(v.skill_id)?.name}</span>
+              <span className="font-black">{byId.get(v.skill_id)?.name}</span>
               <div className="flex gap-1" role="radiogroup" aria-label="Nivel">
                 {[1, 2, 3].map((l) => (
                   <button
@@ -45,7 +45,7 @@ export function SkillsPicker({
                     type="button"
                     title={SKILL_LEVEL_HELP[l]}
                     onClick={() => update(v.skill_id, { level: l })}
-                    className={`rounded-md border px-2.5 py-1 text-xs font-bold ${v.level === l ? "border-azul bg-azul text-white" : "border-borde bg-white text-suave"}`}
+                    className={`rounded-md border px-2.5 py-1 text-xs font-black ${v.level === l ? "border-azul bg-azul text-white" : "border-borde bg-white text-suave"}`}
                   >
                     {SKILL_LEVEL[l]}
                   </button>

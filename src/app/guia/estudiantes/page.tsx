@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Faq, GuideSection, Pending, Timeline, Toc } from "@/components/guide";
+import { Constellation, Rings, StepDivider } from "@/components/ui/decor";
 import { DateCalculator, FlipCards, ProgramPicker, ReadinessChecker } from "./interactive";
 
 export const metadata: Metadata = { title: "Guía del estudiante" };
@@ -23,9 +24,12 @@ const TOC = [
 export default function StudentGuide() {
   return (
     <>
-      <section className="bg-azul-oscuro text-white">
-        <div className="wrap py-12 md:py-16">
-          <p className="text-sm font-bold uppercase tracking-wider text-verde">Guía del estudiante</p>
+      <section className="bg-hero relative overflow-hidden text-white">
+        <div className="bg-dots-light mask-fade-b absolute inset-0" />
+        <Rings className="animate-spin-slow absolute -right-40 -top-40 w-[34rem] text-verde" />
+        <Constellation className="animate-float-slow absolute bottom-8 right-[8%] hidden w-64 text-white md:block" />
+        <div className="wrap stagger relative pb-24 pt-12 md:pt-16">
+          <p className="kicker kicker-light">Guía del estudiante</p>
           <h1 className="display mt-2 max-w-3xl text-4xl md:text-5xl">Tu práctica empieza aquí</h1>
           <p className="mt-4 max-w-2xl text-lg text-white/85">
             Entiende qué es una práctica, revisa si estás listo y sigue la ruta paso a paso hasta formalizarla con la Facultad.
@@ -36,19 +40,20 @@ export default function StudentGuide() {
               ["#listo", "Revisa si estás listo"],
               ["#ruta", "Sigue la ruta en 7 pasos"],
             ].map(([href, label]) => (
-              <a key={href} href={href} className="rounded-xl border border-white/20 bg-white/5 p-4 font-bold hover:bg-white/10">
+              <a key={href} href={href} className="group flex items-center justify-between rounded-[1rem_1rem_1rem_0.25rem] border border-white/15 bg-white/5 p-4 font-black backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/10">
                 {label} →
               </a>
             ))}
           </div>
         </div>
+        <StepDivider className="absolute inset-x-0 bottom-0" />
       </section>
 
       <div className="wrap grid gap-10 lg:grid-cols-[14rem_1fr]">
-        <aside className="hidden pt-10 lg:block">
+        <aside className="hidden pt-12 lg:block">
           <Toc items={TOC} />
         </aside>
-        <div className="min-w-0 max-w-3xl divide-y divide-borde">
+        <div className="min-w-0 max-w-3xl divide-y divide-dashed divide-borde">
           <GuideSection id="que-es" kicker="Lo básico" title="¿Qué es una práctica?">
             <p>
               Una práctica es una actividad que haces <strong>bajo la orientación de un profesor</strong> para ganar destrezas, conocer cómo
@@ -61,8 +66,8 @@ export default function StudentGuide() {
                 ["De investigación y creación", "Dentro de un proyecto de investigación.", "Apoyar un proyecto de un grupo de la Facultad"],
                 ["De extensión", "Llevar el conocimiento de la Universidad a una organización o a la sociedad.", "Una pasantía en una entidad pública o una empresa de tecnología"],
               ].map(([t, d, e]) => (
-                <div key={t} className="card">
-                  <p className="font-bold text-azul-oscuro">{t}</p>
+                <div key={t} className="card card-hover">
+                  <p className="font-black text-azul-oscuro">{t}</p>
                   <p className="mt-1 text-sm">{d}</p>
                   <p className="mt-2 text-xs text-suave">Ejemplo: {e}</p>
                 </div>
@@ -197,7 +202,7 @@ export default function StudentGuide() {
           <GuideSection id="derechos" kicker="Tus garantías" title="Derechos y deberes">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="card border-t-4 border-t-verde">
-                <p className="font-bold text-azul-oscuro">Tienes derecho a</p>
+                <p className="font-black text-azul-oscuro">Tienes derecho a</p>
                 <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm">
                   <li>Que la organización te afilie y pague tu ARL desde el inicio (Decreto 055 de 2015).</li>
                   <li>Actividades acordes con tu formación y con el plan acordado.</li>
@@ -207,7 +212,7 @@ export default function StudentGuide() {
                 </ul>
               </div>
               <div className="card border-t-4 border-t-azul">
-                <p className="font-bold text-azul-oscuro">Te comprometes a</p>
+                <p className="font-black text-azul-oscuro">Te comprometes a</p>
                 <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm">
                   <li>Cumplir el plan, los horarios y las normas de la organización, incluidas las de seguridad y confidencialidad.</li>
                   <li>Entregar informes y bitácora a tiempo.</li>
@@ -240,7 +245,7 @@ export default function StudentGuide() {
                 ["Confirma tu disponibilidad", "Los perfiles confirmados hace poco aparecen primero."],
               ].map(([t, d]) => (
                 <div key={t} className="rounded-lg bg-superficie p-4">
-                  <p className="font-bold text-azul-oscuro">{t}</p>
+                  <p className="font-black text-azul-oscuro">{t}</p>
                   <p className="mt-1 text-sm">{d}</p>
                 </div>
               ))}
@@ -301,7 +306,7 @@ export default function StudentGuide() {
                 ["Pasantía", "Modalidad de trabajo de grado en la que trabajas en una organización con un plan formativo."],
               ].map(([t, d]) => (
                 <div key={t} className="rounded-lg border border-borde p-3">
-                  <dt className="font-bold text-azul-oscuro">{t}</dt>
+                  <dt className="font-black text-azul-oscuro">{t}</dt>
                   <dd className="mt-1 text-sm">{d}</dd>
                 </div>
               ))}
@@ -309,10 +314,10 @@ export default function StudentGuide() {
           </GuideSection>
 
           <section className="py-10">
-            <div className="card bg-azul-oscuro text-white">
+            <div className="card-dark p-8">
               <p className="display text-2xl">¿Listo para empezar?</p>
               <p className="mt-2 text-white/80">Crea tu perfil con tu cuenta @unal.edu.co.</p>
-              <Link href="/ingresar?como=estudiante" className="btn mt-4 bg-verde text-azul-oscuro">
+              <Link href="/ingresar?como=estudiante" className="btn btn-accent mt-4">
                 Crear mi perfil
               </Link>
             </div>
