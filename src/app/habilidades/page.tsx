@@ -34,8 +34,8 @@ export default async function SkillsPage() {
         title="Habilidades de la Facultad"
         description="Las habilidades que los estudiantes de la FCEN pueden declarar en su perfil, agrupadas por área. Las resaltadas son las más declaradas."
       />
-    <div className="wrap -mt-4">
-      <div className="mt-8 grid gap-5 md:grid-cols-2">
+    <div className="wrap">
+      <div className="grid gap-5 md:grid-cols-2">
         {(domains ?? []).map((d, i) => {
           const Icon = DOMAIN_ICON[d.name] ?? Blocks;
           return (

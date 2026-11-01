@@ -9,7 +9,7 @@ export default function DataPolicyPage() {
   return (
     <>
     <PageHeader kicker="Privacidad" icon={ShieldCheck} title="Tratamiento de datos personales" description="Qué datos pedimos, quién los ve y cuáles son tus derechos." />
-    <div className="wrap -mt-4 max-w-3xl">
+    <div className="wrap max-w-3xl">
       <div className="card prose-fcen space-y-6 p-6 md:p-8">
         <section>
           <h2 className="text-xl font-black text-azul-oscuro">Responsable</h2>

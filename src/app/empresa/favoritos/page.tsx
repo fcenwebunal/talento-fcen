@@ -34,7 +34,7 @@ export default async function FavoritesPage() {
   return (
     <>
       <PageHeader kicker={session.company.name} icon={Star} title="Favoritos" description="Perfiles que guardó para revisar después." />
-      <div className="wrap -mt-4">
+      <div className="wrap">
         {details.length === 0 && (
           <EmptyState
             icon={Star}

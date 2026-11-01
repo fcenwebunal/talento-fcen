@@ -30,7 +30,13 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 - Archivos en Storage: bucket privado `documentos` (`<uid>/<tipo>/<archivo>`) y público `logos`.
 - La prueba `test:smoke` no puede simular un ingreso real con Google (la API de administración crea cuentas de correo): el rechazo de cuentas que no son `@unal.edu.co` se verifica con un ingreso real.
 
-## Diseño (2026-11-01)
+## Diseño (2026-11-01, segunda vuelta)
+
+Decisiones del usuario: nada de banners; diseño de sistema y no de infografía (las infografías van dentro de las guías); portada como llamado a la acción; tras ingresar, un espacio de trabajo por rol (`components/app-shell.tsx`, barra lateral y pestañas inferiores en celular, con las acciones principales de estudiante, empresa y administración); encabezado superior con el lenguaje del banner institucional FCEN (`.masthead`, sello «FCEN | Facultad de Ciencias Exactas & Naturales»); decoraciones de la temática de conexión practicante y empresa (`components/ui/connect-art.tsx`: red de conexión, piezas que encajan, hoja de vida hacia organización, patrón `bg-links`), no figuras geométricas genéricas. `PageHeader` es un título compacto, no un banner.
+
+Los manejadores de ruta redirigen con `localRedirect` (`src/lib/redirect.ts`): detrás de App Hosting el origen de la petición es `https://0.0.0.0:8080` y una redirección absoluta mandaba ahí al cerrar sesión.
+
+## Diseño (primera vuelta)
 
 Identidad UNAL (Ancizar Sans, paleta institucional) con un sistema propio en `src/app/globals.css`: esquinas mixtas (redondeadas con una recta), `card`, `card-dark`, `notch`, `icon-tile`, chips con puntos de nivel, fondos decorativos (`bg-hero`, `bg-dots`, `bg-grid`), animaciones (`page-in`, `stagger`, `reveal` con `components/ui/reveal.tsx`, esqueletos y barra de carga en los `loading.tsx`) que respetan `prefers-reduced-motion`. Íconos de `lucide-react` (sin íconos de marcas: la versión instalada no los tiene). Componentes en `src/components/ui/`: `PageHeader`, `HelpTip` (ayudas «?» discretas), `Counter`, `ProgressRing`, `Avatar`, `Stat`, `EmptyState`, decoraciones SVG. Buscador rápido Ctrl+K (`command-palette.tsx`, destinos por rol en `nav-items.ts`).
 

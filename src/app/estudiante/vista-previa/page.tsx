@@ -41,16 +41,16 @@ export default async function PreviewPage({ searchParams }: { searchParams: Prom
         title="Así ven tu perfil las empresas"
         description="Cambia de nivel para ver qué muestra la plataforma en cada caso."
         actions={
-          <Link href="/estudiante" className="btn btn-glass">
+          <Link href="/estudiante" className="btn btn-secondary">
             <ArrowLeft /> Mi panel
           </Link>
         }
       >
-        <div className="mt-6 inline-flex rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] border border-white/15 bg-white/5 p-1">
-          <Link href="/estudiante/vista-previa" className={`flex items-center gap-2 rounded-[0.75rem_0.75rem_0.75rem_0.1875rem] px-4 py-2 text-sm font-black ${!authorized ? "bg-white text-azul" : "text-white/70 hover:text-white"}`}>
+        <div className="mt-5 inline-flex rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] border border-borde bg-white p-1 shadow-sm">
+          <Link href="/estudiante/vista-previa" className={`flex items-center gap-2 rounded-[0.75rem_0.75rem_0.75rem_0.1875rem] px-4 py-2 text-sm font-black ${!authorized ? "bg-azul text-white" : "text-suave hover:text-azul"}`}>
             <EyeOff className="h-4 w-4" /> Empresa registrada
           </Link>
-          <Link href="/estudiante/vista-previa?nivel=autorizada" className={`flex items-center gap-2 rounded-[0.75rem_0.75rem_0.75rem_0.1875rem] px-4 py-2 text-sm font-black ${authorized ? "bg-white text-azul" : "text-white/70 hover:text-white"}`}>
+          <Link href="/estudiante/vista-previa?nivel=autorizada" className={`flex items-center gap-2 rounded-[0.75rem_0.75rem_0.75rem_0.1875rem] px-4 py-2 text-sm font-black ${authorized ? "bg-azul text-white" : "text-suave hover:text-azul"}`}>
             <Lock className="h-4 w-4" /> Empresa autorizada
           </Link>
         </div>

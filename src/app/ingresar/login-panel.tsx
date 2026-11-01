@@ -9,7 +9,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { UNAL_DOMAIN } from "@/lib/config";
 import { HelpTip } from "@/components/ui/help-tip";
-import { Constellation, Rings } from "@/components/ui/decor";
+import { ConnectionNetwork } from "@/components/ui/connect-art";
 
 type Tab = "estudiante" | "empresa";
 
@@ -31,29 +31,28 @@ export function LoginPanel({ initial }: { initial: Tab }) {
 
   return (
     <div className="page-in mx-auto grid max-w-5xl overflow-hidden rounded-[1.75rem_0.375rem_1.75rem_1.75rem] border border-borde bg-white shadow-xl lg:grid-cols-[1fr_1.1fr]">
-      <aside className="bg-hero relative hidden overflow-hidden p-10 text-white lg:block">
-        <div className="bg-dots-light absolute inset-0 opacity-60" />
-        <Rings className="animate-spin-slow absolute -bottom-32 -left-32 w-96 text-verde" />
-        <Constellation className="animate-float-slow absolute right-4 top-6 w-48 text-white" />
+      <aside className="relative hidden flex-col overflow-hidden bg-celeste p-10 lg:flex">
+        <div className="bg-links absolute inset-0" />
         <div className="relative">
-          <p className="kicker kicker-light">{tab === "estudiante" ? "Para estudiantes" : "Para empresas"}</p>
-          <h1 className="display mt-3 text-3xl">
+          <p className="kicker">{tab === "estudiante" ? "Para estudiantes" : "Para empresas"}</p>
+          <h1 className="display mt-3 text-3xl text-azul-oscuro">
             {tab === "estudiante" ? "Tu talento, visible para quien lo busca" : "El talento de la FCEN, a su alcance"}
           </h1>
           <ul key={tab} className="stagger mt-8 space-y-5">
             {BENEFITS[tab].map((b) => (
               <li key={b.title} className="flex gap-3">
-                <span className="icon-tile icon-tile-dark">
+                <span className="icon-tile bg-white">
                   <b.icon />
                 </span>
                 <div>
-                  <p className="font-black">{b.title}</p>
-                  <p className="text-sm text-white/70">{b.text}</p>
+                  <p className="font-black text-azul-oscuro">{b.title}</p>
+                  <p className="text-sm text-suave">{b.text}</p>
                 </div>
               </li>
             ))}
           </ul>
         </div>
+        <ConnectionNetwork className="relative mt-auto w-full pt-6" />
       </aside>
 
       <div className="p-6 sm:p-10">

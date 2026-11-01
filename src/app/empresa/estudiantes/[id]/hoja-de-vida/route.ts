@@ -1,10 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { localRedirect } from "@/lib/redirect";
 import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/session";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
-  if (!session || session.level < 2) return NextResponse.redirect(new URL("/empresa", request.url));
+  if (!session || session.level < 2) return localRedirect("/empresa");
   const { id } = await params;
   const supabase = await createClient();
 

@@ -68,13 +68,13 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         title="Editar mi perfil"
         description="Es lo que la Facultad comparte con las empresas para presentarte. Escribe breve y profesional, y guarda cada sección al terminarla."
         actions={
-          <Link href="/estudiante/vista-previa" className="btn btn-glass">
+          <Link href="/estudiante/vista-previa" className="btn btn-secondary">
             <Eye /> Ver cómo me ven
           </Link>
         }
       />
-      <div className="wrap -mt-4">
-        <ProfileEditor data={data} initialSection={seccion} />
+      <div className="wrap">
+        <ProfileEditor key={seccion ?? "personales"} data={data} initialSection={seccion} />
       </div>
     </>
   );

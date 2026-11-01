@@ -9,7 +9,8 @@ import {
 } from "@/lib/labels";
 import { Avatar } from "./ui/avatar";
 import { HelpTip } from "./ui/help-tip";
-import { Constellation, CornerLines } from "./ui/decor";
+import { CornerLines } from "./ui/decor";
+import { PuzzleMatch } from "./ui/connect-art";
 
 export function LevelDots({ level }: { level: number }) {
   return (
@@ -43,9 +44,9 @@ export function StudentDetailView({
     <article className="page-in grid gap-6 lg:grid-cols-[1fr_21rem]">
       <div className="min-w-0 space-y-5">
         <header className="card overflow-hidden p-0">
-          <div className="bg-hero relative h-28">
-            <div className="bg-dots-light absolute inset-0" />
-            <Constellation className="absolute -right-4 -top-2 w-56 text-verde" />
+          <div className="relative h-24 overflow-hidden bg-celeste">
+            <div className="bg-links absolute inset-0" />
+            <PuzzleMatch className="absolute -bottom-2 right-4 w-32 opacity-90" />
           </div>
           <div className="px-6 pb-6">
             <div className="-mt-10 flex flex-wrap items-end gap-4">

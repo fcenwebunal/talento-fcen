@@ -20,7 +20,7 @@ export default async function CompanyRegisterPage() {
         title="Registre su organización"
         description="Con el registro puede buscar perfiles anónimos. Después podrá solicitar la autorización de la Facultad para ver datos de contacto."
       />
-      <div className="wrap -mt-4 max-w-4xl">
+      <div className="wrap max-w-4xl">
         <CompanyForm defaultEmail={session.email} />
       </div>
     </>

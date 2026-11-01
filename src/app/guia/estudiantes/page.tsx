@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Faq, GuideSection, Pending, Timeline, Toc } from "@/components/guide";
-import { Constellation, Rings, StepDivider } from "@/components/ui/decor";
+import { PageHeader } from "@/components/ui/page-header";
+import { CvToOrg, PuzzleMatch } from "@/components/ui/connect-art";
+import { Building2, GraduationCap } from "lucide-react";
 import { DateCalculator, FlipCards, ProgramPicker, ReadinessChecker } from "./interactive";
 
 export const metadata: Metadata = { title: "Guía del estudiante" };
@@ -24,33 +26,29 @@ const TOC = [
 export default function StudentGuide() {
   return (
     <>
-      <section className="bg-hero relative overflow-hidden text-white">
-        <div className="bg-dots-light mask-fade-b absolute inset-0" />
-        <Rings className="animate-spin-slow absolute -right-40 -top-40 w-[34rem] text-verde" />
-        <Constellation className="animate-float-slow absolute bottom-8 right-[8%] hidden w-64 text-white md:block" />
-        <div className="wrap stagger relative pb-24 pt-12 md:pt-16">
-          <p className="kicker kicker-light">Guía del estudiante</p>
-          <h1 className="display mt-2 max-w-3xl text-4xl md:text-5xl">Tu práctica empieza aquí</h1>
-          <p className="mt-4 max-w-2xl text-lg text-white/85">
-            Entiende qué es una práctica, revisa si estás listo y sigue la ruta paso a paso hasta formalizarla con la Facultad.
-          </p>
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            {[
-              ["#que-es", "Entiende qué es una práctica"],
-              ["#listo", "Revisa si estás listo"],
-              ["#ruta", "Sigue la ruta en 7 pasos"],
-            ].map(([href, label]) => (
-              <a key={href} href={href} className="group flex items-center justify-between rounded-[1rem_1rem_1rem_0.25rem] border border-white/15 bg-white/5 p-4 font-black backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/10">
-                {label} →
-              </a>
-            ))}
-          </div>
+      <PageHeader
+        kicker="Guía del estudiante"
+        icon={GraduationCap}
+        title="Tu práctica empieza aquí"
+        description="Qué es una práctica, si estás listo y la ruta paso a paso hasta formalizarla con la Facultad."
+        art={<CvToOrg className="w-52" />}
+      >
+        <div className="mt-5 flex flex-wrap gap-2">
+          {[
+            ["#que-es", "Qué es una práctica"],
+            ["#listo", "¿Estoy listo?"],
+            ["#ruta", "La ruta en 7 pasos"],
+            ["#preguntas", "Preguntas frecuentes"],
+          ].map(([href, label]) => (
+            <a key={href} href={href} className="chip chip-azul hover:border-azul">
+              {label}
+            </a>
+          ))}
         </div>
-        <StepDivider className="absolute inset-x-0 bottom-0" />
-      </section>
+      </PageHeader>
 
       <div className="wrap grid gap-10 lg:grid-cols-[14rem_1fr]">
-        <aside className="hidden pt-12 lg:block">
+        <aside className="hidden lg:block">
           <Toc items={TOC} />
         </aside>
         <div className="min-w-0 max-w-3xl divide-y divide-dashed divide-borde">

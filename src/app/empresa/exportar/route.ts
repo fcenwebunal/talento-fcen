@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { localRedirect } from "@/lib/redirect";
 import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/session";
 import { filtersFrom } from "@/lib/search";
@@ -15,7 +16,7 @@ function csvCell(value: unknown) {
 
 export async function GET(request: NextRequest) {
   const session = await getSession();
-  if (!session || session.level < 2) return NextResponse.redirect(new URL("/empresa", request.url));
+  if (!session || session.level < 2) return localRedirect("/empresa");
 
   const params = Object.fromEntries(
     [...new Set(request.nextUrl.searchParams.keys())].map((k) => [k, request.nextUrl.searchParams.getAll(k)])

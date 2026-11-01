@@ -44,16 +44,16 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         title="Buscar talento"
         description={
           <span className="flex flex-wrap items-center gap-2">
-            <span className="chip chip-dark">
+            <span className="chip chip-azul">
               <Users /> {total} {total === 1 ? "perfil" : "perfiles"}
             </span>
             {session.level < 2 ? (
-              <span className="chip chip-dark">
+              <span className="chip chip-azul">
                 <EyeOff /> Vista anónima
                 <HelpTip>Solicite la autorización de la Facultad en «Mi empresa» para ver nombres, contacto y hojas de vida.</HelpTip>
               </span>
             ) : (
-              <span className="chip chip-dark">
+              <span className="chip chip-azul">
                 <Lock /> Empresa autorizada
               </span>
             )}
@@ -69,7 +69,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         }
       />
 
-      <div className="wrap -mt-4 grid gap-6 lg:grid-cols-[19rem_1fr]">
+      <div className="wrap grid gap-6 lg:grid-cols-[19rem_1fr]">
         <SearchFilters action="/empresa/buscar" initial={filters} programs={programs.data ?? []} skills={skills.data ?? []} areas={areas.data ?? []} />
         <div className="min-w-0">
           {error && <p className="card text-naranja">No se pudo buscar. {error.message}</p>}
