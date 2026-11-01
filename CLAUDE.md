@@ -31,4 +31,4 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 
 ## Estado (2026-10-31)
 
-Beta construida y probada en local (22 verificaciones de visibilidad en verde). Google activo en Supabase. Pendiente: crear el backend de App Hosting (lo hace el usuario porque autoriza la app de Firebase en GitHub) y dar el rol de administrador a `judiazgom@unal.edu.co` (cuenta del usuario) después de su primer ingreso con Google.
+Beta **en línea** en https://talento-fcen--talentofcen.us-east4.hosted.app (Firebase App Hosting, backend `talento-fcen`, `us-east4`; cada push a `main` despliega). Google activo en Supabase. 22 verificaciones de visibilidad en verde. La conexión de App Hosting con GitHub está autorizada por la cuenta `fcenwebunal` (dueña del repositorio); si se rehace, tiene que ser con esa cuenta. Pendiente: dar el rol de administrador a `judiazgom@unal.edu.co` después de su primer ingreso y verificar con un ingreso real que se rechazan cuentas de Google que no son `@unal.edu.co`.
