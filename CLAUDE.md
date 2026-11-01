@@ -6,7 +6,7 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 
 - **Repositorio**: `github.com/fcenwebunal/talento-fcen` (rama `main`). Repositorio propio dentro de FCEN DEV, que lo ignora. Commit y push al terminar cada cambio.
 - **Supabase**: proyecto `talento-fcen`, ref `iwpnsyuvqvmdlsbkbzly`, región `us-east-1`, Postgres 17. URL `https://iwpnsyuvqvmdlsbkbzly.supabase.co`. La publishable key es pública y va en el código y en `apphosting.yaml`.
-- **Firebase**: proyecto `talentofcen` (número 857627517671), plan Blaze, creado por el usuario con `fcenwebunal2@gmail.com`; la CLI de Claude entra como `juanmanueldiazgomez247@gmail.com` (propietario). El backend de App Hosting previsto es `talento-fcen` en `us-east4`, con URL `https://talento-fcen--talentofcen.us-east4.hosted.app` (ya registrada en Supabase como sitio y retorno). Si el backend queda con otro ID o región, actualizar `SITE` en `scripts/configure-auth.mjs` y correr `npm run auth:configure`.
+- **Firebase**: proyecto `talentofcen` (número 857627517671), plan Blaze, creado por el usuario con `fcenwebunaldos@gmail.com`; la CLI de Claude entra como `juanmanueldiazgomez247@gmail.com` (propietario). El backend de App Hosting previsto es `talento-fcen` en `us-east4`, con URL `https://talento-fcen--talentofcen.us-east4.hosted.app` (ya registrada en Supabase como sitio y retorno). Si el backend queda con otro ID o región, actualizar `SITE` en `scripts/configure-auth.mjs` y correr `npm run auth:configure`.
 - **Inicio de sesión con Google**: cliente OAuth creado por Firebase Authentication en `talentofcen` (ID `857627517671-0qtve299itfvsnmomkas00hqvjvo8833.apps.googleusercontent.com`), con el retorno de Supabase autorizado. Su secreto va en `.env.local` y lo activa `npm run auth:configure`.
 - **Secretos**: `.env.local` (`SUPABASE_SECRET_KEY`, `SUPABASE_DB_PASSWORD`, `SUPABASE_ACCESS_TOKEN`, `GOOGLE_CLIENT_SECRET`). Lo mantiene el usuario; **Claude no lo lee ni lo edita** (regla de permisos de FCEN DEV) y nunca imprime sus valores: los comandos lo cargan con `node --env-file=.env.local` o `set -a && . ./.env.local && set +a`. La app desplegada no usa la secret key.
 
@@ -31,4 +31,4 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 
 ## Estado (2026-10-31)
 
-Beta construida y probada en local (22 verificaciones de visibilidad en verde). Pendiente: `GOOGLE_CLIENT_SECRET` en `.env.local`, crear el backend de App Hosting (lo hace el usuario porque autoriza la app de Firebase en GitHub) y dar el rol de administrador a la cuenta `@unal.edu.co` del usuario.
+Beta construida y probada en local (22 verificaciones de visibilidad en verde). Google activo en Supabase. Pendiente: crear el backend de App Hosting (lo hace el usuario porque autoriza la app de Firebase en GitHub) y dar el rol de administrador a `judiazgom@unal.edu.co` (cuenta del usuario) después de su primer ingreso con Google.
