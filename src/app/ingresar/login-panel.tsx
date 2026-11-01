@@ -7,7 +7,7 @@ import {
   Search, ShieldCheck, Sparkles, UserPlus,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { UNAL_DOMAIN } from "@/lib/config";
+import { signInWithGoogle } from "./google";
 import { HelpTip } from "@/components/ui/help-tip";
 import { ConnectionNetwork } from "@/components/ui/connect-art";
 
@@ -84,18 +84,16 @@ export function LoginPanel({ initial }: { initial: Tab }) {
 }
 
 function StudentLogin() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   async function signIn() {
     setLoading(true);
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        queryParams: { hd: UNAL_DOMAIN, prompt: "select_account" },
-      },
-    });
+    const result = await signInWithGoogle("estudiante");
+    if (result === "done") {
+      router.replace("/panel");
+      router.refresh();
+    } else if (result === "cancelled") setLoading(false);
   }
 
   return (
@@ -131,6 +129,7 @@ function CompanyLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -155,8 +154,24 @@ function CompanyLogin() {
     router.refresh();
   }
 
+  async function google() {
+    setGoogleLoading(true);
+    const result = await signInWithGoogle("empresa");
+    if (result === "done") {
+      router.replace("/panel");
+      router.refresh();
+    } else if (result === "cancelled") setGoogleLoading(false);
+  }
+
   return (
     <form onSubmit={submit} className="space-y-4">
+      <button type="button" onClick={google} disabled={googleLoading} className="btn btn-secondary w-full justify-center py-3">
+        {googleLoading ? <Loader2 className="animate-spin" /> : <GoogleIcon />}
+        {googleLoading ? "Abriendo Google…" : "Continuar con Google"}
+      </button>
+      <div className="flex items-center gap-3 text-xs text-suave">
+        <span className="h-px flex-1 bg-borde" /> o con correo y contraseña <span className="h-px flex-1 bg-borde" />
+      </div>
       <p className="text-suave">
         {mode === "login"
           ? "Ingrese con el correo y la contraseña de su organización."

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
-  Building2, Eye, History, KeyRound, LayoutDashboard, ListChecks, Route, Search, Star, UserRoundPen, Users, type LucideIcon,
+  Building2, CircleUserRound, Eye, History, KeyRound, LayoutDashboard, ListChecks, Route, Search, Star, UserRoundPen, Users, type LucideIcon,
 } from "lucide-react";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -18,6 +18,7 @@ const ICONS: Record<string, LucideIcon> = {
   list: ListChecks,
   history: History,
   key: KeyRound,
+  account: CircleUserRound,
 };
 
 export type SideItem = {
@@ -89,7 +90,7 @@ export function MobileTabs({ items, badges }: { items: SideItem[]; badges: Recor
   const isActive = useActive();
   const tabs = items.slice(0, 5);
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 grid border-t border-borde bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }} aria-label="Mi espacio">
+    <nav className="mobile-tabs fixed inset-x-0 bottom-0 z-30 grid border-t border-borde bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }} aria-label="Mi espacio">
       {tabs.map((item) => {
         const Icon = ICONS[item.icon] ?? LayoutDashboard;
         const active = isActive(item);

@@ -30,6 +30,16 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 - Archivos en Storage: bucket privado `documentos` (`<uid>/<tipo>/<archivo>`) y público `logos`.
 - La prueba `test:smoke` no puede simular un ingreso real con Google (la API de administración crea cuentas de correo): el rechazo de cuentas que no son `@unal.edu.co` se verifica con un ingreso real.
 
+## Incrustado en fcen.unal.edu.co (2026-11-01)
+
+- Página prevista: Facultad > Prácticas (oculta en el menú), carpeta local `../../../sitio/facultad/practicas/`; el elemento HTML es un iframe a todo el ancho de `/?embed=1`.
+- `?embed=1` deja la cookie `tf_embed` (particionada): el layout quita el pie de página y la barra superior deja de ser fija; `EmbedBridge` envía `talento:height` y `talento:navigate` a `https://fcen.unal.edu.co`. Solo ese origen puede embeber la app (`frame-ancestors` en `next.config.ts`).
+- Cookies de sesión en producción con `SameSite=None; Secure; Partitioned` (`COOKIE_OPTIONS` en `src/lib/config.ts`) para que funcionen dentro del iframe.
+- Google no carga dentro de un iframe: dentro de la FCEN el ingreso abre una ventana emergente (`/auth/popup`), el retorno (`/auth/callback?handoff=`) genera un enlace mágico con la secret key y lo deja en `login_handoffs`, y el iframe lo recoge por `/api/handoff` y llama `verifyOtp`. **Requiere el secreto `SUPABASE_SECRET_KEY` en App Hosting** (y su línea en `apphosting.yaml`); sin él ese ingreso muestra un aviso y lo demás funciona.
+- Cuentas de Google: `@unal.edu.co` y la lista `google_students` de `app_settings` entran como estudiantes; cualquier otra cuenta de Google entra como empresa.
+- `/cuenta`: foto (bucket público `avatars`), nombre, cargo y descripción para cualquier rol; las empresas además editan su organización y logo.
+- Datos demo: correos con la etiqueta `+demo` (formato institucional, nunca coincide con una cuenta real de Google), rostros generados por IA en `scripts/demo-assets/rostros/`, empresas ficticias registradas en `app_settings.demo_company_ids`.
+
 ## Diseño (2026-11-01, segunda vuelta)
 
 Decisiones del usuario: nada de banners; diseño de sistema y no de infografía (las infografías van dentro de las guías); portada como llamado a la acción; tras ingresar, un espacio de trabajo por rol (`components/app-shell.tsx`, barra lateral y pestañas inferiores en celular, con las acciones principales de estudiante, empresa y administración); encabezado superior con el lenguaje del banner institucional FCEN (`.masthead`, sello «FCEN | Facultad de Ciencias Exactas & Naturales»); decoraciones de la temática de conexión practicante y empresa (`components/ui/connect-art.tsx`: red de conexión, piezas que encajan, hoja de vida hacia organización, patrón `bg-links`), no figuras geométricas genéricas. `PageHeader` es un título compacto, no un banner.

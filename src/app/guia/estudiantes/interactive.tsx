@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Hourglass } from "lucide-react";
 
 const CHECKS = [
   { id: "matricula", label: "Estoy matriculado en la Universidad (debo estarlo al formalizar y durante toda la práctica).", key: true },
@@ -156,7 +157,9 @@ export function ProgramPicker() {
         </dl>
       ) : (
         <p className="mt-4">
-          <span className="pending">⏳ Por confirmar: programa nuevo, sus datos aún no están en las mallas publicadas</span>
+          <span className="pending">
+            <Hourglass className="mr-1 inline h-3 w-3 align-[-0.125rem]" aria-hidden="true" />
+            Por confirmar: programa nuevo, sus datos aún no están en las mallas publicadas</span>
         </p>
       )}
       {p.contact && (

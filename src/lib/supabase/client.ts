@@ -1,6 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
-import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/config";
+import { COOKIE_OPTIONS, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/config";
 
 export function createClient() {
-  return createBrowserClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  return createBrowserClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { cookieOptions: COOKIE_OPTIONS });
 }

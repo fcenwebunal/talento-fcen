@@ -13,7 +13,7 @@ const LINKS = [
 
 export function SiteFooter() {
   const pathname = usePathname();
-  if (/^\/(estudiante|empresa|admin)/.test(pathname)) return null;
+  if (/^\/(estudiante|empresa|admin|cuenta)/.test(pathname)) return null;
 
   return (
     <footer className="border-t border-borde bg-white">

@@ -8,6 +8,7 @@ export type Session = {
   userId: string;
   email: string;
   fullName: string | null;
+  avatarUrl: string | null;
   role: Role;
   level: 0 | 1 | 2;
   company: { id: string; name: string; status: CompanyStatus; authorized_until: string | null } | null;
@@ -20,7 +21,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: profile } = await supabase.from("profiles").select("email, full_name, role").eq("id", user.id).single();
+  const { data: profile } = await supabase.from("profiles").select("email, full_name, role, avatar_path").eq("id", user.id).single();
   if (!profile) return null;
 
   let company: Session["company"] = null;
@@ -39,6 +40,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
     userId: user.id,
     email: profile.email,
     fullName: profile.full_name,
+    avatarUrl: profile.avatar_path ? supabase.storage.from("avatars").getPublicUrl(profile.avatar_path).data.publicUrl : null,
     role: profile.role as Role,
     level: (level ?? 0) as 0 | 1 | 2,
     company,

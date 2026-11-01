@@ -3,9 +3,10 @@
 //      node --env-file=.env.local scripts/demo-seed.mjs --clean  (only removes demo data)
 //      node --env-file=.env.local scripts/demo-seed.mjs --passwords  (sets DEMO_PASSWORD on every demo account)
 // Demo accounts use DEMO_PASSWORD from .env.local when present; otherwise a random password (they cannot log in).
-// Everything demo is marked: student emails demo.*@unal.edu.co, company emails demo.*@example.com, company NIT DEMO-*.
+// Everything demo is marked: emails carry the +demo tag (it never matches a real Google account) and company ids are
+// listed in app_settings.demo_company_ids. Faces in demo-assets/rostros are AI-generated (no real people).
 import { randomBytes } from "node:crypto";
-import sharp from "sharp";
+import { readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 
 const admin = createClient("https://iwpnsyuvqvmdlsbkbzly.supabase.co", process.env.SUPABASE_SECRET_KEY, {
@@ -78,11 +79,11 @@ const STUDENTS = [
   ["Valentina Ríos Arango", "estadistica", "disponible", 6, 88],
   ["Santiago Herrera Gil", "ciencias-computacion", "disponible", 12, 82],
   ["Mariana Ocampo López", "ingenieria-fisica", "disponible", 3, 90],
-  ["Juan Esteban Cardona", "matematicas", "disponible", 40, 79],
-  ["Laura Sofía Giraldo", "ingenieria-biologica", "disponible", 20, 74],
-  ["Andrés Felipe Salazar", "ciencias-computacion", "en_proceso", 15, 85],
+  ["Juan Esteban Cardona Ruiz", "matematicas", "disponible", 40, 79],
+  ["Laura Sofía Giraldo Mejía", "ingenieria-biologica", "disponible", 20, 74],
+  ["Andrés Felipe Salazar Ortiz", "ciencias-computacion", "en_proceso", 15, 85],
   ["Daniela Marín Restrepo", "estadistica", "disponible", 82, 81],
-  ["Camilo Andrés Duque", "ingenieria-fisica", "en_practica", 60, 93],
+  ["Camilo Andrés Duque Arias", "ingenieria-fisica", "en_practica", 60, 93],
   ["Isabella Castaño Mejía", "matematicas", "disponible", 9, 76],
   ["Mateo Zuluaga Henao", "ciencias-computacion", "disponible", 25, 71],
   ["Sara Valencia Montoya", "ingenieria-biologica", "en_proceso", 30, 80],
@@ -95,20 +96,43 @@ const STUDENTS = [
   ["Alejandro Rendón Toro", "maestria-matematica-aplicada", "disponible", 33, 50],
   ["Juliana Agudelo Correa", "maestria-fisica", "en_proceso", 45, 45],
   ["David Soto Hincapié", "esp-nanotecnologia", "disponible", 14, 65],
-  ["Paula Andrea Montes", "estadistica", "disponible", 70, 100, "egresado"],
+  ["Paula Andrea Montes Cano", "estadistica", "disponible", 70, 100, "egresado"],
   ["Nicolás Bedoya Arenas", "ciencias-computacion", "disponible", 5, 100, "egresado"],
 ];
 
+const FACES = {
+  "Valentina Ríos Arango": 3, "Santiago Herrera Gil": 19, "Mariana Ocampo López": 9, "Juan Esteban Cardona Ruiz": 8,
+  "Laura Sofía Giraldo Mejía": 15, "Andrés Felipe Salazar Ortiz": 20, "Daniela Marín Restrepo": 30, "Camilo Andrés Duque Arias": 26,
+  "Isabella Castaño Mejía": 11, "Mateo Zuluaga Henao": 22, "Sara Valencia Montoya": 21, "Tomás Escobar Ramírez": 4,
+  "Natalia Franco Osorio": 28, "Manuela Gómez Patiño": 5, "Felipe Londoño Vargas": 10, "Carolina Betancur Ruiz": 17,
+  "Alejandro Rendón Toro": 14, "Juliana Agudelo Correa": 24, "Paula Andrea Montes Cano": 2,
+};
+
+const ABOUT_EXTRA = [
+  "En el semillero aprendí a documentar bien lo que hago y a presentar resultados con claridad.",
+  "Me motiva trabajar con datos reales y ver el impacto de un análisis en una decisión concreta.",
+  "He liderado trabajos en equipo de la carrera y me adapto rápido a herramientas nuevas.",
+  "Busco un entorno donde pueda aprender de personas con experiencia y aportar desde el primer mes.",
+  "Disfruto explicar temas técnicos a personas de otras áreas.",
+];
+
+// UNAL style: two letters of the first name, first surname, three letters of the second surname, plus the +demo tag.
+function unalEmail(name) {
+  const w = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/\s+/);
+  const [s1, s2] = w.length >= 4 ? [w[w.length - 2], w[w.length - 1]] : [w[1], w[2]];
+  return `${w[0].slice(0, 2)}${s1}${s2.slice(0, 3)}+demo@unal.edu.co`;
+}
+
 const COMPANIES = [
-  ["Analítica del Eje SAS", "Analítica de datos y consultoría", "pequena", "Manizales", "autorizada", "#13477c"],
-  ["Cafeteros Digitales SAS", "Agroindustria y tecnología", "mediana", "Manizales", "autorizada", "#3f6a00"],
-  ["Bioinsumos Andinos SAS", "Biotecnología agrícola", "mediana", "Chinchiná", "autorizada", "#0c6896"],
-  ["Metrología Industrial de Caldas SAS", "Calibración e instrumentación", "pequena", "Manizales", "en_revision", "#8a5d00"],
-  ["Seguros del Cafetal SA", "Seguros y actuaría", "grande", "Pereira", "en_revision", "#0b2e59"],
-  ["Código Montaña SAS", "Desarrollo de software", "micro", "Manizales", "registrada", "#4b2a7b"],
-  ["Laboratorio Ambiental Ruiz SAS", "Análisis ambiental", "pequena", "Villamaría", "registrada", "#3fa3c9"],
-  ["Datos Express SAS", "Mercadeo digital", "micro", "Bogotá", "rechazada", "#c1390a"],
-  ["Inversiones Nevado SAS", "Finanzas", "pequena", "Manizales", "suspendida", "#5f6b7a"],
+  { name: "Analítica Cafetera S.A.S.", sector: "Consultoría en analítica de datos", size: "pequena", city: "Manizales", status: "autorizada", color: "#13477c", emblem: "chart", domain: "analiticacafetera.co", contact: "Lina María Arcila", position: "Líder de talento humano", nit: "901457823-4" },
+  { name: "Torre Norte Software S.A.S.", sector: "Desarrollo de software", size: "mediana", city: "Manizales", status: "autorizada", color: "#0b2e59", emblem: "code", domain: "torrenortesoftware.co", contact: "Julián Andrés Osorio", position: "Director de ingeniería", nit: "900874521-7" },
+  { name: "BioAndes Laboratorios S.A.S.", sector: "Biotecnología agrícola", size: "mediana", city: "Chinchiná", status: "autorizada", color: "#3f6a00", emblem: "leaf", domain: "bioandeslab.co", contact: "Marcela Hoyos Valencia", position: "Coordinadora de I+D", nit: "901236598-1" },
+  { name: "Metrocal Caldas S.A.S.", sector: "Calibración y metrología industrial", size: "pequena", city: "Manizales", status: "en_revision", color: "#8a5d00", emblem: "gauge", domain: "metrocalcaldas.co", contact: "Héctor Fabio Ramírez", position: "Gerente técnico", nit: "900563214-9" },
+  { name: "Seguros La Cumbre S.A.", sector: "Seguros y actuaría", size: "grande", city: "Pereira", status: "en_revision", color: "#0c6896", emblem: "shield", domain: "seguroslacumbre.co", contact: "Catalina Mejía Duque", position: "Jefa de actuaría", nit: "860512347-3" },
+  { name: "Nevado Energía Solar S.A.S.", sector: "Energía solar", size: "pequena", city: "Villamaría", status: "registrada", color: "#c1390a", emblem: "sun", domain: "nevadoenergia.co", contact: "Óscar Iván Cardona", position: "Gerente general", nit: "901785412-6" },
+  { name: "Hidrolab Ambiental S.A.S.", sector: "Laboratorio de análisis ambiental", size: "pequena", city: "Manizales", status: "registrada", color: "#3fa3c9", emblem: "drop", domain: "hidrolabambiental.co", contact: "Paola Andrea Gallego", position: "Directora de laboratorio", nit: "900987456-2" },
+  { name: "Impulso Digital Mercadeo S.A.S.", sector: "Mercadeo digital", size: "micro", city: "Bogotá", status: "rechazada", color: "#4b2a7b", emblem: "megaphone", domain: "impulsodigital.co", contact: "Andrés Mauricio Pinto", position: "Gerente", nit: "901112233-0" },
+  { name: "Inversiones Altos del Cable S.A.S.", sector: "Finanzas e inversiones", size: "pequena", city: "Manizales", status: "suspendida", color: "#5f6b7a", emblem: "trend", domain: "altosdelcable.co", contact: "Ricardo León Salazar", position: "Representante legal", nit: "900445566-8" },
 ];
 
 // ---------- generators ----------
@@ -164,29 +188,29 @@ function makePdf(title, lines) {
   return Buffer.from(out, "latin1");
 }
 
-async function makeAvatar(i) {
-  const [a, b] = COLORS[i % COLORS.length];
-  const skin = ["#f1c9a5", "#e0ac83", "#c68b62", "#a8714b", "#8d5a3b"][i % 5];
-  const hair = ["#2b1d14", "#4a3020", "#1c1c1c", "#6b4226", "#3a2a1f"][(i * 3) % 5];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
-    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>
-    <rect width="400" height="400" fill="url(#g)"/>
-    <circle cx="330" cy="70" r="90" fill="#fff" opacity="0.08"/><circle cx="60" cy="360" r="70" fill="#7ab317" opacity="0.18"/>
-    <path d="M70 400c10-80 60-120 130-120s120 40 130 120z" fill="#fff" opacity="0.92"/>
-    <path d="M110 400c8-60 45-92 90-92s82 32 90 92z" fill="${a}" opacity="0.25"/>
-    <circle cx="200" cy="175" r="72" fill="${skin}"/>
-    <path d="M128 170c0-52 32-82 72-82s72 30 72 82c-16-26-40-38-72-38s-56 12-72 38z" fill="${hair}"/>
-  </svg>`;
-  return sharp(Buffer.from(svg)).png().toBuffer();
+function facePhoto(name) {
+  const n = FACES[name];
+  return n ? readFileSync(new URL(`./demo-assets/rostros/rostro-${String(n).padStart(2, "0")}.webp`, import.meta.url)) : null;
 }
 
-function makeLogo(name, color) {
-  const initials = name.split(" ").filter((w) => w.length > 2).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-  return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-    <rect width="200" height="200" rx="44" fill="${color}"/>
-    <path d="M0 150 L200 90 L200 200 L0 200z" fill="#fff" opacity="0.12"/>
-    <circle cx="160" cy="40" r="22" fill="#7ab317" opacity="0.9"/>
-    <text x="100" y="122" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" text-anchor="middle" fill="#fff">${initials}</text>
+
+const EMBLEMS = {
+  chart: '<rect x="62" y="104" width="18" height="34" rx="3"/><rect x="91" y="84" width="18" height="54" rx="3"/><rect x="120" y="62" width="18" height="76" rx="3"/>',
+  code: '<path d="M84 72 58 100l26 28M116 72l26 28-26 28" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>',
+  leaf: '<path d="M60 136c0-50 30-76 82-78-2 52-28 80-78 80l-4-2z"/><path d="M68 132 118 82" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>',
+  gauge: '<path d="M54 124a46 46 0 0 1 92 0" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round"/><path d="M100 124 124 92" stroke="#fff" stroke-width="9" stroke-linecap="round"/><circle cx="100" cy="124" r="9"/>',
+  shield: '<path d="M100 56 142 72v30c0 26-18 42-42 50-24-8-42-24-42-50V72z"/><path d="m82 102 12 12 24-26" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>',
+  sun: '<circle cx="100" cy="100" r="22"/><g stroke="#fff" stroke-width="8" stroke-linecap="round"><path d="M100 56v12M100 132v12M56 100h12M132 100h12M69 69l8 8M123 123l8 8M131 69l-8 8M77 123l-8 8"/></g>',
+  drop: '<path d="M100 54c20 28 34 46 34 64a34 34 0 0 1-68 0c0-18 14-36 34-64z"/>',
+  megaphone: '<path d="M58 92h22l50-26v68l-50-26H58z"/><path d="M76 118l8 22" stroke="#fff" stroke-width="9" stroke-linecap="round"/>',
+  trend: '<path d="M56 130l30-30 20 18 38-44" fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M124 74h20v20" fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>',
+};
+
+function makeLogo(company) {
+  return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" color="${company.color}">
+    <rect width="200" height="200" rx="46" fill="${company.color}"/>
+    <path d="M0 150 L200 96 L200 200 L0 200z" fill="#fff" opacity="0.1"/>
+    <g fill="#fff">${EMBLEMS[company.emblem]}</g>
   </svg>`);
 }
 
@@ -202,22 +226,33 @@ async function listAllUsers() {
   return users;
 }
 
+const isDemoEmail = (email = "") => /\+demo@|^demo\./.test(email);
+
+async function demoCompanyIds() {
+  const { data: setting } = await admin.from("app_settings").select("value").eq("key", "demo_company_ids").maybeSingle();
+  const { data: legacy } = await admin.from("companies").select("id").like("nit", "DEMO-%");
+  return [...new Set([...(setting?.value ?? []), ...(legacy ?? []).map((c) => c.id)])];
+}
+
 async function clean() {
-  const { data: companies } = await admin.from("companies").select("id").like("nit", "DEMO-%");
+  const companies = (await demoCompanyIds()).map((id) => ({ id }));
   for (const c of companies ?? []) {
     const { data: files } = await admin.storage.from("logos").list(c.id);
     if (files?.length) await admin.storage.from("logos").remove(files.map((f) => `${c.id}/${f.name}`));
   }
   if (companies?.length) await admin.from("companies").delete().in("id", companies.map((c) => c.id));
-  const users = (await listAllUsers()).filter((u) => /^demo\./.test(u.email ?? ""));
+  const users = (await listAllUsers()).filter((u) => isDemoEmail(u.email));
   for (const u of users) {
+    const { data: avatars } = await admin.storage.from("avatars").list(u.id);
+    if (avatars?.length) await admin.storage.from("avatars").remove(avatars.map((f) => `${u.id}/${f.name}`));
     for (const kind of ["foto", "hoja_vida", "historia_academica", "certificado"]) {
       const { data: files } = await admin.storage.from("documentos").list(`${u.id}/${kind}`);
       if (files?.length) await admin.storage.from("documentos").remove(files.map((f) => `${u.id}/${kind}/${f.name}`));
     }
     await admin.auth.admin.deleteUser(u.id);
   }
-  return { companies: companies?.length ?? 0, users: users.length };
+  await admin.from("app_settings").delete().eq("key", "demo_company_ids");
+  return { companies: companies.length, users: users.length };
 }
 
 // ---------- seed ----------
@@ -242,12 +277,20 @@ async function seedStudents() {
 
   for (const [i, [name, prog, availability, confirmedDaysAgo, progress, status = "activo"]] of STUDENTS.entries()) {
     const content = PROGRAM_CONTENT[prog];
-    const email = `demo.${slug(name)}@unal.edu.co`;
+    const email = unalEmail(name);
     const id = await createAccount(email, name);
     ids.push({ id, name, prog, availability });
     await admin.from("profiles").update({ role: "student", full_name: name }).eq("id", id);
+    await admin.from("students").upsert({ id });
+    await admin.from("student_private").upsert({ student_id: id });
+    const face = facePhoto(name);
+    if (face) {
+      const avatarPath = `${id}/avatar.webp`;
+      await admin.storage.from("avatars").upload(avatarPath, face, { contentType: "image/webp", upsert: true });
+      await admin.from("profiles").update({ avatar_path: avatarPath }).eq("id", id);
+    }
 
-    const first = name.split(" ")[0].toLowerCase();
+    const first = email.split("+")[0];
     const consentContact = !["no_disponible"].includes(availability) && i % 5 !== 4;
     const period = pick(["2027-1", "2027-1", "2027-2", "2026-2"]);
     const city = pick(CITIES);
@@ -262,7 +305,7 @@ async function seedStudents() {
       emphasis: i % 2 ? pick(content.areas) : null,
       honors: i % 4 === 0 ? "Monitora académica durante dos semestres. Beca de excelencia académica." : i % 4 === 1 ? "Ponente en el Encuentro Nacional de Semilleros de Investigación." : null,
       headline: pick(content.headlines),
-      about: content.about,
+      about: `${content.about} ${ABOUT_EXTRA[i % ABOUT_EXTRA.length]}`,
       motivation: "Quiero aplicar lo aprendido en la carrera a problemas reales, aprender cómo trabaja un equipo profesional y salir con experiencia que me ayude a definir mi camino.",
       city,
       modalities: sample(["presencial", "remota", "hibrida"], 1 + Math.floor(rand() * 3)),
@@ -277,9 +320,9 @@ async function seedStudents() {
       practice_end_date: availability === "en_practica" ? dateIn(90) : null,
       availability,
       last_confirmed_at: daysAgo(confirmedDaysAgo),
-      linkedin_url: `https://www.linkedin.com/in/${first}-demo-${i}`,
-      github_url: ["ciencias-computacion", "estadistica"].includes(prog) ? `https://github.com/${first}-demo-${i}` : null,
-      portfolio_url: i % 4 === 2 ? `https://${first}-demo.github.io` : null,
+      linkedin_url: `https://www.linkedin.com/in/${slug(name).replace(/\./g, "-")}`,
+      github_url: ["ciencias-computacion", "estadistica"].includes(prog) ? `https://github.com/${first}` : null,
+      portfolio_url: i % 4 === 2 ? `https://${first}.github.io` : null,
       consent_anonymous: availability !== "no_disponible",
       consent_contact: consentContact,
       consent_version: "2026-10-31",
@@ -289,12 +332,12 @@ async function seedStudents() {
     await admin.from("student_private").upsert({
       student_id: id,
       doc_type: "Cédula de ciudadanía",
-      doc_number: `DEMO-${1000 + i}`,
+      doc_number: String(1053800000 + i * 7919),
       birth_date: `${2000 + (i % 5)}-0${1 + (i % 9)}-1${i % 9}`,
-      phone: `300 000 ${String(1000 + i).padStart(4, "0")}`,
-      personal_email: `demo.${first}${i}@example.com`,
-      eps: pick(["EPS de demostración A", "EPS de demostración B"]),
-      emergency_name: "Contacto de demostración",
+      phone: `3${pick(["00", "01", "10", "13", "14", "20", "22"])} ${String(400 + i * 37).padStart(3, "0")} ${String(1000 + i * 263).slice(-4)}`,
+      personal_email: `${first}+demo@gmail.com`,
+      eps: pick(["Salud Total", "Sura", "Nueva EPS", "Sanitas", "Coosalud"]),
+      emergency_name: pick(["Gloria Inés", "Luz Marina", "Jorge Alberto", "Carlos Arturo", "Martha Lucía"]) + " " + name.split(" ").slice(-2, -1)[0],
       emergency_relation: pick(["Madre", "Padre", "Hermana", "Tío"]),
       emergency_phone: `310 000 ${String(2000 + i).padStart(4, "0")}`,
     });
@@ -305,7 +348,7 @@ async function seedStudents() {
         student_id: id,
         skill_id: skillId[s],
         level: k < 2 ? 3 : k < 5 ? 2 : 1,
-        evidence_url: k === 0 ? `https://github.com/${first}-demo-${i}/proyecto` : null,
+        evidence_url: k === 0 ? `https://github.com/${first}/portafolio` : null,
       }))
     );
     await admin.from("student_soft_skills").insert(sample(SOFT, 3 + Math.floor(rand() * 3)).map((s) => ({ student_id: id, soft_skill_id: softId[s] })));
@@ -315,7 +358,7 @@ async function seedStudents() {
       ...(i % 4 === 0 ? [{ student_id: id, language: pick(["Francés", "Portugués", "Alemán"]), level: "A2", certificate: "No" }] : []),
     ]);
     await admin.from("relevant_subjects").insert(sample(content.subjects, 2 + Math.floor(rand() * 3)).map(([n, r]) => ({ student_id: id, name: n, reason: r })));
-    await admin.from("projects").insert(sample(content.projects, 1 + Math.floor(rand() * 3)).map(([t, d], k) => ({ student_id: id, title: t, description: d, year: 2025 + (k % 2), url: k === 0 ? `https://github.com/${first}-demo-${i}/proyecto` : null })));
+    await admin.from("projects").insert(sample(content.projects, 1 + Math.floor(rand() * 3)).map(([t, d], k) => ({ student_id: id, title: t, description: d, year: 2025 + (k % 2), url: k === 0 ? `https://github.com/${first}/${slug(t).split(".").slice(0, 3).join("-")}` : null })));
     if (i % 3 !== 2) {
       await admin.from("experiences").insert([
         { student_id: id, organization: pick(["Semillero de investigación de la Facultad", "Monitoría académica, UNAL Manizales", "Voluntariado de enseñanza STEM"]), role: pick(["Integrante", "Monitor", "Voluntario"]), start_date: "2025-02-01", end_date: i % 2 ? null : "2025-12-01", description: "Apoyo en actividades académicas, preparación de material y análisis de resultados." },
@@ -334,7 +377,7 @@ async function seedStudents() {
       ["h", "Proyectos"],
       ...content.projects.slice(0, 2).map(([t, d]) => ["p", `${t}: ${d}`]),
       ["h", "Contacto"],
-      ["p", `${email} · 300 000 ${String(1000 + i).padStart(4, "0")}`],
+      ["p", email],
     ]);
     const history = makePdf(`Historia académica: ${name}`, [
       ["p", `Programa: ${prog.replace(/-/g, " ")}`],
@@ -346,7 +389,7 @@ async function seedStudents() {
     const uploads = [
       ["hoja_vida", `hoja-de-vida-${slug(name)}.pdf`, cv, "application/pdf"],
       ["historia_academica", `historia-academica-${slug(name)}.pdf`, history, "application/pdf"],
-      ...(i % 6 !== 5 ? [["foto", `foto-${slug(name)}.png`, await makeAvatar(i), "image/png"]] : []),
+      ...(facePhoto(name) ? [["foto", `foto-${slug(name)}.webp`, facePhoto(name), "image/webp"]] : []),
     ];
     for (const [kind, file, buffer, type] of uploads) {
       const path = `${id}/${kind}/${Date.now()}-${file}`;
@@ -362,29 +405,29 @@ async function seedStudents() {
 
 async function seedCompanies(students) {
   const created = [];
-  for (const [i, [name, sector, size, city, status, color]] of COMPANIES.entries()) {
-    const email = `demo.${slug(name).replace(/\.sas$|\.sa$/, "")}@example.com`;
-    const contact = pick(["Ana María Pérez", "Carlos Jaramillo", "Lucía Restrepo", "Jorge Iván Mejía", "Diana Cárdenas"]);
-    const userId = await createAccount(email, contact);
+  for (const [i, c] of COMPANIES.entries()) {
+    const { name, sector, size, city, status } = c;
+    const email = `seleccion+demo@${c.domain}`;
+    const userId = await createAccount(email, c.contact);
     const { data: company, error } = await admin
       .from("companies")
       .insert({
-        nit: `DEMO-9000${String(i + 1).padStart(5, "0")}`,
+        nit: c.nit,
         name,
         sector,
         size,
         city,
-        website: `https://${slug(name).replace(/\.sas$|\.sa$/, "").replace(/\./g, "")}.example.com`,
-        description: `${name} es una organización ficticia de demostración del sector ${sector.toLowerCase()} que busca practicantes de la FCEN.`,
+        website: `https://www.${c.domain}`,
+        description: `${name} trabaja en ${sector.toLowerCase()} desde ${city}. Buscamos practicantes de la FCEN para proyectos reales con acompañamiento de un tutor del equipo.`,
         terms_version: "2026-10-31",
         terms_accepted_at: daysAgo(20 - i),
       })
       .select("id")
       .single();
     if (error) throw error;
-    await admin.from("company_members").insert({ user_id: userId, company_id: company.id, member_role: "owner", contact_name: contact, position: pick(["Gerente de talento humano", "Directora de operaciones", "Líder de analítica"]), phone: `606 000 ${String(100 + i).padStart(4, "0")}` });
+    await admin.from("company_members").insert({ user_id: userId, company_id: company.id, member_role: "owner", contact_name: c.contact, position: c.position, phone: `606 ${String(8800000 + i * 12345).slice(0, 3)} ${String(1000 + i * 77).slice(-4)}` });
     const logoPath = `${company.id}/logo.svg`;
-    await admin.storage.from("logos").upload(logoPath, makeLogo(name, color), { contentType: "image/svg+xml", upsert: true });
+    await admin.storage.from("logos").upload(logoPath, makeLogo(c), { contentType: "image/svg+xml", upsert: true });
     await admin.from("companies").update({ logo_path: logoPath }).eq("id", company.id);
 
     if (status !== "registrada") await admin.from("companies").update({ status: "en_revision" }).eq("id", company.id);
@@ -393,15 +436,16 @@ async function seedCompanies(students) {
         .from("companies")
         .update({
           status: status === "suspendida" ? "autorizada" : status,
-          review_note: status === "rechazada" ? "No fue posible verificar la existencia de la organización en el RUES." : null,
+          review_note: status === "rechazada" ? "No fue posible verificar la existencia de la organización en el RUES con el NIT registrado." : null,
           authorized_at: status === "rechazada" ? null : daysAgo(15),
           authorized_until: status === "rechazada" ? null : dateIn(350),
         })
         .eq("id", company.id);
     }
-    if (status === "suspendida") await admin.from("companies").update({ status: "suspendida", review_note: "Uso indebido de los datos exportados (caso de demostración)." }).eq("id", company.id);
+    if (status === "suspendida") await admin.from("companies").update({ status: "suspendida", review_note: "Se reportó el uso de los datos exportados para fines distintos a la selección de practicantes." }).eq("id", company.id);
     created.push({ id: company.id, userId, name, status });
   }
+  await admin.from("app_settings").upsert({ key: "demo_company_ids", value: created.map((c) => c.id), description: "Empresas de demostración (se borran con npm run demo:clean)" });
   console.log(`${created.length} empresas`);
 
   const listed = students.filter((s) => ["disponible", "en_proceso"].includes(s.availability));
@@ -429,7 +473,7 @@ if (process.argv.includes("--passwords")) {
     console.error("Falta DEMO_PASSWORD en .env.local");
     process.exit(1);
   }
-  const users = (await listAllUsers()).filter((u) => /^demo\./.test(u.email ?? ""));
+  const users = (await listAllUsers()).filter((u) => isDemoEmail(u.email));
   for (const u of users) await admin.auth.admin.updateUserById(u.id, { password: process.env.DEMO_PASSWORD });
   console.log(`Contraseña de demostración aplicada a ${users.length} cuentas`);
   process.exit(0);

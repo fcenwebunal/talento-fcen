@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 const ERRORS: Record<string, string> = {
   unal: "Para entrar como estudiante usa tu cuenta institucional @unal.edu.co.",
   auth: "No pudimos completar el ingreso. Inténtalo de nuevo.",
+  popup: "Ya ingresaste en esta ventana, pero no se pudo pasar la sesión a la página de la Facultad. Usa Talento FCEN desde esta pestaña.",
 };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ como?: string; error?: string }> }) {

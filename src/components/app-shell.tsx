@@ -22,6 +22,7 @@ export const STUDENT_NAV: SideItem[] = [
     ],
   },
   { href: "/estudiante/vista-previa", label: "Cómo me ven", icon: "eye" },
+  { href: "/cuenta", label: "Mi cuenta", icon: "account" },
   { href: "/guia/estudiantes", label: "Guía de prácticas", icon: "route", external: true },
 ];
 
@@ -29,6 +30,7 @@ export const COMPANY_NAV: SideItem[] = [
   { href: "/empresa", label: "Inicio", icon: "dashboard", exact: true },
   { href: "/empresa/buscar", label: "Buscar talento", icon: "search" },
   { href: "/empresa/favoritos", label: "Favoritos", icon: "star" },
+  { href: "/cuenta", label: "Mi cuenta y empresa", icon: "account" },
   { href: "/guia/empresas", label: "Cómo vincular", icon: "route", external: true },
 ];
 
@@ -39,6 +41,7 @@ export const ADMIN_NAV: SideItem[] = [
   { href: "/admin/catalogo", label: "Habilidades", icon: "list" },
   { href: "/admin/registros", label: "Registros", icon: "history" },
   { href: "/admin/usuarios", label: "Roles", icon: "key" },
+  { href: "/cuenta", label: "Mi cuenta", icon: "account" },
 ];
 
 export function AppShell({
@@ -58,7 +61,7 @@ export function AppShell({
     <div className="grid min-h-[calc(100vh-4rem)] lg:grid-cols-[16rem_1fr]">
       <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] flex-col border-r border-borde bg-white lg:flex">
         <div className="flex items-center gap-3 border-b border-borde p-4">
-          <Avatar name={title} seed={session.company?.id ?? session.email} size={40} square={session.role === "company"} />
+          <Avatar name={title} seed={session.company?.id ?? session.email} src={session.avatarUrl} size={40} square={session.role === "company"} />
           <div className="min-w-0">
             <p className="truncate text-sm font-black text-azul-oscuro">{title}</p>
             <p className="text-xs text-verde-tinta">{ROLE_LABEL[session.role]}</p>
@@ -70,9 +73,6 @@ export function AppShell({
           </Suspense>
         </div>
         <div className="border-t border-borde p-3">
-          <p className="px-3 pb-2 text-[0.6875rem] text-suave">
-            <kbd className="rounded border border-borde px-1">Ctrl K</kbd> para ir a cualquier sección
-          </p>
           <form action="/auth/salir" method="post">
             <button className="side-link w-full text-suave">
               <LogOut aria-hidden="true" /> Cerrar sesión

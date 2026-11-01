@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -24,7 +25,7 @@ export default async function AdminCompany({ params }: { params: Promise<{ id: s
   return (
     <div className="space-y-6">
       <Link href="/admin/empresas" className="text-sm text-suave hover:text-azul">
-        ← Empresas
+        <ArrowLeft className="mr-1 inline h-4 w-4 align-[-0.2rem]" aria-hidden="true" /> Empresas
       </Link>
       <div>
         <h1 className="display text-3xl text-azul-oscuro">{c.name}</h1>
@@ -107,7 +108,7 @@ export default async function AdminCompany({ params }: { params: Promise<{ id: s
             <ul className="mt-1 space-y-1 text-suave">
               {(history ?? []).map((h, i) => (
                 <li key={i}>
-                  {formatDate(h.created_at)}: {h.from_status ?? "?"} → {h.to_status}
+                  {formatDate(h.created_at)}: {h.from_status ?? "?"} <ArrowRight className="mx-1 inline h-3 w-3 align-[-0.1rem]" aria-hidden="true" /> {h.to_status}
                   {h.reason ? ` (${h.reason})` : ""}
                 </li>
               ))}

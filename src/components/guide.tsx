@@ -1,6 +1,7 @@
 import { FileText, Hourglass } from "lucide-react";
 import { Reveal } from "./ui/reveal";
 import { GuideToc } from "./guide-toc";
+import { GuideArt } from "./ui/guide-art";
 
 export function Pending({ children = "Por confirmar con la Facultad" }: { children?: React.ReactNode }) {
   return (
@@ -14,9 +15,12 @@ export function Pending({ children = "Por confirmar con la Facultad" }: { childr
 export function GuideSection({ id, kicker, title, children }: { id: string; kicker?: string; title: string; children: React.ReactNode }) {
   return (
     <section id={id} data-guide-section className="scroll-mt-24 py-12">
-      <Reveal>
-        {kicker && <p className="kicker">{kicker}</p>}
-        <h2 className="display mt-2 text-2xl text-azul-oscuro md:text-3xl">{title}</h2>
+      <Reveal className="flex items-center justify-between gap-6">
+        <div>
+          {kicker && <p className="kicker">{kicker}</p>}
+          <h2 className="display mt-2 text-2xl text-azul-oscuro md:text-3xl">{title}</h2>
+        </div>
+        <GuideArt id={id} className="hidden sm:block" />
       </Reveal>
       <Reveal className="prose-fcen mt-5">{children}</Reveal>
     </section>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CornerDownLeft, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import type { NavItem } from "./nav-items";
 import { Icon } from "./icon";
 
@@ -107,17 +107,12 @@ export function CommandPalette({ items }: { items: NavItem[] }) {
                     <Icon name={item.icon} className="!h-4 !w-4" />
                   </span>
                   <span className="flex-1 font-black">{item.label}</span>
-                  {i === active && <CornerDownLeft className="h-4 w-4 text-suave" aria-hidden="true" />}
+                  
                 </button>
               </li>
             );
           })}
         </ul>
-        <div className="flex items-center gap-4 border-t border-borde bg-superficie px-4 py-2 text-xs text-suave">
-          <span><kbd className="rounded border border-borde bg-white px-1">↑</kbd> <kbd className="rounded border border-borde bg-white px-1">↓</kbd> moverse</span>
-          <span><kbd className="rounded border border-borde bg-white px-1">Enter</kbd> abrir</span>
-          <span><kbd className="rounded border border-borde bg-white px-1">Esc</kbd> cerrar</span>
-        </div>
       </div>
     </div>
   );

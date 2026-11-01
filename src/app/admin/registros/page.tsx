@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Download, Eye, History, RefreshCcw } from "lucide-react";
+import { Download, Eye, History, RefreshCcw, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AdminTitle } from "../admin-title";
 import { formatDate } from "@/lib/labels";
@@ -94,7 +94,7 @@ export default async function AdminRecords() {
                 <td>{formatDate(h.created_at)}</td>
                 <td>{h.entity === "student" ? "Estudiante" : "Empresa"}</td>
                 <td>
-                  {h.from_status ?? "?"} → {h.to_status}
+                  {h.from_status ?? "?"} <ArrowRight className="mx-1 inline h-3 w-3 align-[-0.1rem]" aria-hidden="true" /> {h.to_status}
                   {h.reason ? ` (${h.reason})` : ""}
                 </td>
               </tr>
