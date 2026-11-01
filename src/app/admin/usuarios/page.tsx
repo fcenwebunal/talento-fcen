@@ -1,0 +1,65 @@
+import type { Metadata } from "next";
+import { createClient } from "@/lib/supabase/server";
+import { getSession } from "@/lib/session";
+import { setRole } from "../actions";
+
+export const metadata: Metadata = { title: "Roles" };
+export const dynamic = "force-dynamic";
+
+const ROLE_LABEL: Record<string, string> = { student: "Estudiante", staff: "Facultad", admin: "Administrador", company: "Empresa" };
+
+export default async function AdminUsers({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const session = await getSession();
+  const { q } = await searchParams;
+  const supabase = await createClient();
+  let query = supabase.from("profiles").select("id, email, full_name, role").neq("role", "company").order("email").limit(100);
+  if (q) query = query.ilike("email", `%${q}%`);
+  const { data } = await query;
+  const isAdmin = session?.role === "admin";
+
+  return (
+    <div>
+      <h1 className="display text-3xl text-azul-oscuro">Roles</h1>
+      <p className="mt-1 text-suave">
+        Las personas de la Facultad entran con su cuenta @unal.edu.co y quedan como estudiantes; aquí se les asigna el rol «Facultad».
+        {!isAdmin && " Solo un administrador puede cambiar roles."}
+      </p>
+      <form method="get" className="mt-4 flex gap-2">
+        <input name="q" defaultValue={q} placeholder="Buscar por correo" className="input max-w-sm" />
+        <button className="btn btn-secondary">Buscar</button>
+      </form>
+      <table className="table-fcen mt-6">
+        <thead>
+          <tr>
+            <th>Correo</th>
+            <th>Nombre</th>
+            <th>Rol</th>
+          </tr>
+        </thead>
+        <tbody>
+          {(data ?? []).map((u) => (
+            <tr key={u.id}>
+              <td>{u.email}</td>
+              <td>{u.full_name}</td>
+              <td>
+                {isAdmin && u.id !== session?.userId ? (
+                  <form action={setRole} className="flex gap-2">
+                    <input type="hidden" name="user_id" value={u.id} />
+                    <select name="role" defaultValue={u.role} className="input py-1">
+                      <option value="student">Estudiante</option>
+                      <option value="staff">Facultad</option>
+                      <option value="admin">Administrador</option>
+                    </select>
+                    <button className="btn btn-secondary py-1">Guardar</button>
+                  </form>
+                ) : (
+                  ROLE_LABEL[u.role]
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

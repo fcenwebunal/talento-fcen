@@ -1,0 +1,13 @@
+# Firebase App Hosting (project talentofcen). Docs: https://firebase.google.com/docs/app-hosting/configure
+
+runConfig:
+  minInstances: 0
+  maxInstances: 2
+
+env:
+  - variable: NEXT_PUBLIC_SUPABASE_URL
+    value: https://iwpnsyuvqvmdlsbkbzly.supabase.co
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    value: sb_publishable_uxq4iuk9aDfEOBMv9GzAXw_oO-KkZ8H
+    availability: [BUILD, RUNTIME]

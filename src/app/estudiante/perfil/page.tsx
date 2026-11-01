@@ -1,0 +1,70 @@
+import type { Metadata } from "next";
+import { createClient } from "@/lib/supabase/server";
+import { requireRole } from "@/lib/session";
+import { ProfileEditor, type ProfileData } from "./editor";
+
+export const metadata: Metadata = { title: "Editar mi perfil" };
+export const dynamic = "force-dynamic";
+
+export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ seccion?: string }> }) {
+  const session = await requireRole(["student"]);
+  const { seccion } = await searchParams;
+  const supabase = await createClient();
+  const id = session.userId;
+
+  const [student, priv, profile, skills, soft, areas, languages, experiences, projects, courses, subjects, documents, programs, catalog, domains, softCatalog, areaCatalog] =
+    await Promise.all([
+      supabase.from("students").select("*").eq("id", id).single(),
+      supabase.from("student_private").select("*").eq("student_id", id).single(),
+      supabase.from("profiles").select("full_name, email").eq("id", id).single(),
+      supabase.from("student_skills").select("skill_id, level, evidence_url").eq("student_id", id),
+      supabase.from("student_soft_skills").select("soft_skill_id").eq("student_id", id),
+      supabase.from("student_areas").select("area_id").eq("student_id", id),
+      supabase.from("student_languages").select("language, level, certificate").eq("student_id", id).order("id"),
+      supabase.from("experiences").select("organization, role, start_date, end_date, description").eq("student_id", id).order("id"),
+      supabase.from("projects").select("title, year, description, url").eq("student_id", id).order("id"),
+      supabase.from("courses").select("name, institution, year, hours").eq("student_id", id).order("id"),
+      supabase.from("relevant_subjects").select("name, reason").eq("student_id", id).order("id"),
+      supabase.from("documents").select("id, kind, path, file_name, created_at").eq("student_id", id).order("created_at", { ascending: false }),
+      supabase.from("programs").select("id, name, level, department").eq("active", true).order("sort"),
+      supabase.from("skills").select("id, name, domain_id").eq("active", true).order("name"),
+      supabase.from("skill_domains").select("id, name").order("sort"),
+      supabase.from("soft_skills").select("id, name").order("sort"),
+      supabase.from("areas").select("id, name").eq("active", true).order("sort"),
+    ]);
+
+  const data: ProfileData = {
+    id,
+    email: profile.data?.email ?? session.email,
+    fullName: profile.data?.full_name ?? "",
+    student: student.data,
+    priv: priv.data,
+    skills: skills.data ?? [],
+    softSkills: (soft.data ?? []).map((r) => r.soft_skill_id),
+    areas: (areas.data ?? []).map((r) => r.area_id),
+    languages: languages.data ?? [],
+    experiences: experiences.data ?? [],
+    projects: projects.data ?? [],
+    courses: courses.data ?? [],
+    subjects: subjects.data ?? [],
+    documents: documents.data ?? [],
+    catalogs: {
+      programs: programs.data ?? [],
+      skills: catalog.data ?? [],
+      domains: domains.data ?? [],
+      softSkills: softCatalog.data ?? [],
+      areas: areaCatalog.data ?? [],
+    },
+  };
+
+  return (
+    <div className="wrap py-10">
+      <h1 className="display text-3xl text-azul-oscuro">Editar mi perfil</h1>
+      <p className="mt-2 max-w-3xl text-suave">
+        Es la información que la Facultad comparte con las empresas para presentarte. Escribe de forma breve y profesional:
+        la empresa leerá tu perfil antes de contactarte. Guarda cada sección al terminarla.
+      </p>
+      <ProfileEditor data={data} initialSection={seccion} />
+    </div>
+  );
+}
