@@ -19,7 +19,7 @@ type Row = {
   consent_anonymous: boolean;
   consent_contact: boolean;
   updated_at: string;
-  profiles: { full_name: string | null; email: string } | null;
+  profiles: { full_name: string | null; email: string; avatar_path: string | null } | null;
   programs: { name: string } | null;
 };
 
@@ -28,7 +28,7 @@ export default async function AdminStudents({ searchParams }: { searchParams: Pr
   const supabase = await createClient();
   let query = supabase
     .from("students")
-    .select("id, availability, progress_pct, progress_verified, last_confirmed_at, consent_anonymous, consent_contact, updated_at, profiles(full_name, email), programs(name)")
+    .select("id, availability, progress_pct, progress_verified, last_confirmed_at, consent_anonymous, consent_contact, updated_at, profiles(full_name, email, avatar_path), programs(name)")
     .order("updated_at", { ascending: false })
     .limit(300);
   if (estado) query = query.eq("availability", estado);
@@ -38,6 +38,26 @@ export default async function AdminStudents({ searchParams }: { searchParams: Pr
   const rows = ((data ?? []) as unknown as Row[]).filter(
     (r) => !needle || `${r.profiles?.full_name ?? ""} ${r.profiles?.email ?? ""}`.toLowerCase().includes(needle)
   );
+
+  // Account photo first (public bucket); otherwise the profile photo document, signed in one batch
+  const photos = new Map<string, string>();
+  for (const r of rows) {
+    if (r.profiles?.avatar_path) photos.set(r.id, supabase.storage.from("avatars").getPublicUrl(r.profiles.avatar_path).data.publicUrl);
+  }
+  const missing = rows.filter((r) => !photos.has(r.id)).map((r) => r.id);
+  if (missing.length) {
+    const { data: docs } = await supabase.from("documents").select("student_id, path").eq("kind", "foto").in("student_id", missing).order("created_at", { ascending: false });
+    const latest = new Map<string, string>();
+    for (const d of docs ?? []) if (!latest.has(d.student_id)) latest.set(d.student_id, d.path);
+    if (latest.size) {
+      const { data: signed } = await supabase.storage.from("documentos").createSignedUrls([...latest.values()], 3600);
+      const byPath = new Map((signed ?? []).map((x) => [x.path, x.signedUrl]));
+      for (const [id, path] of latest) {
+        const url = byPath.get(path);
+        if (url) photos.set(id, url);
+      }
+    }
+  }
 
   return (
     <div>
@@ -79,7 +99,7 @@ export default async function AdminStudents({ searchParams }: { searchParams: Pr
               <tr key={r.id}>
                 <td>
                   <Link href={`/admin/estudiantes/${r.id}`} className="group flex items-center gap-3">
-                    <Avatar name={r.profiles?.full_name ?? r.profiles?.email} seed={r.id} size={36} />
+                    <Avatar name={r.profiles?.full_name ?? r.profiles?.email} seed={r.id} src={photos.get(r.id) ?? null} size={36} />
                     <span className="min-w-0">
                       <span className="block font-black text-azul-oscuro group-hover:text-azul-medio">{r.profiles?.full_name || "Sin nombre"}</span>
                       <span className="block truncate text-xs text-suave">{r.profiles?.email}</span>

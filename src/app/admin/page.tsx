@@ -31,7 +31,7 @@ const STATUS_COLOR: Record<CompanyStatus, string> = {
   rechazada: "var(--texto-suave)",
 };
 
-type ToVerify = { id: string; progress_pct: number; progress_verified: string; profiles: { full_name: string | null } | null; programs: { name: string } | null };
+type ToVerify = { id: string; progress_pct: number; progress_verified: string; profiles: { full_name: string | null; avatar_path: string | null } | null; programs: { name: string } | null };
 
 export default async function AdminHome() {
   const supabase = await createClient();
@@ -41,7 +41,7 @@ export default async function AdminHome() {
     supabase.from("companies").select("id, name, nit, city, sector, logo_path, created_at").eq("status", "en_revision").order("created_at").limit(6),
     supabase
       .from("students")
-      .select("id, progress_pct, progress_verified, profiles(full_name), programs(name)")
+      .select("id, progress_pct, progress_verified, profiles(full_name, avatar_path), programs(name)")
       .neq("progress_verified", "coordinacion")
       .not("progress_pct", "is", null)
       .order("updated_at", { ascending: false })
@@ -117,7 +117,7 @@ export default async function AdminHome() {
               {verifyRows.map((r) => (
                 <li key={r.id}>
                   <Link href={`/admin/estudiantes/${r.id}`} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-celeste/60">
-                    <Avatar name={r.profiles?.full_name} seed={r.id} size={38} />
+                    <Avatar name={r.profiles?.full_name} seed={r.id} src={r.profiles?.avatar_path ? supabase.storage.from("avatars").getPublicUrl(r.profiles.avatar_path).data.publicUrl : null} size={38} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-black text-azul-oscuro">{r.profiles?.full_name ?? "Sin nombre"}</span>
                       <span className="block truncate text-xs text-suave">{r.programs?.name}</span>

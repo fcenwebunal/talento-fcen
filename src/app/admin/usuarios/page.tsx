@@ -15,7 +15,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
   const session = await getSession();
   const { q } = await searchParams;
   const supabase = await createClient();
-  let query = supabase.from("profiles").select("id, email, full_name, role").neq("role", "company").order("email").limit(100);
+  let query = supabase.from("profiles").select("id, email, full_name, role, avatar_path").neq("role", "company").order("email").limit(100);
   if (q) query = query.ilike("email", `%${q}%`);
   const { data } = await query;
   const isAdmin = session?.role === "admin";
@@ -48,7 +48,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
             <tr key={u.id}>
               <td>
                 <span className="flex items-center gap-3">
-                  <Avatar name={u.full_name ?? u.email} seed={u.id} size={32} />
+                  <Avatar name={u.full_name ?? u.email} seed={u.id} src={u.avatar_path ? supabase.storage.from("avatars").getPublicUrl(u.avatar_path).data.publicUrl : null} size={32} />
                   {u.email}
                 </span>
               </td>
