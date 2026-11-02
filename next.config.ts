@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   // The CV PDF is rendered on the server with react-pdf, using the Ancízar fonts from public/fonts. sharp loads
   // libvips through dlopen, which file tracing misses: its @img platform packages are listed explicitly.
   serverExternalPackages: ["@react-pdf/renderer"],
-  outputFileTracingIncludes: { "/cv/[id]": ["./public/fonts/**", "./node_modules/@img/**"] },
+  outputFileTracingIncludes: { "/cv/**": ["./public/fonts/**", "./node_modules/@img/**"] },
   async headers() {
     return [
       {
