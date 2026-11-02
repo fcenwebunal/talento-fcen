@@ -41,6 +41,10 @@ export type SearchRow = {
   total_count: number;
 };
 
+export type ExperienceKind = "laboral" | "practica" | "monitoria" | "investigacion" | "voluntariado" | "extension" | "emprendimiento";
+export type OutputKind = "articulo" | "ponencia" | "poster" | "capitulo" | "evento" | "otro";
+export type PapaVisibility = "nadie" | "facultad" | "autorizadas";
+
 export type StudentDetail = {
   id: string;
   program: string | null;
@@ -50,6 +54,12 @@ export type StudentDetail = {
   progress_verified: string;
   emphasis: string | null;
   honors: string | null;
+  highlights: string[];
+  graduation_date: string | null;
+  target_companies: string | null;
+  papa: number | null;
+  papa_visibility: PapaVisibility | null;
+  updated_at: string | null;
   headline: string | null;
   about: string | null;
   motivation: string | null;
@@ -69,9 +79,10 @@ export type StudentDetail = {
   areas: string[];
   languages: { language: string; level: string; certificate: string | null }[];
   subjects: { name: string; reason: string | null }[];
-  experiences: { organization: string; role: string | null; start_date: string | null; end_date: string | null; description: string | null }[];
-  projects: { title: string; year: number | null; description: string | null; url: string | null }[];
-  courses: { name: string; institution: string | null; year: number | null; hours: number | null }[];
+  experiences: { organization: string; role: string | null; kind: ExperienceKind; start_date: string | null; end_date: string | null; description: string | null }[];
+  projects: { title: string; year: number | null; description: string | null; url: string | null; role: string | null; tools: string | null }[];
+  courses: { name: string; institution: string | null; year: number | null; hours: number | null; url: string | null }[];
+  outputs: { kind: OutputKind; title: string | null; venue: string | null; year: number | null; url: string | null }[];
   contact_visible: boolean;
   contact: {
     full_name: string | null;

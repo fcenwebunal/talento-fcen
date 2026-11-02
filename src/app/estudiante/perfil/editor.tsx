@@ -8,8 +8,8 @@ import {
   ShieldCheck, Sparkles, Trash2, TriangleAlert, UserRound, type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import type { Area, Program, Skill, SkillDomain, SoftSkill } from "@/lib/types";
-import { LEVEL_LABEL, VERIFIED_LABEL } from "@/lib/labels";
+import type { Area, PapaVisibility, Program, Skill, SkillDomain, SoftSkill } from "@/lib/types";
+import { EXPERIENCE_KIND, LEVEL_LABEL, OUTPUT_KIND, PAPA_VISIBILITY, VERIFIED_LABEL } from "@/lib/labels";
 import { HelpTip } from "@/components/ui/help-tip";
 import { ListEditor } from "./list-editor";
 import { SkillsPicker, type StudentSkill } from "./skills-picker";
@@ -24,6 +24,9 @@ type StudentRow = {
   progress_verified: string;
   emphasis: Nullable<string>;
   honors: Nullable<string>;
+  highlights: string[];
+  papa: Nullable<number>;
+  papa_visibility: PapaVisibility;
   headline: Nullable<string>;
   about: Nullable<string>;
   motivation: Nullable<string>;
@@ -59,9 +62,10 @@ type PrivateRow = {
 };
 
 type Language = { language: string; level: string; certificate: Nullable<string> };
-type Experience = { organization: string; role: Nullable<string>; start_date: Nullable<string>; end_date: Nullable<string>; description: Nullable<string> };
-type Project = { title: string; year: Nullable<number>; description: Nullable<string>; url: Nullable<string> };
-type Course = { name: string; institution: Nullable<string>; year: Nullable<number>; hours: Nullable<number> };
+type Experience = { organization: string; role: Nullable<string>; kind: string; start_date: Nullable<string>; end_date: Nullable<string>; description: Nullable<string> };
+type Project = { title: string; year: Nullable<number>; role: Nullable<string>; tools: Nullable<string>; description: Nullable<string>; url: Nullable<string> };
+type Course = { name: string; institution: Nullable<string>; year: Nullable<number>; hours: Nullable<number>; url: Nullable<string> };
+type Output = { kind: string; title: string; venue: Nullable<string>; year: Nullable<number>; url: Nullable<string> };
 type Subject = { name: string; reason: Nullable<string> };
 type Doc = { id: number; kind: string; path: string; file_name: Nullable<string>; created_at: string };
 
@@ -78,6 +82,7 @@ export type ProfileData = {
   experiences: Experience[];
   projects: Project[];
   courses: Course[];
+  outputs: Output[];
   subjects: Subject[];
   documents: Doc[];
   catalogs: { programs: Program[]; skills: Skill[]; domains: SkillDomain[]; softSkills: SoftSkill[]; areas: Area[] };
@@ -124,6 +129,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
   const [experiences, setExperiences] = useState<Experience[]>(data.experiences);
   const [projects, setProjects] = useState<Project[]>(data.projects);
   const [courses, setCourses] = useState<Course[]>(data.courses);
+  const [outputs, setOutputs] = useState<Output[]>(data.outputs);
   const [subjects, setSubjects] = useState<Subject[]>(data.subjects);
   const [documents, setDocuments] = useState<Doc[]>(data.documents);
   const [status, setStatus] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
@@ -161,19 +167,23 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
       } else if (section === "academico") {
         await updateStudent({
           program_id: student.program_id, academic_status: student.academic_status,
-          graduation_date: student.academic_status === "egresado" ? student.graduation_date : null,
+          graduation_date: student.graduation_date, papa_visibility: student.papa_visibility,
           progress_pct: student.progress_pct, practice_period: student.practice_period,
           emphasis: student.emphasis, honors: student.honors,
         });
         await replace("relevant_subjects", subjects.filter((x) => x.name.trim()));
       } else if (section === "perfil") {
-        await updateStudent({ headline: student.headline, about: student.about });
+        await updateStudent({
+          headline: student.headline, about: student.about,
+          highlights: student.highlights.map((h) => h.trim()).filter(Boolean),
+        });
         await replace("student_skills", skills);
         await replace("student_soft_skills", softSkills.map((id) => ({ soft_skill_id: id })));
       } else if (section === "experiencia") {
-        await replace("experiences", experiences.filter((x) => x.organization.trim()));
+        await replace("experiences", experiences.filter((x) => x.organization.trim()).map((x) => ({ ...x, kind: x.kind || "laboral" })));
         await replace("projects", projects.filter((x) => x.title.trim()));
         await replace("courses", courses.filter((x) => x.name.trim()));
+        await replace("student_outputs", outputs.filter((x) => x.title.trim() && x.kind));
         await replace("student_languages", languages.filter((x) => x.language.trim() && x.level));
       } else if (section === "disponibilidad") {
         await updateStudent({
@@ -378,22 +388,35 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                   <option value="egresado">Egresado reciente</option>
                 </select>
               </Field>
-              {student.academic_status === "egresado" && (
-                <Field label="Fecha de grado" help="La plataforma te mantiene activo hasta 12 meses después de tu grado.">
-                  <input className="input" type="date" value={text(student.graduation_date)} onChange={(e) => s("graduation_date", blank(e.target.value))} />
-                </Field>
-              )}
+              <Field
+                label={student.academic_status === "egresado" ? "Fecha de grado" : "Fecha estimada de grado"}
+                help={student.academic_status === "egresado" ? "La plataforma te mantiene activo hasta 12 meses después de tu grado." : "Aproximada: el mes en que esperas graduarte."}
+              >
+                <input className="input" type="date" value={text(student.graduation_date)} onChange={(e) => s("graduation_date", blank(e.target.value))} />
+              </Field>
               <Field label="Porcentaje de avance en el plan de estudios" help={`Estado: ${VERIFIED_LABEL[student.progress_verified] ?? student.progress_verified}. Sube tu historia académica en la sección 6 para que la Facultad lo verifique.`}>
                 <input className="input" type="number" min={0} max={100} step={0.1} value={student.progress_pct ?? ""} onChange={(e) => s("progress_pct", e.target.value === "" ? null : Number(e.target.value))} />
               </Field>
               <Field label="Periodo académico de la práctica" help="Por ejemplo, 2027-1.">
                 <input className="input" placeholder="2027-1" value={text(student.practice_period)} onChange={(e) => s("practice_period", blank(e.target.value))} />
               </Field>
+              <Field label="PAPA" help="Lo registra la Facultad al verificar tu historia académica; tú decides quién lo ve en tu hoja de vida.">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="chip chip-azul font-black">{student.papa !== null ? student.papa.toFixed(1).replace(".", ",") : "Sin registrar"}</span>
+                  <select className="input min-w-0 flex-1" value={student.papa_visibility} onChange={(e) => s("papa_visibility", e.target.value as PapaVisibility)} aria-label="Quién ve tu PAPA">
+                    {(Object.keys(PAPA_VISIBILITY) as PapaVisibility[]).map((k) => (
+                      <option key={k} value={k}>
+                        {PAPA_VISIBILITY[k]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </Field>
               <Field label="Líneas de profundización o énfasis">
                 <input className="input" value={text(student.emphasis)} onChange={(e) => s("emphasis", blank(e.target.value))} />
               </Field>
             </div>
-            <Field label="Reconocimientos académicos, monitorías o becas (si aplica)">
+            <Field label="Reconocimientos académicos, becas o distinciones (si aplica)" help="Las monitorías y los semilleros van en Experiencia, con su tipo.">
               <textarea className="input" value={text(student.honors)} onChange={(e) => s("honors", blank(e.target.value))} />
             </Field>
             <div>
@@ -424,6 +447,27 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               <textarea className="input min-h-32" maxLength={1200} value={text(student.about)} onChange={(e) => s("about", blank(e.target.value))} />
             </Field>
             <div>
+              <h3 className="flex items-center gap-1 font-black text-azul-oscuro">
+                Logros destacados (hasta 3)
+                <HelpTip>Lo que más miran las empresas. Usa la fórmula «Logré X, medido por Y, haciendo Z». Ejemplo: «Reduje en 30 % el tiempo de limpieza de datos de una encuesta automatizándola en R».</HelpTip>
+              </h3>
+              <div className="mt-3 space-y-2">
+                {[0, 1, 2].map((i) => (
+                  <input
+                    key={i}
+                    className="input"
+                    maxLength={220}
+                    placeholder={["Logré…, medido por…, haciendo…", "Segundo logro (opcional)", "Tercer logro (opcional)"][i]}
+                    value={student.highlights[i] ?? ""}
+                    onChange={(e) => {
+                      const next = [0, 1, 2].map((j) => (j === i ? e.target.value : student.highlights[j] ?? ""));
+                      s("highlights", next);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div>
               <h3 className="font-black text-azul-oscuro">Competencias técnicas</h3>
               <p className="mt-1 text-sm text-suave">Elige del catálogo e indica tu nivel. Una habilidad con evidencia vale más que una lista larga.</p>
               <div className="mt-3">
@@ -452,18 +496,19 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
 
         {section === "experiencia" && (
           <div className="space-y-8">
-            <Block title="Experiencia laboral, voluntariados o prácticas previas" help="Si no tienes, déjalo en blanco.">
+            <Block title="Experiencia" help="Trabajos, prácticas previas, monitorías, semilleros, voluntariados o extensión. Si no tienes, déjalo en blanco.">
               <ListEditor
                 items={experiences}
                 onChange={setExperiences}
-                empty={{ organization: "", role: null, start_date: null, end_date: null, description: null }}
+                empty={{ organization: "", role: null, kind: "laboral", start_date: null, end_date: null, description: null }}
                 addLabel="Agregar experiencia"
                 fields={[
-                  { key: "organization", label: "Organización" },
+                  { key: "kind", label: "Tipo", type: "select", options: Object.entries(EXPERIENCE_KIND).map(([value, label]) => ({ value, label })) },
+                  { key: "organization", label: "Organización, grupo o semillero" },
                   { key: "role", label: "Cargo o rol" },
                   { key: "start_date", label: "Desde", type: "date" },
                   { key: "end_date", label: "Hasta", type: "date" },
-                  { key: "description", label: "Principales funciones o logros", type: "textarea" },
+                  { key: "description", label: "Qué lograste (con cifras si puedes)", type: "textarea" },
                 ]}
               />
             </Block>
@@ -471,27 +516,45 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               <ListEditor
                 items={projects}
                 onChange={setProjects}
-                empty={{ title: "", year: null, description: null, url: null }}
+                empty={{ title: "", year: null, role: null, tools: null, description: null, url: null }}
                 addLabel="Agregar proyecto"
                 fields={[
                   { key: "title", label: "Proyecto" },
                   { key: "year", label: "Año", type: "number" },
+                  { key: "role", label: "Tu rol", placeholder: "Líder, analista de datos…" },
+                  { key: "tools", label: "Herramientas (separadas por coma)", placeholder: "Python, R, Arduino" },
                   { key: "description", label: "Qué hiciste y qué resultado obtuviste", type: "textarea" },
                   { key: "url", label: "Enlace (si existe)", type: "url", wide: true },
                 ]}
               />
             </Block>
-            <Block title="Cursos, certificaciones o semilleros">
+            <Block title="Cursos y certificaciones" help="El enlace para verificar el certificado solo lo ven las empresas autorizadas.">
               <ListEditor
                 items={courses}
                 onChange={setCourses}
-                empty={{ name: "", institution: null, year: null, hours: null }}
+                empty={{ name: "", institution: null, year: null, hours: null, url: null }}
                 addLabel="Agregar curso"
                 fields={[
                   { key: "name", label: "Nombre" },
                   { key: "institution", label: "Institución" },
                   { key: "year", label: "Año", type: "number" },
                   { key: "hours", label: "Horas", type: "number" },
+                  { key: "url", label: "Enlace para verificarlo (si existe)", type: "url", wide: true, placeholder: "https://www.credly.com/…" },
+                ]}
+              />
+            </Block>
+            <Block title="Publicaciones y eventos" help="Artículos, ponencias, pósteres y eventos académicos. El título y el enlace solo los ven las empresas autorizadas: identifican a quien los escribió.">
+              <ListEditor
+                items={outputs}
+                onChange={setOutputs}
+                empty={{ kind: "ponencia", title: "", venue: null, year: null, url: null }}
+                addLabel="Agregar publicación o evento"
+                fields={[
+                  { key: "kind", label: "Tipo", type: "select", options: Object.entries(OUTPUT_KIND).map(([value, label]) => ({ value, label })) },
+                  { key: "year", label: "Año", type: "number" },
+                  { key: "title", label: "Título", wide: true },
+                  { key: "venue", label: "Revista, evento o lugar", wide: true },
+                  { key: "url", label: "Enlace (si existe)", type: "url", wide: true },
                 ]}
               />
             </Block>
@@ -585,7 +648,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                 </select>
               </Field>
             </div>
-            <Field label="Empresas de interés específico (si las tienes)">
+            <Field label="Sectores u organizaciones que te interesan" help="Aparece en tu hoja de vida. Ejemplo: banca y seguros, agroindustria del café.">
               <input className="input" value={text(student.target_companies)} onChange={(e) => s("target_companies", blank(e.target.value))} />
             </Field>
             <Field label="¿Por qué quieres hacer la práctica y qué esperas aprender?" help="Máximo 5 líneas.">

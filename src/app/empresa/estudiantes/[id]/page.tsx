@@ -31,29 +31,30 @@ export default async function CompanyStudentPage({ params }: { params: Promise<{
   return (
     <div className="bg-dots">
       <div className="wrap py-8">
-        <Link href="/empresa/buscar" className="mb-4 inline-flex items-center gap-2 text-sm font-black text-suave hover:text-azul">
+        <Link href="/empresa/buscar" className="no-print mb-4 inline-flex items-center gap-2 text-sm font-black text-suave hover:text-azul">
           <ArrowLeft className="h-4 w-4" /> Volver a la búsqueda
         </Link>
+        {session.level < 2 && (
+          <p className="no-print mb-4 flex gap-3 rounded-[1rem_1rem_1rem_0.25rem] border border-borde bg-white p-4 text-sm text-suave shadow-sm">
+            <Lock className="h-5 w-5 shrink-0 text-azul-medio" aria-hidden="true" />
+            Está viendo la hoja de vida sin datos de contacto. Cuando la Facultad autorice a su organización, verá el nombre, el contacto y los enlaces de quienes lo permitieron.
+          </p>
+        )}
         <StudentDetailView
           detail={detail}
           photoUrl={photoUrl}
+          viewer={session.level < 2 ? "empresa registrada (perfil anónimo)" : detail.contact_visible ? "empresa autorizada" : "empresa autorizada, sin contacto compartido"}
           actions={
             <>
               <FavoriteButton studentId={id} isFavorite={!!fav} />
               {detail.contact?.cv_path && (
-                <a href={`/empresa/estudiantes/${id}/hoja-de-vida`} target="_blank" className="btn btn-primary">
-                  <FileDown /> Descargar hoja de vida
+                <a href={`/empresa/estudiantes/${id}/hoja-de-vida`} target="_blank" className="btn btn-secondary" title="La hoja de vida que subió el propio estudiante">
+                  <FileDown /> PDF del estudiante
                 </a>
               )}
             </>
           }
         />
-        {session.level < 2 && (
-          <p className="mt-6 flex gap-3 rounded-[1rem_1rem_1rem_0.25rem] border border-borde bg-white p-4 text-sm text-suave shadow-sm">
-            <Lock className="h-5 w-5 shrink-0 text-azul-medio" aria-hidden="true" />
-            Está viendo el perfil sin datos de contacto. Cuando la Facultad autorice a su organización, verá el nombre, el contacto y la hoja de vida de quienes lo permitieron.
-          </p>
-        )}
       </div>
     </div>
   );

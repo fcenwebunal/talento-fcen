@@ -4,7 +4,7 @@ export type FieldDef<T> = {
   key: keyof T & string;
   label: string;
   type?: "text" | "number" | "date" | "url" | "textarea" | "select";
-  options?: string[];
+  options?: (string | { value: string; label: string })[];
   wide?: boolean;
   placeholder?: string;
 };
@@ -46,11 +46,14 @@ export function ListEditor<T extends Record<string, unknown>>({
                 ) : f.type === "select" ? (
                   <select className="input" value={(item[f.key] as string) ?? ""} onChange={(e) => update(index, f.key, e.target.value)}>
                     <option value="">Elegir…</option>
-                    {f.options?.map((o) => (
-                      <option key={o} value={o}>
-                        {o}
-                      </option>
-                    ))}
+                    {f.options?.map((o) => {
+                      const { value, label } = typeof o === "string" ? { value: o, label: o } : o;
+                      return (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      );
+                    })}
                   </select>
                 ) : (
                   <input

@@ -14,6 +14,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Ancizar Serif";
+  src: url("/fonts/Ancizar_Serif-Bold_Italic.otf") format("opentype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
 :root {
   --azul-noche: #071d3a;
   --azul-oscuro: #0b2e59;
@@ -1282,6 +1290,364 @@ body {
     transform: scaleX(1);
   }
 
+  /* Hoja de vida: a white sheet with the FCEN band on top, a strip of key figures and two columns */
+  .cv-sheet {
+    position: relative;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid var(--borde);
+    border-radius: 1.25rem 1.25rem 1.25rem 0.3125rem;
+    box-shadow: 0 1.5rem 3rem -1.75rem rgb(11 46 89 / 0.4);
+  }
+
+  .cv-band {
+    position: relative;
+    isolation: isolate;
+    padding: 1.75rem 1.75rem 1.25rem;
+    color: #fff;
+    background:
+      radial-gradient(ellipse 55% 160% at 100% 100%, #174f86 0%, rgb(23 79 134 / 0) 70%),
+      linear-gradient(100deg, #082448 0%, var(--azul-oscuro) 55%);
+  }
+
+  /* Connection pattern fading out before the name, and the green rule of the FCEN banner */
+  .cv-band::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.13'%3E%3Cpath d='M20 30 L70 18 L120 46 L150 20 M70 18 L60 80 L120 46 L110 104 M60 80 L18 98'/%3E%3C/g%3E%3Cg fill='%23ffffff' fill-opacity='.2'%3E%3Ccircle cx='20' cy='30' r='3'/%3E%3Ccircle cx='70' cy='18' r='3'/%3E%3Ccircle cx='60' cy='80' r='3'/%3E%3Ccircle cx='18' cy='98' r='3'/%3E%3C/g%3E%3Cg fill='%237ab317' fill-opacity='.55'%3E%3Crect x='116' y='42' width='8' height='8' rx='2'/%3E%3Crect x='146' y='16' width='8' height='8' rx='2'/%3E%3Crect x='106' y='100' width='8' height='8' rx='2'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 10rem 7.5rem;
+    mask-image: linear-gradient(to left, #000 0%, rgb(0 0 0 / 0.4) 40%, transparent 75%);
+  }
+
+  .cv-band::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: linear-gradient(90deg, var(--verde) 0%, var(--verde) 35%, transparent 90%);
+  }
+
+  .cv-photo {
+    position: relative;
+    width: fit-content;
+    padding: 0.25rem;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 0.75rem 1.75rem -0.75rem rgb(0 0 0 / 0.55);
+  }
+
+  .cv-photo-lock {
+    position: absolute;
+    right: 0.125rem;
+    bottom: 0.125rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.875rem;
+    height: 1.875rem;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: var(--verde);
+    color: var(--azul-noche);
+  }
+
+  .cv-photo-lock svg {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  .cv-kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.72);
+  }
+
+  .cv-kicker::before {
+    content: "";
+    flex: none;
+    width: 1.125rem;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--verde);
+  }
+
+  .cv-name {
+    margin-top: 0.25rem;
+    font-size: clamp(1.625rem, 1.1rem + 2.2cqi, 2.375rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  .cv-headline {
+    margin-top: 0.375rem;
+    font-family: "Ancizar Serif", Georgia, serif;
+    font-size: 1.0625rem;
+    font-style: italic;
+    font-weight: 700;
+    line-height: 1.3;
+    color: rgb(255 255 255 / 0.92);
+  }
+
+  .cv-brand {
+    align-items: center;
+    align-self: start;
+    gap: 0.75rem;
+  }
+
+  .cv-brand-mark {
+    font-size: 1.75rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .cv-brand-name {
+    display: flex;
+    flex-direction: column;
+    padding-left: 0.75rem;
+    border-left: 1px solid rgb(255 255 255 / 0.35);
+    font-size: 0.625rem;
+    line-height: 1.35;
+    color: rgb(255 255 255 / 0.72);
+  }
+
+  /* Hairlines drawn by each figure, so an incomplete last row leaves no grey gap */
+  .cv-stats {
+    display: grid;
+    border-bottom: 1px solid var(--borde);
+    background: var(--superficie);
+  }
+
+  .cv-stat {
+    padding: 0.875rem 1.25rem;
+    background: linear-gradient(#fff, var(--superficie));
+    box-shadow:
+      1px 0 0 var(--borde),
+      0 1px 0 var(--borde);
+  }
+
+  .cv-stat dt {
+    font-size: 0.625rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  .cv-stat-value {
+    margin-top: 0.125rem;
+    font-family: "Ancizar Serif", Georgia, serif;
+    font-size: 1.5rem;
+    font-style: italic;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--azul-oscuro);
+  }
+
+  .cv-stat-value small {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 400;
+    color: var(--texto-suave);
+  }
+
+  .cv-main {
+    padding: 1.5rem 1.75rem 1.75rem;
+  }
+
+  .cv-side {
+    padding: 1.5rem 1.25rem 1.75rem;
+    border-top: 1px solid var(--borde);
+    background: color-mix(in srgb, var(--celeste) 45%, #fff);
+  }
+
+  @container (min-width: 42rem) {
+    .cv-side {
+      border-top: 0;
+      border-left: 1px solid var(--borde);
+    }
+  }
+
+  .cv-side .cv-h {
+    letter-spacing: 0.1em;
+  }
+
+  .cv-h {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.6875rem;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--azul-oscuro);
+  }
+
+  .cv-h::before {
+    content: "";
+    flex: none;
+    width: 1rem;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--verde);
+  }
+
+  .cv-h::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--borde);
+  }
+
+  .cv-quote {
+    margin-top: 0.875rem;
+    padding: 0.75rem 1rem;
+    border-left: 3px solid var(--verde);
+    border-radius: 0 0.75rem 0.75rem 0;
+    background: var(--verde-claro);
+  }
+
+  .cv-quote p {
+    margin-top: 0.25rem;
+    font-family: "Ancizar Serif", Georgia, serif;
+    font-size: 0.9375rem;
+    font-style: italic;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--azul-oscuro);
+  }
+
+  .cv-number {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 0.5rem 0.5rem 0.5rem 0.125rem;
+    background: var(--azul-oscuro);
+    font-size: 0.75rem;
+    font-weight: 900;
+    color: #fff;
+  }
+
+  .cv-timeline {
+    display: grid;
+    gap: 1rem;
+    margin-left: 0.375rem;
+    padding-left: 1.25rem;
+    border-left: 2px solid var(--borde);
+  }
+
+  .cv-timeline-item {
+    position: relative;
+  }
+
+  .cv-timeline-item::before {
+    content: "";
+    position: absolute;
+    top: 0.3rem;
+    left: calc(-1.25rem - 0.4375rem);
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: var(--kind, var(--azul-medio));
+    box-shadow: 0 0 0 1px var(--borde);
+  }
+
+  .kind-practica {
+    --kind: var(--verde);
+  }
+
+  .kind-monitoria,
+  .kind-investigacion {
+    --kind: var(--azul);
+  }
+
+  .kind-voluntariado {
+    --kind: var(--amarillo);
+  }
+
+  .kind-extension,
+  .kind-emprendimiento {
+    --kind: var(--naranja);
+  }
+
+  .kind-laboral {
+    --kind: var(--azul-oscuro);
+  }
+
+  .cv-card {
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--borde);
+    border-radius: 0.875rem 0.875rem 0.875rem 0.1875rem;
+    background: var(--superficie);
+  }
+
+  .cv-degree {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .cv-honors {
+    display: flex;
+    gap: 0.625rem;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 0.75rem 0.75rem 0.75rem 0.1875rem;
+    background: color-mix(in srgb, var(--amarillo) 12%, #fff);
+    font-size: 0.875rem;
+  }
+
+  .cv-output-kind {
+    flex: none;
+    width: 5.5rem;
+    padding-top: 0.1875rem;
+    font-size: 0.625rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--azul-medio);
+  }
+
+  .cv-skill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.1875rem 0;
+    border-bottom: 1px dashed color-mix(in srgb, var(--borde) 80%, transparent);
+    font-size: 0.8125rem;
+  }
+
+  .cv-skill:last-child {
+    border-bottom: 0;
+  }
+
+  .cv-foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    padding: 0.75rem 1.75rem;
+    border-top: 1px solid var(--borde);
+    background: var(--superficie);
+    font-size: 0.625rem;
+    color: var(--texto-suave);
+  }
+
   /* App workspace */
   .app-main .wrap {
     max-width: none;
@@ -1373,5 +1739,62 @@ body.embed {
 @media (min-width: 768px) {
   .embed .appbar > div {
     padding-right: 3.5rem;
+  }
+}
+
+/* Printing (and saving as PDF) leaves only the CV sheet, on letter paper, with its colors */
+@media print {
+  @page {
+    size: letter;
+    margin: 0.4in;
+  }
+
+  html {
+    font-size: 12.5px;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  body,
+  .app-main,
+  .bg-dots {
+    background: #fff !important;
+  }
+
+  .no-print,
+  .appbar,
+  .fcen-masthead,
+  .mobile-tabs {
+    display: none !important;
+  }
+
+  .app-main,
+  .wrap {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .cv-sheet {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .cv-stat,
+  .cv-card,
+  .cv-timeline-item,
+  .cv-skill,
+  .cv-main li {
+    break-inside: avoid;
+  }
+
+  .cv-h {
+    break-after: avoid;
   }
 }

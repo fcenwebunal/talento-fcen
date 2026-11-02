@@ -15,7 +15,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const supabase = await createClient();
   const id = session.userId;
 
-  const [student, priv, profile, skills, soft, areas, languages, experiences, projects, courses, subjects, documents, programs, catalog, domains, softCatalog, areaCatalog] =
+  const [student, priv, profile, skills, soft, areas, languages, experiences, projects, courses, subjects, documents, programs, catalog, domains, softCatalog, areaCatalog, outputs] =
     await Promise.all([
       supabase.from("students").select("*").eq("id", id).single(),
       supabase.from("student_private").select("*").eq("student_id", id).single(),
@@ -24,9 +24,9 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       supabase.from("student_soft_skills").select("soft_skill_id").eq("student_id", id),
       supabase.from("student_areas").select("area_id").eq("student_id", id),
       supabase.from("student_languages").select("language, level, certificate").eq("student_id", id).order("id"),
-      supabase.from("experiences").select("organization, role, start_date, end_date, description").eq("student_id", id).order("id"),
-      supabase.from("projects").select("title, year, description, url").eq("student_id", id).order("id"),
-      supabase.from("courses").select("name, institution, year, hours").eq("student_id", id).order("id"),
+      supabase.from("experiences").select("organization, role, kind, start_date, end_date, description").eq("student_id", id).order("id"),
+      supabase.from("projects").select("title, year, role, tools, description, url").eq("student_id", id).order("id"),
+      supabase.from("courses").select("name, institution, year, hours, url").eq("student_id", id).order("id"),
       supabase.from("relevant_subjects").select("name, reason").eq("student_id", id).order("id"),
       supabase.from("documents").select("id, kind, path, file_name, created_at").eq("student_id", id).order("created_at", { ascending: false }),
       supabase.from("programs").select("id, name, level, department").eq("active", true).order("sort"),
@@ -35,6 +35,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       supabase.from("skill_domains").select("id, name").order("sort"),
       supabase.from("soft_skills").select("id, name").order("sort"),
       supabase.from("areas").select("id, name").eq("active", true).order("sort"),
+      supabase.from("student_outputs").select("kind, title, venue, year, url").eq("student_id", id).order("id"),
     ]);
 
   const data: ProfileData = {
@@ -50,6 +51,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     experiences: experiences.data ?? [],
     projects: projects.data ?? [],
     courses: courses.data ?? [],
+    outputs: outputs.data ?? [],
     subjects: subjects.data ?? [],
     documents: documents.data ?? [],
     catalogs: {

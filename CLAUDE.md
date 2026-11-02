@@ -19,6 +19,7 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 | Prueba completa de niveles de visibilidad (crea y borra cuentas de prueba) | `npm run test:smoke` |
 | Revisar en producción las páginas de cada rol con las cuentas demo (usa `DEMO_PASSWORD`) | `npm run check:pages` |
 | Cargar descripción e ícono de las habilidades del catálogo que no los tengan | `npm run skills:catalog` |
+| Completar en los estudiantes demo los datos de la hoja de vida (logros, PAPA, publicaciones…) | `npm run demo:cv` |
 | Dar un rol (la persona debe haber ingresado una vez) | `npm run role -- correo@unal.edu.co admin` |
 | Datos de demostración: crear (reemplaza los anteriores), borrar, fijar contraseña | `npm run demo:seed`, `npm run demo:clean`, `npm run demo:passwords` (usa `DEMO_PASSWORD` de `.env.local`) |
 | Compilar | `npx tsc --noEmit` y `npx next build` |
@@ -67,4 +68,12 @@ Beta **en línea** en https://talento-fcen--talentofcen.us-east4.hosted.app (Fir
 - `skills.status` es `approved` o `pending`. Un estudiante propone con `propose_skill(nombre, grupo, descripción)` desde el selector de su perfil (máximo 5 pendientes; si el nombre o un alias ya existe, devuelve esa habilidad). La propuesta queda en su perfil marcada «en revisión» (borde punteado, `chip-pending`) y las empresas la ven así; no sale en el catálogo público, en los filtros del buscador ni en las sugerencias de otros estudiantes.
 - Administración revisa en `/admin/propuestas` (contador `pendingSkills` en la barra lateral) con `review_skill`: aprobar (corrigiendo nombre, grupo, descripción e ícono), unir con una aprobada (los estudiantes pasan a la existente) o rechazar (se quita de los perfiles). En `/admin/catalogo` se edita la descripción, el grupo y el ícono de cada habilidad aprobada.
 - Toda consulta de catálogo o sugerencias filtra `status = 'approved'`; el perfil del estudiante incluye además las que él propuso (`proposed_by`).
+
+## Hoja de vida (2026-11-02)
+
+- Análisis y propuesta en `../analisis-hoja-de-vida.md` (fuentes: Ladders, NN/g, Europass, JSON Resume, LinkedIn, Harvard, Uniandes, NACE, fórmula XYZ, formatos colombianos, Ley 1581).
+- `components/student-detail.tsx` (`StudentDetailView`) es ahora la hoja de vida: banda FCEN con foto, nombre y titular (Ancízar Serif Bold Italic en `public/fonts`), franja de datos clave (avance, PAPA, grado, práctica, idioma), dos columnas por consulta de contenedor (`@2xl`, la ancha con perfil, logros, experiencia en línea de tiempo por tipo, proyectos, formación y publicaciones; la angosta con contacto, competencias con tres puntos y leyenda, idiomas, transversales, disponibilidad e intereses) y pie con la Ley 1581. La ven empresas, Facultad y el estudiante («Cómo me ven», con `lib/cv.ts` para simular cada nivel); la prop `viewer` dice desde qué nivel se mira.
+- «Descargar PDF» (`components/cv/print-button.tsx`) usa la impresión del navegador: hoja carta, colores exactos, `html` a 12,5 px y todo lo marcado `no-print` (menú, banner, avisos) oculto. Las secciones se pueden partir entre páginas; las entradas no.
+- Datos nuevos (migración `20261102000008_cv_fields.sql`): `experiences.kind` (laboral, práctica, monitoría, investigación o semillero, voluntariado, extensión, emprendimiento), `students.highlights` (hasta 3 logros de 220 caracteres), `students.papa_visibility` (nadie, facultad, autorizadas; el PAPA lo registra solo la Facultad en «Verificar avance y PAPA», el estudiante no puede cambiarlo), `projects.role` y `projects.tools`, `courses.url` y la tabla `student_outputs` (artículo, ponencia, póster, capítulo, evento, otro). `graduation_date` se pide también a estudiantes activos (fecha estimada) y `target_companies` se muestra como sectores de interés.
+- Reglas de `get_student_detail`: el PAPA lo ve el estudiante, la Facultad (salvo «nadie») y las empresas autorizadas si eligió «autorizadas»; los títulos y enlaces de publicaciones, y los enlaces de cursos y proyectos, solo con contacto autorizado (un título identifica a quien lo escribió). El PDF propio del estudiante sigue como complemento («PDF del estudiante»).
 

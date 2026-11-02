@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { StudentDetailView } from "@/components/student-detail";
-import { AVAILABILITY_LABEL, formatDate } from "@/lib/labels";
+import { AVAILABILITY_LABEL, PAPA_VISIBILITY, formatDate } from "@/lib/labels";
 import type { Availability, StudentDetail } from "@/lib/types";
 import { setStudentAvailability, verifyProgress } from "../../actions";
 
@@ -23,12 +23,15 @@ const DOC_LABEL: Record<string, string> = {
 export default async function AdminStudent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data, error }, { data: priv }, { data: docs }, { data: history }] = await Promise.all([
+  const [{ data, error }, { data: priv }, { data: docs }, { data: history }, { data: papaRow }] = await Promise.all([
     supabase.rpc("get_student_detail", { p_student: id }),
     supabase.from("student_private").select("*").eq("student_id", id).single(),
     supabase.from("documents").select("kind, path, file_name, created_at").eq("student_id", id).order("created_at", { ascending: false }),
     supabase.from("status_history").select("from_status, to_status, created_at").eq("entity", "student").eq("entity_id", id).order("created_at", { ascending: false }).limit(20),
+    supabase.from("students").select("papa").eq("id", id).single(),
   ]);
+  // The CV hides the PAPA when the student chose «nadie»; staff still records it here
+  const papa = papaRow?.papa as number | null | undefined;
   if (error || !data) notFound();
   const detail = data as StudentDetail;
 
@@ -41,16 +44,24 @@ export default async function AdminStudent({ params }: { params: Promise<{ id: s
 
   return (
     <div className="space-y-6">
-      <Link href="/admin/estudiantes" className="text-sm text-suave hover:text-azul">
+      <Link href="/admin/estudiantes" className="no-print text-sm text-suave hover:text-azul">
         <ArrowLeft className="mr-1 inline h-4 w-4 align-[-0.2rem]" aria-hidden="true" /> Estudiantes
       </Link>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="no-print grid gap-6 lg:grid-cols-3">
         <form action={verifyProgress} className="card space-y-3">
           <input type="hidden" name="student_id" value={id} />
-          <h2 className="font-black text-azul-oscuro">Verificar avance</h2>
-          <p className="text-sm text-suave">Compáralo con la historia académica y guarda el valor verificado.</p>
-          <input name="progress_pct" type="number" step="0.1" min="0" max="100" defaultValue={detail.progress_pct ?? ""} className="input" />
+          <h2 className="font-black text-azul-oscuro">Verificar avance y PAPA</h2>
+          <p className="text-sm text-suave">Compáralos con la historia académica y guarda los valores verificados.</p>
+          <label className="field">
+            <span>Avance del plan (%)</span>
+            <input name="progress_pct" type="number" step="0.1" min="0" max="100" defaultValue={detail.progress_pct ?? ""} className="input" />
+          </label>
+          <label className="field">
+            <span>PAPA (0,0 a 5,0)</span>
+            <input name="papa" type="number" step="0.1" min="0" max="5" defaultValue={papa ?? ""} className="input" />
+          </label>
+          {detail.papa_visibility && <p className="text-xs text-suave">El estudiante muestra su PAPA a: {PAPA_VISIBILITY[detail.papa_visibility].toLowerCase()}.</p>}
           <button className="btn btn-primary">Marcar como verificado</button>
         </form>
 
@@ -102,7 +113,7 @@ export default async function AdminStudent({ params }: { params: Promise<{ id: s
         </div>
       </div>
 
-      <StudentDetailView detail={detail} photoUrl={signed.find((d) => d.kind === "foto")?.url ?? null} />
+      <StudentDetailView detail={detail} viewer="la Facultad" photoUrl={signed.find((d) => d.kind === "foto")?.url ?? null} />
     </div>
   );
 }

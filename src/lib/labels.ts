@@ -1,4 +1,4 @@
-import type { Availability, CompanyStatus, ProgramLevel } from "@/lib/types";
+import type { Availability, CompanyStatus, ExperienceKind, OutputKind, PapaVisibility, ProgramLevel } from "@/lib/types";
 
 export const LEVEL_LABEL: Record<ProgramLevel, string> = {
   pregrado: "Pregrado",
@@ -49,6 +49,36 @@ export const VERIFIED_LABEL: Record<string, string> = {
   documento: "verificado con documento",
   coordinacion: "verificado por la Facultad",
 };
+
+export const EXPERIENCE_KIND: Record<ExperienceKind, string> = {
+  laboral: "Laboral",
+  practica: "Práctica",
+  monitoria: "Monitoría",
+  investigacion: "Investigación o semillero",
+  voluntariado: "Voluntariado",
+  extension: "Extensión",
+  emprendimiento: "Emprendimiento",
+};
+
+export const OUTPUT_KIND: Record<OutputKind, string> = {
+  articulo: "Artículo",
+  ponencia: "Ponencia",
+  poster: "Póster",
+  capitulo: "Capítulo de libro",
+  evento: "Evento",
+  otro: "Otro",
+};
+
+export const PAPA_VISIBILITY: Record<PapaVisibility, string> = {
+  nadie: "Nadie: no aparece en mi hoja de vida",
+  facultad: "Solo la Facultad",
+  autorizadas: "La Facultad y las empresas autorizadas",
+};
+
+export function formatMonth(iso: string | null) {
+  if (!iso) return "";
+  return new Date(iso + (iso.length === 10 ? "T00:00:00" : "")).toLocaleDateString("es-CO", { month: "short", year: "numeric" });
+}
 
 export function daysSince(iso: string | null) {
   if (!iso) return null;

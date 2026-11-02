@@ -8,6 +8,7 @@ export function PageHeader({
   actions,
   art,
   children,
+  className = "",
 }: {
   kicker?: string;
   title: React.ReactNode;
@@ -16,9 +17,10 @@ export function PageHeader({
   actions?: React.ReactNode;
   art?: React.ReactNode;
   children?: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <header className="page-head wrap page-in pb-6 pt-8">
+    <header className={`page-head wrap page-in pb-6 pt-8 ${className}`}>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
           {Icon && (

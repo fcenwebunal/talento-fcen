@@ -21,10 +21,12 @@ export async function verifyProgress(formData: FormData) {
   const supabase = await createClient();
   const id = String(formData.get("student_id"));
   const pct = formData.get("progress_pct");
+  const papa = formData.get("papa");
   await supabase
     .from("students")
     .update({
       progress_pct: pct === null || pct === "" ? null : Number(pct),
+      papa: papa === null || papa === "" ? null : Number(papa),
       progress_verified: "coordinacion",
       progress_verified_at: new Date().toISOString(),
     })

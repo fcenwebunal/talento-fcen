@@ -6,6 +6,7 @@ import { requireRole } from "@/lib/session";
 import { StudentDetailView } from "@/components/student-detail";
 import { PageHeader } from "@/components/ui/page-header";
 import type { StudentDetail } from "@/lib/types";
+import { previewAs } from "@/lib/cv";
 
 export const metadata: Metadata = { title: "Cómo me ven las empresas" };
 export const dynamic = "force-dynamic";
@@ -23,19 +24,12 @@ export default async function PreviewPage({ searchParams }: { searchParams: Prom
   const detail = data as StudentDetail;
   const showContact = authorized && !!consents?.consent_contact;
   const photoUrl = showContact && photo ? (await supabase.storage.from("documentos").createSignedUrl(photo.path, 3600)).data?.signedUrl : null;
-  const shown: StudentDetail = showContact
-    ? detail
-    : {
-        ...detail,
-        contact_visible: false,
-        contact: null,
-        projects: detail.projects.map((p) => ({ ...p, url: null })),
-        skills: detail.skills.map((s) => ({ ...s, evidence_url: null })),
-      };
+  const shown = previewAs(detail, { authorized, consentContact: !!consents?.consent_contact });
 
   return (
     <>
       <PageHeader
+        className="no-print"
         kicker="Vista previa"
         icon={Eye}
         title="Así ven tu perfil las empresas"
@@ -57,12 +51,12 @@ export default async function PreviewPage({ searchParams }: { searchParams: Prom
       </PageHeader>
       <div className="wrap">
         {authorized && !consents?.consent_contact && (
-          <p className="mb-6 flex gap-2 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] bg-amarillo/15 p-4 text-sm text-amarillo-tinta">
+          <p className="no-print mb-6 flex gap-2 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] bg-amarillo/15 p-4 text-sm text-amarillo-tinta">
             <TriangleAlert className="h-5 w-5 shrink-0" aria-hidden="true" />
             No has aceptado compartir tu contacto, así que las empresas autorizadas también ven tu perfil sin nombre ni contacto.
           </p>
         )}
-        <StudentDetailView detail={shown} photoUrl={photoUrl} />
+        <StudentDetailView detail={shown} photoUrl={photoUrl} viewer={authorized ? "una empresa autorizada" : "una empresa registrada (perfil anónimo)"} />
       </div>
     </>
   );
