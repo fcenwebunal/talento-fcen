@@ -7,8 +7,6 @@ import type { StudentDetail } from "@/lib/types";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const describe = (e: unknown) => (e instanceof Error ? `${e.name}: ${e.message}` : String(e)).slice(0, 400);
-
 // Builds the CV PDF on request with the viewer's own permissions and streams it as a download; nothing is stored.
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -29,7 +27,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   let photo: Buffer | null = null;
-  let photoError = "";
   if (detail.contact_visible) {
     try {
       const { data: files } = await supabase.storage.from("documentos").list(`${id}/foto`, { limit: 1, sortBy: { column: "created_at", order: "desc" } });
@@ -41,7 +38,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
     } catch (e) {
       console.error("cv photo", e);
-      photoError = describe(e);
     }
   }
 
@@ -51,7 +47,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     pdf = await renderCv(detail, { photo });
   } catch (e) {
     console.error("cv render", e);
-    return new NextResponse(`No se pudo generar la hoja de vida. ${describe(e)}`, { status: 500 });
+    return new NextResponse("No se pudo generar la hoja de vida. Inténtalo de nuevo en unos minutos.", { status: 500 });
   }
 
   if (session.company && detail.contact_visible && !self) {
@@ -65,7 +61,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(name)}`,
       "Cache-Control": "private, no-store",
-      ...(photoError ? { "X-Cv-Photo-Error": encodeURIComponent(photoError) } : {}),
     },
   });
 }
