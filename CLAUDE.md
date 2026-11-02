@@ -8,7 +8,7 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 - **Supabase**: proyecto `talento-fcen`, ref `iwpnsyuvqvmdlsbkbzly`, región `us-east-1`, Postgres 17. URL `https://iwpnsyuvqvmdlsbkbzly.supabase.co`. La publishable key es pública y va en el código y en `apphosting.yaml`.
 - **Firebase**: proyecto `talentofcen` (número 857627517671), plan Blaze, creado por el usuario con `fcenwebunaldos@gmail.com`; la CLI de Claude entra como `juanmanueldiazgomez247@gmail.com` (propietario). El backend de App Hosting previsto es `talento-fcen` en `us-east4`, con URL `https://talento-fcen--talentofcen.us-east4.hosted.app` (ya registrada en Supabase como sitio y retorno). Si el backend queda con otro ID o región, actualizar `SITE` en `scripts/configure-auth.mjs` y correr `npm run auth:configure`.
 - **Inicio de sesión con Google**: cliente OAuth creado por Firebase Authentication en `talentofcen` (ID `857627517671-0qtve299itfvsnmomkas00hqvjvo8833.apps.googleusercontent.com`), con el retorno de Supabase autorizado. Su secreto va en `.env.local` y lo activa `npm run auth:configure`.
-- **Secretos**: `.env.local` (`SUPABASE_SECRET_KEY`, `SUPABASE_DB_PASSWORD`, `SUPABASE_ACCESS_TOKEN`, `GOOGLE_CLIENT_SECRET`). Lo mantiene el usuario; **Claude no lo lee ni lo edita** (regla de permisos de FCEN DEV) y nunca imprime sus valores: los comandos lo cargan con `node --env-file=.env.local` o `set -a && . ./.env.local && set +a`. La app desplegada no usa la secret key.
+- **Secretos**: `.env.local` (`SUPABASE_SECRET_KEY`, `SUPABASE_DB_PASSWORD`, `SUPABASE_ACCESS_TOKEN`, `GOOGLE_CLIENT_SECRET`). Lo mantiene el usuario; **Claude no lo lee ni lo edita** (regla de permisos de FCEN DEV) y nunca imprime sus valores: los comandos lo cargan con `node --env-file=.env.local` o `set -a && . ./.env.local && set +a`. La app desplegada usa `SUPABASE_SECRET_KEY` solo en el servidor, desde Cloud Secret Manager (secreto de App Hosting, activo desde el 2026-11-01), para el ingreso con Google dentro de la FCEN.
 
 ## Comandos
 
@@ -17,6 +17,7 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 | Aplicar migraciones | `set -a && . ./.env.local && set +a && npx supabase db push --linked --password "$SUPABASE_DB_PASSWORD" --yes` |
 | Configurar Auth (sitio, retornos, Google, sin confirmación por correo) | `npm run auth:configure` |
 | Prueba completa de niveles de visibilidad (crea y borra cuentas de prueba) | `npm run test:smoke` |
+| Revisar en producción las páginas de cada rol con las cuentas demo (usa `DEMO_PASSWORD`) | `npm run check:pages` |
 | Dar un rol (la persona debe haber ingresado una vez) | `npm run role -- correo@unal.edu.co admin` |
 | Datos de demostración: crear (reemplaza los anteriores), borrar, fijar contraseña | `npm run demo:seed`, `npm run demo:clean`, `npm run demo:passwords` (usa `DEMO_PASSWORD` de `.env.local`) |
 | Compilar | `npx tsc --noEmit` y `npx next build` |
@@ -32,7 +33,7 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 
 ## Incrustado en fcen.unal.edu.co (2026-11-01)
 
-- Página prevista: Facultad > Prácticas (oculta en el menú), carpeta local `../../../sitio/facultad/practicas/`; el elemento HTML es un iframe a todo el ancho de `/?embed=1`.
+- Página publicada: Facultad > Prácticas, https://fcen.unal.edu.co/menu/facultad/practicas/ (pid 645, elemento c4596), oculta en el menú y accesible solo por enlace; carpeta local `../../../sitio/facultad/practicas/`. El elemento HTML es un iframe a todo el ancho de `/?embed=1` que ajusta su alto con `postMessage`.
 - `?embed=1` deja la cookie `tf_embed` (particionada): el layout quita el pie de página y la barra superior deja de ser fija; `EmbedBridge` envía `talento:height` y `talento:navigate` a `https://fcen.unal.edu.co`. Solo ese origen puede embeber la app (`frame-ancestors` en `next.config.ts`).
 - Cookies de sesión en producción con `SameSite=None; Secure; Partitioned` (`COOKIE_OPTIONS` en `src/lib/config.ts`) para que funcionen dentro del iframe.
 - Google no carga dentro de un iframe: dentro de la FCEN el ingreso abre una ventana emergente (`/auth/popup`), el retorno (`/auth/callback?handoff=`) genera un enlace mágico con la secret key y lo deja en `login_handoffs`, y el iframe lo recoge por `/api/handoff` y llama `verifyOtp`. **Requiere el secreto `SUPABASE_SECRET_KEY` en App Hosting** (y su línea en `apphosting.yaml`); sin él ese ingreso muestra un aviso y lo demás funciona.
