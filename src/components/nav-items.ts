@@ -47,6 +47,7 @@ const STAFF: NavItem[] = [
   { label: "Avance por verificar", href: "/admin/estudiantes?verificar=1", icon: "check", group: "Administración" },
   { label: "Catálogo de habilidades", href: "/admin/catalogo", icon: "list", group: "Administración" },
   { label: "Habilidades propuestas", href: "/admin/propuestas", icon: "sparkles", group: "Administración", keywords: "revisión estudiantes" },
+  { label: "Recoger datos de estudiantes", href: "/admin/recoger", icon: "file", group: "Administración", keywords: "exportar csv pdf resumen empresas" },
   { label: "Registros", href: "/admin/registros", icon: "history", group: "Administración", keywords: "exportaciones" },
   { label: "Roles", href: "/admin/usuarios", icon: "key", group: "Administración" },
 ];

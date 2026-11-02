@@ -101,7 +101,7 @@ type SectionId = string;
 
 const DOC_KINDS = [
   { kind: "hoja_vida", label: "Hoja de vida propia en PDF (opcional)", help: "Solo la ve la Facultad. Las empresas descargan el CV que se arma con tu perfil." },
-  { kind: "historia_academica", label: "Historia académica del SIA", help: "Solo la ve la Facultad, para verificar tu avance." },
+  { kind: "historia_academica", label: "Historia académica del SIA", help: "Solo la ve la Facultad, para verificar tu avance y tu PAPA." },
   { kind: "foto", label: "Fotografía tipo documento (opcional)", help: "Solo la ven las empresas autorizadas, si aceptas compartir tu contacto." },
   { kind: "certificado", label: "Certificados de idiomas o cursos (opcional)", help: "Solo los ve la Facultad." },
 ];
@@ -134,6 +134,9 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
   const [documents, setDocuments] = useState<Doc[]>(data.documents);
   const [status, setStatus] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [savedAcademic, setSavedAcademic] = useState({ progress: data.student!.progress_pct, papa: data.student!.papa });
+  const recentRecord = documents.some((d) => d.kind === "historia_academica" && Date.now() - new Date(d.created_at).getTime() < 120 * 86_400_000);
+  const academicChanged = student.progress_pct !== savedAcademic.progress || student.papa !== savedAcademic.papa;
 
   const s = <K extends keyof StudentRow>(key: K, value: StudentRow[K]) => setStudent((prev) => ({ ...prev, [key]: value }));
   const p = <K extends keyof PrivateRow>(key: K, value: PrivateRow[K]) => setPriv((prev) => ({ ...prev, [key]: value }));
@@ -165,13 +168,17 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
           city: student.city, linkedin_url: student.linkedin_url, github_url: student.github_url, portfolio_url: student.portfolio_url,
         });
       } else if (section === "academico") {
+        if (academicChanged && (student.progress_pct !== null || student.papa !== null) && !recentRecord) {
+          throw new Error("Adjunta tu historia académica (PDF o imagen) antes de guardar el avance y el PAPA: la Facultad los verifica con ella.");
+        }
         await updateStudent({
           program_id: student.program_id, academic_status: student.academic_status,
           graduation_date: student.graduation_date, papa_visibility: student.papa_visibility,
-          progress_pct: student.progress_pct, practice_period: student.practice_period,
+          progress_pct: student.progress_pct, papa: student.papa, practice_period: student.practice_period,
           emphasis: student.emphasis, honors: student.honors,
         });
         await replace("relevant_subjects", subjects.filter((x) => x.name.trim()));
+        setSavedAcademic({ progress: student.progress_pct, papa: student.papa });
       } else if (section === "perfil") {
         await updateStudent({
           headline: student.headline, about: student.about,
@@ -203,7 +210,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
       router.refresh();
     } catch (e) {
       const message = e instanceof Error ? e.message : (e as { message?: string })?.message;
-      setStatus({ tone: "error", text: `No se pudo guardar. ${message ?? ""}` });
+      setStatus({ tone: "error", text: `No se pudo guardar. ${(message ?? "").replace(/^[A-Z_]+: /, "")}` });
     } finally {
       setSaving(false);
     }
@@ -244,6 +251,49 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
     const { data: signed } = await supabase.storage.from("documentos").createSignedUrl(doc.path, 120);
     if (signed?.signedUrl) window.open(signed.signedUrl, "_blank", "noopener");
   }
+
+  const docCard = (d: (typeof DOC_KINDS)[number]) => {
+    const docs = documents.filter((x) => x.kind === d.kind);
+    return (
+      <div key={d.kind} className="rounded-[1rem_1rem_1rem_0.25rem] border border-borde bg-white p-4">
+        <p className="flex items-center gap-2 font-black text-azul-oscuro">
+          <FileText className="h-4 w-4 text-azul-medio" aria-hidden="true" />
+          {d.label}
+          <HelpTip>{d.help}</HelpTip>
+        </p>
+        {docs.length > 0 && (
+          <ul className="mt-3 space-y-1.5">
+            {docs.map((doc) => (
+              <li key={doc.id} className="flex items-center gap-2 rounded-lg bg-verde-claro px-3 py-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-verde-tinta" aria-hidden="true" />
+                <button type="button" className="flex-1 truncate text-left text-azul-oscuro underline-offset-2 hover:underline" onClick={() => openDoc(doc)}>
+                  {doc.file_name ?? "Archivo"}
+                </button>
+                <button type="button" className="rounded p-1 text-naranja hover:bg-white" onClick={() => removeDoc(doc)} aria-label="Quitar archivo">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <label className="mt-3 flex cursor-pointer flex-col items-center gap-1 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] border-2 border-dashed border-borde px-4 py-5 text-center text-sm text-suave transition-colors hover:border-azul hover:bg-celeste">
+          <FileUp className="h-6 w-6 text-azul" aria-hidden="true" />
+          <span className="font-black text-azul">{docs.length ? "Subir otro archivo" : "Elegir archivo"}</span>
+          <span className="text-xs">{d.kind === "foto" ? "JPG, PNG o WebP" : "PDF o imagen (JPG, PNG, WebP)"} · máximo 5 MB</span>
+          <input
+            type="file"
+            className="sr-only"
+            accept={d.kind === "foto" ? "image/jpeg,image/png,image/webp" : "application/pdf,image/jpeg,image/png,image/webp"}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) upload(d.kind, file);
+              e.target.value = "";
+            }}
+          />
+        </label>
+      </div>
+    );
+  };
 
   const toggle = (list: number[], id: number) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
   const programsByLevel = data.catalogs.programs.reduce<Record<string, Program[]>>((acc, pr) => {
@@ -394,15 +444,25 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               >
                 <input className="input" type="date" value={text(student.graduation_date)} onChange={(e) => s("graduation_date", blank(e.target.value))} />
               </Field>
-              <Field label="Porcentaje de avance en el plan de estudios" help={`Estado: ${VERIFIED_LABEL[student.progress_verified] ?? student.progress_verified}. Sube tu historia académica en la sección 6 para que la Facultad lo verifique.`}>
+              <Field label="Porcentaje de avance en el plan de estudios" help={`Estado: ${VERIFIED_LABEL[student.progress_verified] ?? student.progress_verified}. Adjunta tu historia académica abajo para que la Facultad lo verifique.`}>
                 <input className="input" type="number" min={0} max={100} step={0.1} value={student.progress_pct ?? ""} onChange={(e) => s("progress_pct", e.target.value === "" ? null : Number(e.target.value))} />
               </Field>
               <Field label="Periodo académico de la práctica" help="Por ejemplo, 2027-1.">
                 <input className="input" placeholder="2027-1" value={text(student.practice_period)} onChange={(e) => s("practice_period", blank(e.target.value))} />
               </Field>
-              <Field label="PAPA" help="Lo registra la Facultad al verificar tu historia académica; tú decides quién lo ve en tu hoja de vida.">
+              <Field label="PAPA" help="Tu promedio acumulado (P.A.P.A.) como aparece en el SIA. La Facultad lo verifica con tu historia académica; tú decides quién lo ve en tu hoja de vida.">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="chip chip-azul font-black">{student.papa !== null ? student.papa.toFixed(1).replace(".", ",") : "Sin registrar"}</span>
+                  <input
+                    className="input w-24"
+                    type="number"
+                    min={0}
+                    max={5}
+                    step={0.1}
+                    placeholder="4,2"
+                    value={student.papa ?? ""}
+                    onChange={(e) => s("papa", e.target.value === "" ? null : Number(e.target.value))}
+                    aria-label="PAPA"
+                  />
                   <select className="input min-w-0 flex-1" value={student.papa_visibility} onChange={(e) => s("papa_visibility", e.target.value as PapaVisibility)} aria-label="Quién ve tu PAPA">
                     {(Object.keys(PAPA_VISIBILITY) as PapaVisibility[]).map((k) => (
                       <option key={k} value={k}>
@@ -415,6 +475,17 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               <Field label="Líneas de profundización o énfasis">
                 <input className="input" value={text(student.emphasis)} onChange={(e) => s("emphasis", blank(e.target.value))} />
               </Field>
+            </div>
+            <div className={`rounded-[1rem_1rem_1rem_0.25rem] p-3 ${academicChanged && !recentRecord ? "bg-amarillo/15" : "bg-celeste"}`}>
+              <p className="mb-2 text-sm">
+                <strong className="text-azul-oscuro">Historia académica para verificar tu avance y tu PAPA.</strong>{" "}
+                <span className="text-suave">
+                  {recentRecord
+                    ? "Ya adjuntaste una este semestre. Si cambias los valores, sube la más reciente."
+                    : "Es obligatoria para guardar esos valores: descárgala del SIA y súbela en PDF o como imagen. Solo la ve la Facultad."}
+                </span>
+              </p>
+              {docCard(DOC_KINDS.find((d) => d.kind === "historia_academica")!)}
             </div>
             <Field label="Reconocimientos académicos, becas o distinciones (si aplica)" help="Las monitorías y los semilleros van en Experiencia, con su tipo.">
               <textarea className="input" value={text(student.honors)} onChange={(e) => s("honors", blank(e.target.value))} />
@@ -661,48 +732,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
           <div className="space-y-8">
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
-                {DOC_KINDS.map((d) => {
-                  const docs = documents.filter((x) => x.kind === d.kind);
-                  return (
-                    <div key={d.kind} className="rounded-[1rem_1rem_1rem_0.25rem] border border-borde bg-white p-4">
-                      <p className="flex items-center gap-2 font-black text-azul-oscuro">
-                        <FileText className="h-4 w-4 text-azul-medio" aria-hidden="true" />
-                        {d.label}
-                        <HelpTip>{d.help}</HelpTip>
-                      </p>
-                      {docs.length > 0 && (
-                        <ul className="mt-3 space-y-1.5">
-                          {docs.map((doc) => (
-                            <li key={doc.id} className="flex items-center gap-2 rounded-lg bg-verde-claro px-3 py-2 text-sm">
-                              <CheckCircle2 className="h-4 w-4 shrink-0 text-verde-tinta" aria-hidden="true" />
-                              <button type="button" className="flex-1 truncate text-left text-azul-oscuro underline-offset-2 hover:underline" onClick={() => openDoc(doc)}>
-                                {doc.file_name ?? "Archivo"}
-                              </button>
-                              <button type="button" className="rounded p-1 text-naranja hover:bg-white" onClick={() => removeDoc(doc)} aria-label="Quitar archivo">
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      <label className="mt-3 flex cursor-pointer flex-col items-center gap-1 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] border-2 border-dashed border-borde px-4 py-5 text-center text-sm text-suave transition-colors hover:border-azul hover:bg-celeste">
-                        <FileUp className="h-6 w-6 text-azul" aria-hidden="true" />
-                        <span className="font-black text-azul">{docs.length ? "Subir otro archivo" : "Elegir archivo"}</span>
-                        <span className="text-xs">{d.kind === "foto" ? "JPG, PNG o WebP" : "PDF, JPG o PNG"} · máximo 5 MB</span>
-                        <input
-                          type="file"
-                          className="sr-only"
-                          accept={d.kind === "foto" ? "image/jpeg,image/png,image/webp" : "application/pdf,image/jpeg,image/png"}
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) upload(d.kind, file);
-                            e.target.value = "";
-                          }}
-                        />
-                      </label>
-                    </div>
-                  );
-                })}
+                {DOC_KINDS.map((d) => docCard(d))}
               </div>
               <p className="text-xs text-suave">
                 La copia del documento de identidad y el certificado de la EPS se piden solo al formalizar la práctica.

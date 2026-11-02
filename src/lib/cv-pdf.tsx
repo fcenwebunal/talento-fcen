@@ -39,7 +39,7 @@ async function fontDir() {
   }
 }
 
-async function ensureFonts() {
+export async function ensureFonts() {
   if (fonts) return fonts;
   const dir = await fontDir();
   if (dir) {
@@ -232,7 +232,7 @@ export function CvDocument({ detail, photo, generatedAt, f }: { detail: StudentD
 
   const stats = [
     detail.progress_pct !== null && { label: "Avance del plan", value: `${decimal(detail.progress_pct)} %`, note: VERIFIED_LABEL[detail.progress_verified] },
-    detail.papa !== null && { label: "PAPA", value: `${decimal(detail.papa)} / 5,0`, note: "registrado por la Facultad" },
+    detail.papa !== null && { label: "PAPA", value: `${decimal(detail.papa)} / 5,0`, note: VERIFIED_LABEL[detail.progress_verified] },
     detail.graduation_date && { label: detail.academic_status === "egresado" ? "Grado" : "Grado estimado", value: formatMonth(detail.graduation_date) },
     (detail.practice_period || detail.available_from) && {
       label: "Práctica",

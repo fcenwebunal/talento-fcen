@@ -43,7 +43,7 @@ export default async function AdminHome() {
       .from("students")
       .select("id, progress_pct, progress_verified, profiles(full_name, avatar_path), programs(name)")
       .neq("progress_verified", "coordinacion")
-      .not("progress_pct", "is", null)
+      .or("progress_pct.not.is.null,papa.not.is.null")
       .order("updated_at", { ascending: false })
       .limit(6),
     supabase.from("exports_log").select("id", { count: "exact", head: true }),
@@ -104,7 +104,7 @@ export default async function AdminHome() {
           <header className="flex items-center justify-between border-b border-borde px-5 py-4">
             <h2 className="flex items-center gap-2 font-black text-azul-oscuro">
               <BadgeCheck className="h-4 w-4 text-verde-tinta" aria-hidden="true" /> Avances por verificar
-              <HelpTip>Compare el porcentaje declarado con la historia académica que subió el estudiante.</HelpTip>
+              <HelpTip>Compare el avance y el PAPA declarados con la historia académica que subió el estudiante.</HelpTip>
             </h2>
             <Link href="/admin/estudiantes?verificar=1" className="text-sm font-black text-azul hover:underline">
               Ver todos

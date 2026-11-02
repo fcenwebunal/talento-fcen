@@ -32,7 +32,7 @@ export default async function AdminStudents({ searchParams }: { searchParams: Pr
     .order("updated_at", { ascending: false })
     .limit(300);
   if (estado) query = query.eq("availability", estado);
-  if (verificar) query = query.neq("progress_verified", "coordinacion").not("progress_pct", "is", null);
+  if (verificar) query = query.neq("progress_verified", "coordinacion").or("progress_pct.not.is.null,papa.not.is.null");
   const { data } = await query;
   const needle = (q ?? "").toLowerCase();
   const rows = ((data ?? []) as unknown as Row[]).filter(

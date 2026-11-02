@@ -78,7 +78,7 @@ export function StudentDetailView({
       verified: detail.progress_verified !== "autodeclarado",
       bar: detail.progress_pct,
     },
-    detail.papa !== null && { label: "PAPA", value: decimal(detail.papa), suffix: "/ 5,0", note: "registrado por la Facultad", verified: true },
+    detail.papa !== null && { label: "PAPA", value: decimal(detail.papa), suffix: "/ 5,0", note: VERIFIED_LABEL[detail.progress_verified], verified: detail.progress_verified !== "autodeclarado" },
     detail.graduation_date && {
       label: detail.academic_status === "egresado" ? "Grado" : "Grado estimado",
       value: formatMonth(detail.graduation_date),

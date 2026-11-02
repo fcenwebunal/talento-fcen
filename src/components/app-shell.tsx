@@ -40,6 +40,7 @@ export const ADMIN_NAV: SideItem[] = [
   { href: "/admin/estudiantes", label: "Estudiantes", icon: "users", badgeKey: "pendingProgress" },
   { href: "/admin/catalogo", label: "Habilidades", icon: "list" },
   { href: "/admin/propuestas", label: "Propuestas", icon: "idea", badgeKey: "pendingSkills" },
+  { href: "/admin/recoger", label: "Recoger datos", icon: "download" },
   { href: "/admin/registros", label: "Registros", icon: "history" },
   { href: "/admin/usuarios", label: "Roles", icon: "key" },
   { href: "/cuenta", label: "Mi cuenta", icon: "account" },
