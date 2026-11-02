@@ -1314,7 +1314,8 @@ body {
 
 /* Embedded in fcen.unal.edu.co: the iframe grows with the content, so nothing sticks to the viewport */
 .embed [class*="min-h-[calc(100vh"],
-.embed .min-h-screen {
+.embed .min-h-screen,
+body.embed {
   min-height: 0;
 }
 
