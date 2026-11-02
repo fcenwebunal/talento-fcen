@@ -15,7 +15,9 @@ export function EmbedBridge() {
       window.location.replace(`${window.location.pathname}?embed=0`);
       return;
     }
-    const send = () => window.parent.postMessage({ type: "talento:height", height: document.documentElement.scrollHeight }, FCEN_ORIGIN);
+    // The body's own height, not the document's scrollHeight: that one never drops below the iframe's current
+    // height, so the frame could only grow and short pages were left with a blank tail.
+    const send = () => window.parent.postMessage({ type: "talento:height", height: Math.ceil(document.body.getBoundingClientRect().height) }, FCEN_ORIGIN);
     const observer = new ResizeObserver(send);
     observer.observe(document.body);
     send();

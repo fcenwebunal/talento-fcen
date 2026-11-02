@@ -22,7 +22,8 @@ async function uploadImage(bucket: string, folder: string, file: File) {
   if (file.size > 2 * 1024 * 1024) throw new Error("La imagen supera los 2 MB.");
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
   const path = `${folder}/${Date.now()}.${ext}`;
-  const { error } = await createClient().storage.from(bucket).upload(path, file, { contentType: file.type, upsert: true });
+  // No upsert: it needs a SELECT policy these buckets don't have, and the timestamped path is always new.
+  const { error } = await createClient().storage.from(bucket).upload(path, file, { contentType: file.type });
   if (error) throw error;
   return path;
 }
