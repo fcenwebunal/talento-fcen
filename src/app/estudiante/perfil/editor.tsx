@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Area, PapaVisibility, Program, Skill, SkillDomain, SoftSkill } from "@/lib/types";
 import { EXPERIENCE_KIND, LEVEL_LABEL, OUTPUT_KIND, PAPA_VISIBILITY, VERIFIED_LABEL } from "@/lib/labels";
 import { HelpTip } from "@/components/ui/help-tip";
+import { ImageCropper } from "@/components/ui/image-cropper";
 import { ListEditor } from "./list-editor";
 import { SkillsPicker, type StudentSkill } from "./skills-picker";
 
@@ -130,6 +131,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
   const [projects, setProjects] = useState<Project[]>(data.projects);
   const [courses, setCourses] = useState<Course[]>(data.courses);
   const [outputs, setOutputs] = useState<Output[]>(data.outputs);
+  const [cropping, setCropping] = useState<File | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>(data.subjects);
   const [documents, setDocuments] = useState<Doc[]>(data.documents);
   const [status, setStatus] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
@@ -286,7 +288,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
             accept={d.kind === "foto" ? "image/jpeg,image/png,image/webp" : "application/pdf,image/jpeg,image/png,image/webp"}
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) upload(d.kind, file);
+              if (file) (d.kind === "foto" ? setCropping(file) : upload(d.kind, file));
               e.target.value = "";
             }}
           />
@@ -733,6 +735,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 {DOC_KINDS.map((d) => docCard(d))}
+                {cropping && <ImageCropper file={cropping} onCancel={() => setCropping(null)} onCrop={async (f) => { setCropping(null); await upload("foto", f); }} />}
               </div>
               <p className="text-xs text-suave">
                 La copia del documento de identidad y el certificado de la EPS se piden solo al formalizar la práctica.

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Building2, Camera, CheckCircle2, ImageUp, Loader2, Save, TriangleAlert, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/ui/avatar";
+import { ImageCropper } from "@/components/ui/image-cropper";
 
 type Status = { tone: "ok" | "error"; text: string } | null;
 
@@ -44,6 +45,7 @@ export function AccountForm({
   const router = useRouter();
   const [form, setForm] = useState(initial);
   const [preview, setPreview] = useState(avatarUrl);
+  const [cropping, setCropping] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<Status>(null);
 
@@ -84,8 +86,9 @@ export function AccountForm({
           <Avatar name={form.full_name || email} seed={email} src={preview} size={104} />
           <label className="absolute -bottom-1 -right-1 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-azul text-white shadow-md transition-transform hover:scale-105" title="Cambiar foto">
             <Camera className="h-4 w-4" />
-            <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => e.target.files?.[0] && changePhoto(e.target.files[0])} />
+            <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => { if (e.target.files?.[0]) setCropping(e.target.files[0]); e.target.value = ""; }} />
           </label>
+          {cropping && <ImageCropper file={cropping} onCancel={() => setCropping(null)} onCrop={async (f) => { setCropping(null); await changePhoto(f); }} />}
         </div>
         <div className="text-sm text-suave">
           <p className="font-black text-texto">{email}</p>
@@ -138,6 +141,7 @@ export function CompanyEditForm({ company }: { company: Company }) {
     description: company.description ?? "",
   });
   const [logo, setLogo] = useState(company.logo_url);
+  const [cropping, setCropping] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<Status>(null);
   const set = (k: keyof typeof form, v: string) => setForm({ ...form, [k]: v });
@@ -185,8 +189,9 @@ export function CompanyEditForm({ company }: { company: Company }) {
         <Avatar name={form.name} seed={company.id} src={logo} size={96} square />
         <label className="btn btn-secondary cursor-pointer">
           <ImageUp /> Cambiar logo
-          <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => e.target.files?.[0] && changeLogo(e.target.files[0])} />
+          <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => { if (e.target.files?.[0]) setCropping(e.target.files[0]); e.target.value = ""; }} />
         </label>
+        {cropping && <ImageCropper file={cropping} round={false} onCancel={() => setCropping(null)} onCrop={async (f) => { setCropping(null); await changeLogo(f); }} />}
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <label className="field md:col-span-2">
