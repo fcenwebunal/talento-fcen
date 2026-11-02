@@ -1333,3 +1333,10 @@ body {
 .embed .app-main {
   padding-bottom: 2.5rem;
 }
+
+/* Keeps the menu's right end clear of the fixed "Servicios" tab of fcen.unal.edu.co, like the banner lockup */
+@media (min-width: 768px) {
+  .embed .appbar > div {
+    padding-right: 3.5rem;
+  }
+}
