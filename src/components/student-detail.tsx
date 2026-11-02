@@ -150,7 +150,7 @@ export function StudentDetailView({
                 <div key={i} className="card-flat p-4">
                   <p className="flex items-start justify-between gap-2 font-black text-azul-oscuro">
                     <span>{p.title}</span>
-                    {p.year && <span className="chip shrink-0 bg-white">{p.year}</span>}
+                    {p.year && <span className="chip shrink-0 [--chip-bg:#fff]">{p.year}</span>}
                   </p>
                   {p.description && <p className="mt-1.5 text-sm text-suave">{p.description}</p>}
                   {p.url && (

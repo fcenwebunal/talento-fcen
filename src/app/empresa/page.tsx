@@ -83,7 +83,7 @@ export default async function CompanyHome() {
               </div>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {QUICK.map((q) => (
-                  <Link key={q} href={`/empresa/buscar?q=${encodeURIComponent(q)}`} className="chip hover:border-azul hover:text-azul">
+                  <Link key={q} href={`/empresa/buscar?q=${encodeURIComponent(q)}`} className="chip">
                     {q}
                   </Link>
                 ))}

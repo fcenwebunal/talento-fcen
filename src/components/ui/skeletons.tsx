@@ -27,9 +27,9 @@ export function CardsSkeleton({ count = 6, columns = "md:grid-cols-2 xl:grid-col
             </div>
           </div>
           <div className="mt-4 flex gap-2">
-            <div className="skeleton h-6 w-20 rounded-full" />
-            <div className="skeleton h-6 w-24 rounded-full" />
-            <div className="skeleton h-6 w-16 rounded-full" />
+            <div className="skeleton h-6 w-20 -skew-x-12 rounded-[0.3125rem]" />
+            <div className="skeleton h-6 w-24 -skew-x-12 rounded-[0.3125rem]" />
+            <div className="skeleton h-6 w-16 -skew-x-12 rounded-[0.3125rem]" />
           </div>
           <div className="skeleton mt-4 h-3 w-1/2" />
         </div>

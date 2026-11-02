@@ -83,7 +83,7 @@ export function SkillsPicker({
             <button
               key={s.id}
               type="button"
-              className="chip hover:border-azul hover:text-azul"
+              className="chip"
               onClick={() => {
                 onChange([...value, { skill_id: s.id, level: 1, evidence_url: null }]);
                 setQuery("");

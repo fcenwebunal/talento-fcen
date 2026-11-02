@@ -92,7 +92,7 @@ export function SearchFilters({
                 <button
                   key={s.id}
                   type="button"
-                  className="chip hover:border-azul hover:text-azul"
+                  className="chip"
                   onClick={() => {
                     setSelected([...selected, s.id]);
                     setQuery("");

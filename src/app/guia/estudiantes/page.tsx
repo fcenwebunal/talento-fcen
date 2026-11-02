@@ -40,7 +40,7 @@ export default function StudentGuide() {
             ["#ruta", "La ruta en 7 pasos"],
             ["#preguntas", "Preguntas frecuentes"],
           ].map(([href, label]) => (
-            <a key={href} href={href} className="chip chip-azul hover:border-azul">
+            <a key={href} href={href} className="chip chip-azul">
               {label}
             </a>
           ))}

@@ -55,7 +55,7 @@ export function SideNav({ items, badges }: { items: SideItem[]; badges: Record<s
             <Link href={item.href} className="side-link" aria-current={active ? "page" : undefined}>
               <Icon aria-hidden="true" />
               <span className="flex-1">{item.label}</span>
-              {badge > 0 && <span className={`rounded-full px-2 text-xs ${active ? "bg-verde text-azul-noche" : "bg-amarillo text-azul-noche"}`}>{badge}</span>}
+              {badge > 0 && <span className={`chip px-2 py-0 text-xs font-black text-azul-noche [--chip-line:transparent] ${active ? "[--chip-bg:var(--verde)]" : "[--chip-bg:var(--amarillo)]"}`}>{badge}</span>}
             </Link>
             {item.children && active && (
               <div className="mt-1 space-y-0.5" style={{ animation: "fade-in 0.25s both" }}>
