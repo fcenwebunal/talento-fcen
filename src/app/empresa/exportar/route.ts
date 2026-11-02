@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
   const owner = session.company?.name ?? "Facultad";
   const lines = [
     `# Exportado por ${owner} el ${date} desde Talento FCEN. Uso exclusivo para selección de practicantes.`,
-    COLUMNS.join(","),
-    ...rows.map((r) => COLUMNS.map((c) => csvCell(r[c])).join(",")),
+    COLUMNS.join(";"),
+    ...rows.map((r) => COLUMNS.map((c) => csvCell(r[c])).join(";")),
   ];
   const slug = owner.normalize("NFD").replace(/[^\w]+/g, "-").toLowerCase();
 

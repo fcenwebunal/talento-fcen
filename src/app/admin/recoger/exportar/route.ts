@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
   }
 
   const lines = [
-    COLUMNS.map(([, label]) => label).join(","),
+    COLUMNS.map(([, label]) => label).join(";"),
     ...students.map((st) => {
       const row: Record<(typeof COLUMNS)[number][0], unknown> = {
         perfil: st.name ? "Con contacto" : "Anónimo",
@@ -75,9 +75,9 @@ export async function GET(request: NextRequest) {
         nivel: st.level,
         situacion: st.status,
         estado: st.availability,
-        avance: st.progress,
+        avance: st.progress?.toLocaleString("es-CO"),
         avance_verificacion: st.progress !== null ? st.progressNote : "",
-        papa: st.papa,
+        papa: st.papa?.toLocaleString("es-CO", { minimumFractionDigits: 1 }),
         periodo: st.period,
         desde: st.from,
         ciudad: st.city,
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
         titular: st.headline,
         enlace: st.link,
       };
-      return COLUMNS.map(([key]) => csvCell(row[key])).join(",");
+      return COLUMNS.map(([key]) => csvCell(row[key])).join(";");
     }),
   ];
   return new NextResponse("﻿" + lines.join("\r\n"), {
