@@ -11,3 +11,7 @@ env:
   - variable: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
     value: sb_publishable_uxq4iuk9aDfEOBMv9GzAXw_oO-KkZ8H
     availability: [BUILD, RUNTIME]
+  # Server only: login handoff for the embedded app. Stored in Cloud Secret Manager (firebase apphosting:secrets:set).
+  - variable: SUPABASE_SECRET_KEY
+    secret: SUPABASE_SECRET_KEY
+    availability: [RUNTIME]

@@ -3,10 +3,11 @@
 //      node --env-file=.env.local scripts/demo-seed.mjs --clean  (only removes demo data)
 //      node --env-file=.env.local scripts/demo-seed.mjs --passwords  (sets DEMO_PASSWORD on every demo account)
 // Demo accounts use DEMO_PASSWORD from .env.local when present; otherwise a random password (they cannot log in).
-// Everything demo is marked: emails carry the +demo tag (it never matches a real Google account) and company ids are
+// Everything demo is marked: emails end in .demo@ (they never match a real account) and company ids are
 // listed in app_settings.demo_company_ids. Faces in demo-assets/rostros are AI-generated (no real people).
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
+import sharp from "sharp";
 import { createClient } from "@supabase/supabase-js";
 
 const admin = createClient("https://iwpnsyuvqvmdlsbkbzly.supabase.co", process.env.SUPABASE_SECRET_KEY, {
@@ -116,11 +117,11 @@ const ABOUT_EXTRA = [
   "Disfruto explicar temas técnicos a personas de otras áreas.",
 ];
 
-// UNAL style: two letters of the first name, first surname, three letters of the second surname, plus the +demo tag.
+// UNAL style: two letters of the first name, first surname, three letters of the second surname, plus .demo.
 function unalEmail(name) {
   const w = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/\s+/);
   const [s1, s2] = w.length >= 4 ? [w[w.length - 2], w[w.length - 1]] : [w[1], w[2]];
-  return `${w[0].slice(0, 2)}${s1}${s2.slice(0, 3)}+demo@unal.edu.co`;
+  return `${w[0].slice(0, 2)}${s1}${s2.slice(0, 3)}.demo@unal.edu.co`;
 }
 
 const COMPANIES = [
@@ -206,12 +207,31 @@ const EMBLEMS = {
   trend: '<path d="M56 130l30-30 20 18 38-44" fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M124 74h20v20" fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>',
 };
 
-function makeLogo(company) {
-  return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" color="${company.color}">
-    <rect width="200" height="200" rx="46" fill="${company.color}"/>
-    <path d="M0 150 L200 96 L200 200 L0 200z" fill="#fff" opacity="0.1"/>
-    <g fill="#fff">${EMBLEMS[company.emblem]}</g>
-  </svg>`);
+function shade(hex, amount) {
+  const n = parseInt(hex.slice(1), 16);
+  const f = (v) => Math.max(0, Math.min(255, Math.round(v + amount * 255)));
+  return `rgb(${f(n >> 16)}, ${f((n >> 8) & 255)}, ${f(n & 255)})`;
+}
+
+// Raster logos (PNG) so the demo also exercises image storage.
+async function makeLogo(company) {
+  const words = company.name.replace(/ S\.A\.S\.| S\.A\.| S\.A\.S\. E\.S\.P\./g, "").split(" ");
+  const line1 = words[0];
+  const line2 = words.slice(1).join(" ");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" color="${company.color}">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${shade(company.color, 0.12)}"/><stop offset="1" stop-color="${shade(company.color, -0.12)}"/></linearGradient>
+      <radialGradient id="glow" cx="0.75" cy="0.2" r="0.7"><stop offset="0" stop-color="#ffffff" stop-opacity="0.35"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+      <filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.28"/></filter>
+    </defs>
+    <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+    <rect width="512" height="512" rx="112" fill="url(#glow)"/>
+    <path d="M0 380 C 140 320, 300 440, 512 360 L512 512 L0 512 Z" fill="#000" opacity="0.12"/>
+    <g transform="translate(76 0) scale(1.8)" filter="url(#sh)" fill="#fff">${EMBLEMS[company.emblem]}</g>
+    <text x="256" y="372" font-family="Arial Black, Arial, sans-serif" font-size="${line1.length > 10 ? 50 : 58}" font-weight="900" text-anchor="middle" fill="#fff">${line1}</text>
+    <text x="256" y="424" font-family="Arial, sans-serif" font-size="${line2.length > 16 ? 30 : 36}" text-anchor="middle" fill="#fff" opacity="0.88">${line2}</text>
+  </svg>`;
+  return sharp(Buffer.from(svg)).png({ compressionLevel: 9 }).toBuffer();
 }
 
 // ---------- clean ----------
@@ -226,7 +246,7 @@ async function listAllUsers() {
   return users;
 }
 
-const isDemoEmail = (email = "") => /\+demo@|^demo\./.test(email);
+const isDemoEmail = (email = "") => /[.+]demo@|^demo\./.test(email);
 
 async function demoCompanyIds() {
   const { data: setting } = await admin.from("app_settings").select("value").eq("key", "demo_company_ids").maybeSingle();
@@ -290,7 +310,7 @@ async function seedStudents() {
       await admin.from("profiles").update({ avatar_path: avatarPath }).eq("id", id);
     }
 
-    const first = email.split("+")[0];
+    const first = email.split(".demo@")[0];
     const consentContact = !["no_disponible"].includes(availability) && i % 5 !== 4;
     const period = pick(["2027-1", "2027-1", "2027-2", "2026-2"]);
     const city = pick(CITIES);
@@ -335,7 +355,7 @@ async function seedStudents() {
       doc_number: String(1053800000 + i * 7919),
       birth_date: `${2000 + (i % 5)}-0${1 + (i % 9)}-1${i % 9}`,
       phone: `3${pick(["00", "01", "10", "13", "14", "20", "22"])} ${String(400 + i * 37).padStart(3, "0")} ${String(1000 + i * 263).slice(-4)}`,
-      personal_email: `${first}+demo@gmail.com`,
+      personal_email: `${first}.demo@gmail.com`,
       eps: pick(["Salud Total", "Sura", "Nueva EPS", "Sanitas", "Coosalud"]),
       emergency_name: pick(["Gloria Inés", "Luz Marina", "Jorge Alberto", "Carlos Arturo", "Martha Lucía"]) + " " + name.split(" ").slice(-2, -1)[0],
       emergency_relation: pick(["Madre", "Padre", "Hermana", "Tío"]),
@@ -407,7 +427,7 @@ async function seedCompanies(students) {
   const created = [];
   for (const [i, c] of COMPANIES.entries()) {
     const { name, sector, size, city, status } = c;
-    const email = `seleccion+demo@${c.domain}`;
+    const email = `seleccion.demo@${c.domain}`;
     const userId = await createAccount(email, c.contact);
     const { data: company, error } = await admin
       .from("companies")
@@ -426,8 +446,8 @@ async function seedCompanies(students) {
       .single();
     if (error) throw error;
     await admin.from("company_members").insert({ user_id: userId, company_id: company.id, member_role: "owner", contact_name: c.contact, position: c.position, phone: `606 ${String(8800000 + i * 12345).slice(0, 3)} ${String(1000 + i * 77).slice(-4)}` });
-    const logoPath = `${company.id}/logo.svg`;
-    await admin.storage.from("logos").upload(logoPath, makeLogo(c), { contentType: "image/svg+xml", upsert: true });
+    const logoPath = `${company.id}/logo.png`;
+    await admin.storage.from("logos").upload(logoPath, await makeLogo(c), { contentType: "image/png", upsert: true });
     await admin.from("companies").update({ logo_path: logoPath }).eq("id", company.id);
 
     if (status !== "registrada") await admin.from("companies").update({ status: "en_revision" }).eq("id", company.id);

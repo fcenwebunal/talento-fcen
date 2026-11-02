@@ -38,7 +38,7 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 - Google no carga dentro de un iframe: dentro de la FCEN el ingreso abre una ventana emergente (`/auth/popup`), el retorno (`/auth/callback?handoff=`) genera un enlace mágico con la secret key y lo deja en `login_handoffs`, y el iframe lo recoge por `/api/handoff` y llama `verifyOtp`. **Requiere el secreto `SUPABASE_SECRET_KEY` en App Hosting** (y su línea en `apphosting.yaml`); sin él ese ingreso muestra un aviso y lo demás funciona.
 - Cuentas de Google: `@unal.edu.co` y la lista `google_students` de `app_settings` entran como estudiantes; cualquier otra cuenta de Google entra como empresa.
 - `/cuenta`: foto (bucket público `avatars`), nombre, cargo y descripción para cualquier rol; las empresas además editan su organización y logo.
-- Datos demo: correos con la etiqueta `+demo` (formato institucional, nunca coincide con una cuenta real de Google), rostros generados por IA en `scripts/demo-assets/rostros/`, empresas ficticias registradas en `app_settings.demo_company_ids`.
+- Datos demo: correos terminados en `.demo@` (formato institucional, no coinciden con cuentas reales), logos PNG generados y subidos al bucket `logos`, rostros generados por IA en `scripts/demo-assets/rostros/`, empresas ficticias registradas en `app_settings.demo_company_ids`.
 
 ## Diseño (2026-11-01, segunda vuelta)
 
