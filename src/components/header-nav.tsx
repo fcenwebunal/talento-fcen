@@ -13,9 +13,10 @@ import { navFor } from "./nav-items";
 const ROLE_LABEL: Record<Role, string> = { student: "Estudiante", company: "Empresa", staff: "Facultad", admin: "Administración" };
 const HOME: Record<Role, string> = { student: "/estudiante", company: "/empresa", staff: "/admin", admin: "/admin" };
 
-const LINKS = [
-  { href: "/guia/estudiantes", label: "Estudiantes", icon: GraduationCap },
-  { href: "/guia/empresas", label: "Empresas", icon: BriefcaseBusiness },
+// Each guide is shown to visitors and to its own audience only; staff and admins see neither.
+const LINKS: { href: string; label: string; icon: typeof Blocks; for?: Role }[] = [
+  { href: "/guia/estudiantes", label: "Guía para estudiantes", icon: GraduationCap, for: "student" },
+  { href: "/guia/empresas", label: "Guía para empresas", icon: BriefcaseBusiness, for: "company" },
   { href: "/habilidades", label: "Habilidades", icon: Blocks },
 ];
 
@@ -29,6 +30,7 @@ export function HeaderNav({ role, name, email, avatarUrl, embedded = false }: { 
 
   const openPalette = () => window.dispatchEvent(new Event("open-palette"));
   const inApp = role ? pathname.startsWith(HOME[role]) : false;
+  const links = LINKS.filter((l) => !l.for || !role || l.for === role);
 
   return (
     <>
@@ -44,7 +46,7 @@ export function HeaderNav({ role, name, email, avatarUrl, embedded = false }: { 
                 <span className="nav-ico"><LayoutGrid aria-hidden="true" /></span> Mi espacio
               </Link>
             )}
-            {LINKS.map((l) => (
+            {links.map((l) => (
               <Link key={l.href} href={l.href} className="nav-pill" aria-current={pathname.startsWith(l.href) ? "page" : undefined}>
                 <span className="nav-ico"><l.icon aria-hidden="true" /></span> {l.label}
               </Link>
@@ -105,7 +107,7 @@ export function HeaderNav({ role, name, email, avatarUrl, embedded = false }: { 
                 </span>
               </Link>
             )}
-            {LINKS.map((l) => (
+            {links.map((l) => (
               <Link key={l.href} href={l.href} className="flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-celeste">
                 <l.icon className="h-5 w-5 text-verde-tinta" aria-hidden="true" /> {l.label}
               </Link>
