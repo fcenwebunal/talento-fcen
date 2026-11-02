@@ -19,7 +19,7 @@ export default async function HomePage() {
   return (
     <section className="relative overflow-hidden">
       <div className="bg-links absolute inset-0 opacity-70 [mask-image:radial-gradient(ellipse_at_70%_40%,#000_20%,transparent_70%)]" />
-      <div className="wrap relative grid min-h-[calc(100vh-8rem)] items-center gap-10 py-12 lg:grid-cols-[1.05fr_1fr]">
+      <div className="wrap relative grid min-h-[calc(100vh-15rem)] items-center gap-10 py-10 md:py-12 lg:grid-cols-[1.05fr_1fr]">
         <div className="stagger">
           <p className="kicker">Prácticas y talento FCEN</p>
           <h1 className="display mt-4 text-4xl text-azul-oscuro md:text-5xl">
@@ -76,14 +76,8 @@ export default async function HomePage() {
           </p>
         </div>
 
-        <div className="relative hidden lg:block" style={{ animation: "fade-in 0.8s 0.2s both" }}>
+        <div className="mx-auto w-full max-w-xl lg:max-w-none" style={{ animation: "fade-in 0.8s 0.2s both" }}>
           <ConnectionNetwork className="w-full drop-shadow-sm" />
-          <div className="absolute bottom-6 left-6 flex items-center gap-2 rounded-full border border-borde bg-white px-3 py-1.5 text-xs shadow-md">
-            <GraduationCap className="h-4 w-4 text-azul" aria-hidden="true" /> Estudiantes
-          </div>
-          <div className="absolute right-6 top-4 flex items-center gap-2 rounded-full border border-borde bg-white px-3 py-1.5 text-xs shadow-md">
-            <Building2 className="h-4 w-4 text-azul-medio" aria-hidden="true" /> Organizaciones
-          </div>
         </div>
       </div>
     </section>
