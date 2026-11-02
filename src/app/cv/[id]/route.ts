@@ -1,13 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
-import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/session";
 import { previewAs } from "@/lib/cv";
-import { renderCv } from "@/lib/cv-pdf";
 import type { StudentDetail } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const describe = (e: unknown) => (e instanceof Error ? `${e.name}: ${e.message}` : String(e)).slice(0, 400);
 
 // Builds the CV PDF on request with the viewer's own permissions and streams it as a download; nothing is stored.
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -30,15 +30,27 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   let photo: Buffer | null = null;
   if (detail.contact_visible) {
-    const { data: files } = await supabase.storage.from("documentos").list(`${id}/foto`, { limit: 1, sortBy: { column: "created_at", order: "desc" } });
-    if (files?.[0]) {
-      const { data: blob } = await supabase.storage.from("documentos").download(`${id}/foto/${files[0].name}`);
-      // react-pdf only embeds JPEG and PNG; student photos are often WebP
-      if (blob) photo = await sharp(Buffer.from(await blob.arrayBuffer())).resize(240, 240, { fit: "cover" }).jpeg({ quality: 84 }).toBuffer().catch(() => null);
+    try {
+      const { data: files } = await supabase.storage.from("documentos").list(`${id}/foto`, { limit: 1, sortBy: { column: "created_at", order: "desc" } });
+      const { data: blob } = files?.[0] ? await supabase.storage.from("documentos").download(`${id}/foto/${files[0].name}`) : { data: null };
+      if (blob) {
+        // react-pdf only embeds JPEG and PNG; student photos are often WebP
+        const { default: sharp } = await import("sharp");
+        photo = await sharp(Buffer.from(await blob.arrayBuffer())).resize(240, 240, { fit: "cover" }).jpeg({ quality: 84 }).toBuffer();
+      }
+    } catch (e) {
+      console.error("cv photo", e);
     }
   }
 
-  const pdf = await renderCv(detail, { photo });
+  let pdf: Buffer;
+  try {
+    const { renderCv } = await import("@/lib/cv-pdf");
+    pdf = await renderCv(detail, { photo });
+  } catch (e) {
+    console.error("cv render", e);
+    return new NextResponse(`No se pudo generar la hoja de vida. ${describe(e)}`, { status: 500 });
+  }
 
   if (session.company && detail.contact_visible && !self) {
     await supabase.from("contact_events").insert({ company_id: session.company.id, user_id: session.userId, student_id: id, kind: "download_cv" });
