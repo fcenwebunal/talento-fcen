@@ -3,6 +3,8 @@ import { Atom, BarChart3, Blocks, Code2, Dna, Presentation, Sigma, Wrench } from
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { Reveal } from "@/components/ui/reveal";
+import type { Skill } from "@/lib/types";
+import { DomainSkills } from "./domain-card";
 
 const DOMAIN_ICON: Record<string, typeof Blocks> = {
   "Datos y estadística": BarChart3,
@@ -21,10 +23,10 @@ export default async function SkillsPage() {
   const supabase = await createClient();
   const [{ data: domains }, { data: skills }, { data: stats }] = await Promise.all([
     supabase.from("skill_domains").select("id, name").order("sort"),
-    supabase.from("skills").select("id, name, domain_id").eq("active", true).order("name"),
+    supabase.from("skills").select("id, name, domain_id, description, icon_path").eq("active", true).eq("status", "approved").order("name"),
     supabase.rpc("public_stats"),
   ]);
-  const counts = new Map(((stats as { top_skills: { skill: string; count: number }[] } | null)?.top_skills ?? []).map((s) => [s.skill, s.count]));
+  const counts = Object.fromEntries(((stats as { top_skills: { skill: string; count: number }[] } | null)?.top_skills ?? []).map((s) => [s.skill, s.count]));
 
   return (
     <>
@@ -32,7 +34,7 @@ export default async function SkillsPage() {
         kicker="Catálogo"
         icon={Blocks}
         title="Habilidades de la Facultad"
-        description="Las habilidades que los estudiantes de la FCEN pueden declarar en su perfil, agrupadas por área. Las resaltadas son las más declaradas."
+        description="Las habilidades que los estudiantes de la FCEN pueden declarar en su perfil, agrupadas por área. Toque una para ver de qué se trata; las resaltadas son las más declaradas."
       />
     <div className="wrap">
       <div className="grid gap-5 md:grid-cols-2">
@@ -44,16 +46,7 @@ export default async function SkillsPage() {
               <span className={`icon-tile ${i % 2 ? "icon-tile-verde" : ""}`}><Icon /></span>
               {d.name}
             </h2>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {(skills ?? [])
-                .filter((s) => s.domain_id === d.id)
-                .map((s) => (
-                  <span key={s.id} className={`chip ${counts.has(s.name) ? "chip-verde" : ""}`}>
-                    {s.name}
-                    {counts.has(s.name) && <strong>· {counts.get(s.name)}</strong>}
-                  </span>
-                ))}
-            </div>
+            <DomainSkills skills={((skills ?? []) as Skill[]).filter((s) => s.domain_id === d.id)} counts={counts} />
           </Reveal>
           );
         })}

@@ -7,7 +7,8 @@ export type Program = { id: number; name: string; level: ProgramLevel; departmen
 export type Area = { id: number; name: string };
 export type SoftSkill = { id: number; name: string };
 export type SkillDomain = { id: number; name: string };
-export type Skill = { id: number; name: string; domain_id: number };
+export type SkillStatus = "approved" | "pending";
+export type Skill = { id: number; name: string; domain_id: number; description?: string | null; icon_path?: string | null; status?: SkillStatus };
 
 export type SearchRow = {
   student_id: string;
@@ -26,7 +27,7 @@ export type SearchRow = {
   available_until: string | null;
   availability: Availability;
   last_confirmed_at: string | null;
-  skills: { id: number; name: string; level: number }[];
+  skills: { id: number; name: string; level: number; pending?: boolean; icon?: string | null }[];
   languages: { language: string; level: string }[];
   areas: string[];
   match_count: number;
@@ -63,7 +64,7 @@ export type StudentDetail = {
   duration_months: number | null;
   availability: Availability;
   last_confirmed_at: string | null;
-  skills: { name: string; domain: string; level: number; evidence_url: string | null }[];
+  skills: { name: string; domain: string; level: number; evidence_url: string | null; pending?: boolean; icon?: string | null }[];
   soft_skills: string[];
   areas: string[];
   languages: { language: string; level: string; certificate: string | null }[];

@@ -3,6 +3,7 @@ import { ArrowUpRight, CalendarDays, Compass, GraduationCap, MapPin } from "luci
 import type { SearchRow } from "@/lib/types";
 import { AVAILABILITY_LABEL, MODALITY_LABEL, freshness } from "@/lib/labels";
 import { Avatar } from "./ui/avatar";
+import { SkillIcon } from "./ui/skill-icon";
 import { LevelDots } from "./student-detail";
 
 export function ResultCard({ row, href, highlight = [], index = 0, photoUrl = null }: { row: SearchRow; href: string; highlight?: number[]; index?: number; photoUrl?: string | null }) {
@@ -45,7 +46,8 @@ export function ResultCard({ row, href, highlight = [], index = 0, photoUrl = nu
 
       <div className="flex flex-wrap gap-1.5">
         {skills.slice(0, 5).map((s) => (
-          <span key={s.id} className={`chip ${highlight.includes(s.id) ? "chip-verde" : ""}`}>
+          <span key={s.id} className={`chip ${highlight.includes(s.id) ? "chip-verde" : ""} ${s.pending ? "chip-pending" : ""}`} title={s.pending ? "Propuesta por el estudiante, en revisión" : undefined}>
+            <SkillIcon path={s.icon} />
             {s.name} <LevelDots level={s.level} />
           </span>
         ))}

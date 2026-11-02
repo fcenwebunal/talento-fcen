@@ -576,6 +576,11 @@ body {
     flex-shrink: 0;
   }
 
+  /* Skill proposed by a student and not yet approved */
+  .chip-pending::before {
+    border-style: dashed;
+  }
+
   a.chip:hover,
   button.chip:hover {
     --chip-line: var(--azul);

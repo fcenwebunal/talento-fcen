@@ -11,6 +11,7 @@
     "auth:configure": "node --env-file=.env.local scripts/configure-auth.mjs",
     "test:smoke": "node --env-file=.env.local scripts/smoke-test.mjs",
     "check:pages": "node --env-file=.env.local scripts/check-pages.mjs",
+    "skills:catalog": "node --env-file=.env.local scripts/skill-catalog.mjs",
     "role": "node --env-file=.env.local scripts/set-role.mjs",
     "demo:seed": "node --env-file=.env.local scripts/demo-seed.mjs",
     "demo:clean": "node --env-file=.env.local scripts/demo-seed.mjs --clean",

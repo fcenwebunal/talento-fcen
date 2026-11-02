@@ -29,7 +29,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const [{ data, error }, programs, skills, areas] = await Promise.all([
     supabase.rpc("search_students", { p_filters: rpcFilters }),
     supabase.from("programs").select("id, name, level, department").eq("active", true).order("sort"),
-    supabase.from("skills").select("id, name, domain_id").eq("active", true).order("name"),
+    supabase.from("skills").select("id, name, domain_id").eq("active", true).eq("status", "approved").order("name"),
     supabase.from("areas").select("id, name").eq("active", true).order("sort"),
   ]);
 

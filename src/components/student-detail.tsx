@@ -1,3 +1,4 @@
+import { SkillIcon } from "./ui/skill-icon";
 import {
   BookOpen, Briefcase, CalendarDays, CheckCircle2, Clock, Compass, ExternalLink, FolderGit2, Code2, Globe,
   GraduationCap, HeartHandshake, Languages, Network, Lock, Mail, MapPin, MessageSquareQuote, Phone, Plane,
@@ -114,8 +115,14 @@ export function StudentDetailView({
                   <p className="text-[0.6875rem] font-black uppercase tracking-widest text-suave">{domain}</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {list.map((s) => (
-                      <span key={s.name} className={`chip ${s.level === 3 ? "chip-verde" : s.level === 2 ? "chip-azul" : ""}`}>
+                      <span
+                        key={s.name}
+                        className={`chip ${s.level === 3 ? "chip-verde" : s.level === 2 ? "chip-azul" : ""} ${s.pending ? "chip-pending" : ""}`}
+                        title={s.pending ? "Habilidad propuesta por el estudiante, en revisión por la Facultad" : undefined}
+                      >
+                        <SkillIcon path={s.icon} />
                         {s.name}
+                        {s.pending && <span className="text-[0.6875rem] text-suave">(en revisión)</span>}
                         <LevelDots level={s.level} />
                         {s.evidence_url && (
                           <a href={s.evidence_url} target="_blank" rel="noopener" title="Ver evidencia" aria-label={`Evidencia de ${s.name}`}>

@@ -18,6 +18,7 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 | Configurar Auth (sitio, retornos, Google, sin confirmación por correo) | `npm run auth:configure` |
 | Prueba completa de niveles de visibilidad (crea y borra cuentas de prueba) | `npm run test:smoke` |
 | Revisar en producción las páginas de cada rol con las cuentas demo (usa `DEMO_PASSWORD`) | `npm run check:pages` |
+| Cargar descripción e ícono de las habilidades del catálogo que no los tengan | `npm run skills:catalog` |
 | Dar un rol (la persona debe haber ingresado una vez) | `npm run role -- correo@unal.edu.co admin` |
 | Datos de demostración: crear (reemplaza los anteriores), borrar, fijar contraseña | `npm run demo:seed`, `npm run demo:clean`, `npm run demo:passwords` (usa `DEMO_PASSWORD` de `.env.local`) |
 | Compilar | `npx tsc --noEmit` y `npx next build` |
@@ -59,3 +60,11 @@ Identidad UNAL (Ancizar Sans, paleta institucional) con un sistema propio en `sr
 ## Estado (2026-10-31)
 
 Beta **en línea** en https://talento-fcen--talentofcen.us-east4.hosted.app (Firebase App Hosting, backend `talento-fcen`, `us-east4`; cada push a `main` despliega). Google activo en Supabase. 22 verificaciones de visibilidad en verde. La conexión de App Hosting con GitHub está autorizada por la cuenta `fcenwebunal` (dueña del repositorio); si se rehace, tiene que ser con esa cuenta. Pendiente: verificar con un ingreso real que se rechazan cuentas de Google que no son `@unal.edu.co`.
+
+## Habilidades: descripción, ícono y propuestas (2026-11-01)
+
+- Cada habilidad tiene `description` e `icon_path` (bucket público `skill-icons`, SVG recomendado, máximo 256 KB; se muestra siempre como `<img>`, nunca en línea). Los 79 iniciales son de Tabler Icons (MIT) recoloreados a `#13477C` por `scripts/skill-catalog.mjs`, con copia en `scripts/skill-icons/`. Plataformas para íconos nuevos: Tabler Icons (tabler.io/icons), Lucide (lucide.dev), Phosphor (phosphoricons.com), Iconoir (iconoir.com) y, para logos de herramientas, Simple Icons (simpleicons.org).
+- `skills.status` es `approved` o `pending`. Un estudiante propone con `propose_skill(nombre, grupo, descripción)` desde el selector de su perfil (máximo 5 pendientes; si el nombre o un alias ya existe, devuelve esa habilidad). La propuesta queda en su perfil marcada «en revisión» (borde punteado, `chip-pending`) y las empresas la ven así; no sale en el catálogo público, en los filtros del buscador ni en las sugerencias de otros estudiantes.
+- Administración revisa en `/admin/propuestas` (contador `pendingSkills` en la barra lateral) con `review_skill`: aprobar (corrigiendo nombre, grupo, descripción e ícono), unir con una aprobada (los estudiantes pasan a la existente) o rechazar (se quita de los perfiles). En `/admin/catalogo` se edita la descripción, el grupo y el ícono de cada habilidad aprobada.
+- Toda consulta de catálogo o sugerencias filtra `status = 'approved'`; el perfil del estudiante incluye además las que él propuso (`proposed_by`).
+
