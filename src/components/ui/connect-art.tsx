@@ -146,14 +146,16 @@ export function ConnectionNetwork({ className = "" }: { className?: string }) {
           <stop offset="0" stopColor="var(--azul)" />
           <stop offset="1" stopColor="var(--verde)" />
         </linearGradient>
+        <linearGradient id="cn-word" x1="0" x2="1">
+          <stop offset="0" stopColor="var(--azul-oscuro)" stopOpacity="0" />
+          <stop offset="0.3" stopColor="var(--azul-oscuro)" stopOpacity="0.05" />
+          <stop offset="0.7" stopColor="var(--azul-oscuro)" stopOpacity="0.05" />
+          <stop offset="1" stopColor="var(--azul-oscuro)" stopOpacity="0" />
+        </linearGradient>
       </defs>
-      <g className="display" fill="var(--azul-oscuro)" fillOpacity="0.085" fontSize="58" textAnchor="middle" dominantBaseline="central" aria-hidden="true">
-        <text transform="translate(104 174) rotate(-90)" textLength="300" lengthAdjust="spacingAndGlyphs">
-          ESTUDIANTES
-        </text>
-        <text transform="translate(470 175) rotate(90)" textLength="300" lengthAdjust="spacingAndGlyphs">
-          ORGANIZACIONES
-        </text>
+      <g className="display" fill="url(#cn-word)" fontSize="32" letterSpacing="2" textAnchor="middle" dominantBaseline="central" aria-hidden="true">
+        <text transform="translate(104 174) rotate(-90)">ESTUDIANTES</text>
+        <text transform="translate(470 175) rotate(90)">ORGANIZACIONES</text>
       </g>
       {LINKS.map(([p, o, strong], i) => {
         const { x: x1, y: y1 } = PEOPLE[p];
