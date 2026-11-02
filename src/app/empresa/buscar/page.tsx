@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PAGE_SIZE, filtersFrom, toQuery, type SearchParams } from "@/lib/search";
 import { SearchFilters } from "@/components/search-filters";
 import { ResultCard } from "@/components/result-card";
+import { studentPhotoUrls } from "@/lib/photos";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { HelpTip } from "@/components/ui/help-tip";
@@ -34,6 +35,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
   const rows = (data ?? []) as SearchRow[];
   const total = rows[0]?.total_count ?? 0;
+  const photos = await studentPhotoUrls(supabase, rows.filter((r) => r.contact_visible).map((r) => r.student_id));
   const pages = Math.ceil(total / PAGE_SIZE);
 
   return (
@@ -78,7 +80,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           )}
           <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
             {rows.map((row, i) => (
-              <ResultCard key={row.student_id} row={row} index={i} href={`/empresa/estudiantes/${row.student_id}`} highlight={filters.skill_ids} />
+              <ResultCard key={row.student_id} row={row} index={i} href={`/empresa/estudiantes/${row.student_id}`} highlight={filters.skill_ids} photoUrl={photos.get(row.student_id)} />
             ))}
           </div>
           {pages > 1 && (

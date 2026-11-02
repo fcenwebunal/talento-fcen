@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { ArrowRight, BadgeCheck, Building2, Check, Clock, Download, Eye, Search, Send, Star, Users, XCircle } from "lucide-react";
 import { requireRole } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
+import { studentPhotoUrls } from "@/lib/photos";
 import { COMPANY_STATUS_LABEL, formatDate } from "@/lib/labels";
 import type { StudentDetail } from "@/lib/types";
 import { PageHeader } from "@/components/ui/page-header";
@@ -38,6 +39,7 @@ export default async function CompanyHome() {
       return { id: f.student_id, d: data as StudentDetail | null };
     })
   );
+  const photos = await studentPhotoUrls(supabase, recent.filter((x) => x.d?.contact_visible).map((x) => x.id));
 
   const steps = [
     { label: "Registrada", icon: Building2, done: true },
@@ -157,7 +159,7 @@ export default async function CompanyHome() {
                 d ? (
                   <li key={id}>
                     <Link href={`/empresa/estudiantes/${id}`} className="flex items-center gap-3 rounded-[0.75rem_0.75rem_0.75rem_0.1875rem] border border-borde p-3 transition-colors hover:border-azul hover:bg-celeste">
-                      <Avatar name={d.contact?.full_name ?? d.program} seed={id} size={38} />
+                      <Avatar name={d.contact?.full_name ?? d.program} seed={id} src={photos.get(id) ?? null} size={38} />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-black text-azul-oscuro">{d.contact?.full_name ?? d.headline ?? "Perfil"}</span>
                         <span className="block truncate text-xs text-suave">{d.program}</span>

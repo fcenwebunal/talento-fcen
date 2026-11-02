@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { ArrowUpRight, GraduationCap, Search, Star, UserX } from "lucide-react";
 import { requireRole } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
+import { studentPhotoUrls } from "@/lib/photos";
 import type { StudentDetail } from "@/lib/types";
 import { AVAILABILITY_LABEL, freshness } from "@/lib/labels";
 import { PageHeader } from "@/components/ui/page-header";
@@ -30,6 +31,7 @@ export default async function FavoritesPage() {
       return { id: f.student_id, detail: error ? null : (data as StudentDetail) };
     })
   );
+  const photos = await studentPhotoUrls(supabase, details.filter((x) => x.detail?.contact_visible).map((x) => x.id));
 
   return (
     <>
@@ -52,7 +54,7 @@ export default async function FavoritesPage() {
             detail ? (
               <Link key={id} href={`/empresa/estudiantes/${id}`} className="card card-hover group" style={{ animation: `fade-up 0.6s ${i * 60}ms var(--ease-out) both` }}>
                 <div className="flex items-start gap-3">
-                  <Avatar name={detail.contact?.full_name ?? detail.program} seed={id} size={48} />
+                  <Avatar name={detail.contact?.full_name ?? detail.program} seed={id} src={photos.get(id) ?? null} size={48} />
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-1 text-[0.6875rem] font-black uppercase tracking-widest text-suave">
                       <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" /> <span className="truncate">{detail.program}</span>
