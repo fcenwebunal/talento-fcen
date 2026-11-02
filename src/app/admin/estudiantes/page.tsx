@@ -99,7 +99,7 @@ export default async function AdminStudents({ searchParams }: { searchParams: Pr
               <tr key={r.id}>
                 <td>
                   <Link href={`/admin/estudiantes/${r.id}`} className="group flex items-center gap-3">
-                    <Avatar name={r.profiles?.full_name ?? r.profiles?.email} seed={r.id} src={photos.get(r.id) ?? null} size={36} />
+                    <Avatar name={r.profiles?.full_name ?? r.profiles?.email} seed={r.id} src={photos.get(r.id) ?? null} size={46} />
                     <span className="min-w-0">
                       <span className="block font-black text-azul-oscuro group-hover:text-azul-medio">{r.profiles?.full_name || "Sin nombre"}</span>
                       <span className="block truncate text-xs text-suave">{r.profiles?.email}</span>

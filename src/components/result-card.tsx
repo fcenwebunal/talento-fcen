@@ -18,7 +18,7 @@ export function ResultCard({ row, href, highlight = [], index = 0, photoUrl = nu
       style={{ animation: `fade-up 0.6s ${Math.min(index, 8) * 60}ms var(--ease-out) both` }}
     >
       <div className="flex items-start gap-3">
-        <Avatar name={row.full_name ?? row.program_name} seed={row.student_id} src={row.contact_visible ? photoUrl : null} size={48} />
+        <Avatar name={row.full_name ?? row.program_name} seed={row.student_id} src={row.contact_visible ? photoUrl : null} size={60} />
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1 text-[0.6875rem] font-black uppercase tracking-widest text-suave">
             <GraduationCap className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />

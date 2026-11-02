@@ -71,14 +71,14 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         }
       />
 
-      <div className="wrap grid gap-6 lg:grid-cols-[19rem_1fr]">
+      <div className="wrap grid grid-cols-1 gap-6 lg:grid-cols-[19rem_1fr]">
         <SearchFilters action="/empresa/buscar" initial={filters} programs={programs.data ?? []} skills={skills.data ?? []} areas={areas.data ?? []} />
         <div className="min-w-0">
           {error && <p className="card text-naranja">No se pudo buscar. {error.message}</p>}
           {!error && rows.length === 0 && (
             <EmptyState icon={SearchX} title="No hay perfiles con esos filtros" text="Pruebe con menos habilidades, otro nivel o sin la ciudad." action={<a href="/empresa/buscar" className="btn btn-secondary">Ver todos</a>} />
           )}
-          <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
             {rows.map((row, i) => (
               <ResultCard key={row.student_id} row={row} index={i} href={`/empresa/estudiantes/${row.student_id}`} highlight={filters.skill_ids} photoUrl={photos.get(row.student_id)} />
             ))}

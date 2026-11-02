@@ -50,7 +50,7 @@ export default async function AdminCompanies({ searchParams }: { searchParams: P
               <tr key={c.id}>
                 <td>
                   <Link href={`/admin/empresas/${c.id}`} className="group flex items-center gap-3">
-                    <Avatar name={c.name} seed={c.id} src={c.logo_path ? supabase.storage.from("logos").getPublicUrl(c.logo_path).data.publicUrl : null} size={36} square />
+                    <Avatar name={c.name} seed={c.id} src={c.logo_path ? supabase.storage.from("logos").getPublicUrl(c.logo_path).data.publicUrl : null} size={46} square />
                     <span>
                       <span className="block font-black text-azul-oscuro group-hover:text-azul-medio">{c.name}</span>
                       {c.sector && <span className="text-xs text-suave">{c.sector}</span>}

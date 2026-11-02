@@ -50,9 +50,9 @@ export function StudentDetailView({
             <PuzzleMatch className="absolute -bottom-2 right-4 w-32 opacity-90" />
           </div>
           <div className="px-6 pb-6">
-            <div className="relative z-10 -mt-10 flex flex-wrap items-end gap-4">
+            <div className="relative z-10 -mt-14 flex flex-wrap items-end gap-4">
               <div className="rounded-full border-4 border-white bg-white shadow-md">
-                <Avatar name={contact?.full_name ?? detail.program} seed={detail.id} src={contact ? photoUrl : null} size={84} />
+                <Avatar name={contact?.full_name ?? detail.program} seed={detail.id} src={contact ? photoUrl : null} size={112} />
               </div>
               <div className="flex flex-wrap gap-2 pb-1">
                 <span className={`chip ${fresh.tone === "good" ? "chip-verde" : fresh.tone === "warn" ? "chip-amarillo" : ""}`}>

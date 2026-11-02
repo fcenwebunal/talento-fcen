@@ -54,7 +54,7 @@ export default async function FavoritesPage() {
             detail ? (
               <Link key={id} href={`/empresa/estudiantes/${id}`} className="card card-hover group" style={{ animation: `fade-up 0.6s ${i * 60}ms var(--ease-out) both` }}>
                 <div className="flex items-start gap-3">
-                  <Avatar name={detail.contact?.full_name ?? detail.program} seed={id} src={photos.get(id) ?? null} size={48} />
+                  <Avatar name={detail.contact?.full_name ?? detail.program} seed={id} src={photos.get(id) ?? null} size={60} />
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-1 text-[0.6875rem] font-black uppercase tracking-widest text-suave">
                       <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" /> <span className="truncate">{detail.program}</span>

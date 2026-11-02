@@ -81,7 +81,7 @@ export function AccountForm({
       </h2>
       <div className="flex items-center gap-5">
         <div className="relative">
-          <Avatar name={form.full_name || email} seed={email} src={preview} size={88} />
+          <Avatar name={form.full_name || email} seed={email} src={preview} size={104} />
           <label className="absolute -bottom-1 -right-1 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-azul text-white shadow-md transition-transform hover:scale-105" title="Cambiar foto">
             <Camera className="h-4 w-4" />
             <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => e.target.files?.[0] && changePhoto(e.target.files[0])} />
@@ -182,7 +182,7 @@ export function CompanyEditForm({ company }: { company: Company }) {
         <Building2 className="h-4 w-4 text-azul-medio" aria-hidden="true" /> Mi empresa
       </h2>
       <div className="flex items-center gap-5">
-        <Avatar name={form.name} seed={company.id} src={logo} size={80} square />
+        <Avatar name={form.name} seed={company.id} src={logo} size={96} square />
         <label className="btn btn-secondary cursor-pointer">
           <ImageUp /> Cambiar logo
           <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => e.target.files?.[0] && changeLogo(e.target.files[0])} />

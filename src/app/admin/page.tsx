@@ -78,7 +78,7 @@ export default async function AdminHome() {
             <ul className="divide-y divide-borde">
               {(queue ?? []).map((c) => (
                 <li key={c.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
-                  <Avatar name={c.name} seed={c.id} src={c.logo_path ? supabase.storage.from("logos").getPublicUrl(c.logo_path).data.publicUrl : null} size={38} square />
+                  <Avatar name={c.name} seed={c.id} src={c.logo_path ? supabase.storage.from("logos").getPublicUrl(c.logo_path).data.publicUrl : null} size={46} square />
                   <Link href={`/admin/empresas/${c.id}`} className="min-w-0 flex-1">
                     <span className="block truncate font-black text-azul-oscuro hover:text-azul-medio">{c.name}</span>
                     <span className="block truncate text-xs text-suave">
@@ -117,7 +117,7 @@ export default async function AdminHome() {
               {verifyRows.map((r) => (
                 <li key={r.id}>
                   <Link href={`/admin/estudiantes/${r.id}`} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-celeste/60">
-                    <Avatar name={r.profiles?.full_name} seed={r.id} src={r.profiles?.avatar_path ? supabase.storage.from("avatars").getPublicUrl(r.profiles.avatar_path).data.publicUrl : null} size={38} />
+                    <Avatar name={r.profiles?.full_name} seed={r.id} src={r.profiles?.avatar_path ? supabase.storage.from("avatars").getPublicUrl(r.profiles.avatar_path).data.publicUrl : null} size={46} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-black text-azul-oscuro">{r.profiles?.full_name ?? "Sin nombre"}</span>
                       <span className="block truncate text-xs text-suave">{r.programs?.name}</span>

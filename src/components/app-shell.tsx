@@ -62,7 +62,7 @@ export function AppShell({
     <div className="grid min-h-[calc(100vh-4rem)] lg:grid-cols-[16rem_1fr]">
       <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] flex-col border-r border-borde bg-white lg:flex">
         <div className="flex items-center gap-3 border-b border-borde p-4">
-          <Avatar name={title} seed={session.company?.id ?? session.email} src={session.avatarUrl} size={40} square={session.role === "company"} />
+          <Avatar name={title} seed={session.company?.id ?? session.email} src={session.avatarUrl} size={52} square={session.role === "company"} />
           <div className="min-w-0">
             <p className="truncate text-sm font-black text-azul-oscuro">{title}</p>
             <p className="text-xs text-verde-tinta">{ROLE_LABEL[session.role]}</p>

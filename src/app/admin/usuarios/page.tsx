@@ -48,7 +48,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
             <tr key={u.id}>
               <td>
                 <span className="flex items-center gap-3">
-                  <Avatar name={u.full_name ?? u.email} seed={u.id} src={u.avatar_path ? supabase.storage.from("avatars").getPublicUrl(u.avatar_path).data.publicUrl : null} size={32} />
+                  <Avatar name={u.full_name ?? u.email} seed={u.id} src={u.avatar_path ? supabase.storage.from("avatars").getPublicUrl(u.avatar_path).data.publicUrl : null} size={42} />
                   {u.email}
                 </span>
               </td>

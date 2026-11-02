@@ -64,7 +64,7 @@ export default async function CompanyHome() {
             <Search /> Buscar talento
           </Link>
         }
-        art={<Avatar name={company.name} seed={company.id} src={logo} size={52} square />}
+        art={<Avatar name={company.name} seed={company.id} src={logo} size={64} square />}
       />
 
       <div className="grid gap-5 xl:grid-cols-3">
@@ -159,7 +159,7 @@ export default async function CompanyHome() {
                 d ? (
                   <li key={id}>
                     <Link href={`/empresa/estudiantes/${id}`} className="flex items-center gap-3 rounded-[0.75rem_0.75rem_0.75rem_0.1875rem] border border-borde p-3 transition-colors hover:border-azul hover:bg-celeste">
-                      <Avatar name={d.contact?.full_name ?? d.program} seed={id} src={photos.get(id) ?? null} size={38} />
+                      <Avatar name={d.contact?.full_name ?? d.program} seed={id} src={photos.get(id) ?? null} size={46} />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-black text-azul-oscuro">{d.contact?.full_name ?? d.headline ?? "Perfil"}</span>
                         <span className="block truncate text-xs text-suave">{d.program}</span>

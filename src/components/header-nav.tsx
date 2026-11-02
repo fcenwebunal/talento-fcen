@@ -65,7 +65,7 @@ export function HeaderNav({ role, name, email, avatarUrl, embedded = false }: { 
             {role ? (
               <div className="hidden items-center gap-1 md:flex">
                 <Link href="/cuenta" className="flex items-center gap-2 rounded-lg py-1 pl-2 pr-2 transition-colors hover:bg-celeste" title="Mi cuenta">
-                  <Avatar name={name ?? email} seed={email ?? "x"} src={avatarUrl} size={30} />
+                  <Avatar name={name ?? email} seed={email ?? "x"} src={avatarUrl} size={38} />
                   <span className="hidden flex-col text-left leading-tight xl:flex">
                     <span className="max-w-[9rem] truncate text-sm font-black text-azul-oscuro">{name?.split(" ")[0] ?? "Mi cuenta"}</span>
                     <span className="text-[0.6875rem] text-verde-tinta">{ROLE_LABEL[role]}</span>
@@ -100,7 +100,7 @@ export function HeaderNav({ role, name, email, avatarUrl, embedded = false }: { 
           <div className="absolute inset-x-0 top-full border-b border-borde bg-white px-4 pb-5 pt-2 text-azul-oscuro shadow-xl lg:hidden" style={{ animation: "fade-up 0.25s var(--ease-out) both" }}>
             {role && (
               <Link href={HOME[role]} className="mb-1 flex items-center gap-3 rounded-lg bg-celeste p-3">
-                <Avatar name={name ?? email} seed={email ?? "x"} src={avatarUrl} size={36} />
+                <Avatar name={name ?? email} seed={email ?? "x"} src={avatarUrl} size={44} />
                 <span className="flex-1">
                   <span className="block font-black">{name ?? email}</span>
                   <span className="text-xs text-verde-tinta">{ROLE_LABEL[role]} · Mi espacio</span>
