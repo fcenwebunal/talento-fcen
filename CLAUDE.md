@@ -87,3 +87,8 @@ Beta **en línea** en https://talento-fcen--talentofcen.us-east4.hosted.app (Fir
 
 - `/admin/recoger` (Facultad y administración): resumen de los estudiantes visibles para empresas (consentimiento, programa y estado disponible o en proceso), con filtros por programa, estado y habilidad, vista previa y descarga en CSV (separado por punto y coma, decimales con coma, para Excel en español) o PDF (`src/lib/collect.ts`, `src/lib/collect-pdf.tsx`, ruta `/admin/recoger/exportar`). Nombre y correo solo de quienes aceptaron compartir su contacto; PAPA solo si lo muestran a empresas autorizadas; habilidades aprobadas con su nivel y enlace al perfil. Se genera en cada descarga, no se guarda, y cada exportación queda en `exports_log` sin empresa y con `origen: recoger_datos`.
 
+## Ingreso y cuentas de prueba por rol (2026-11-02)
+
+- La pantalla de ingreso tiene dos pestañas: «Ingreso UNAL» (Google con cuenta @unal.edu.co: estudiantes, egresados y personal de la Facultad) e «Ingreso externo» (Google con cualquier cuenta o correo y contraseña; las cuentas nuevas son de organizaciones). Tras ingresar, `/panel` lleva a la interfaz del rol.
+- Cuentas de prueba, todas por «Ingreso externo» con la `DEMO_PASSWORD` de `.env.local` (no se escribe en ningún archivo): `estudiante.demo@fcen.test`, `empresa.demo@fcen.test` (empresa autorizada), `facultad.demo@fcen.test` (rol Facultad) y `admin.demo@fcen.test`. Se crean o se les restablece la contraseña con `npm run test:accounts`.
+

@@ -15,14 +15,14 @@ type Tab = "estudiante" | "empresa";
 
 const BENEFITS: Record<Tab, { icon: typeof Eye; title: string; text: string }[]> = {
   estudiante: [
-    { icon: Sparkles, title: "Muestra lo que sabes hacer", text: "Habilidades con nivel y evidencia, no solo una hoja de vida." },
-    { icon: ShieldCheck, title: "Tú decides quién te contacta", text: "Tu nombre y contacto solo los ven empresas autorizadas, si lo aceptas." },
-    { icon: BadgeCheck, title: "Una guía paso a paso", text: "Todo lo que necesitas para formalizar tu práctica." },
+    { icon: Sparkles, title: "Estudiantes y egresados", text: "Muestra tus habilidades con nivel y evidencia, y decide quién te contacta." },
+    { icon: BadgeCheck, title: "Personal de la Facultad", text: "Gestiona empresas, verifica perfiles y recoge datos con tu misma cuenta." },
+    { icon: ShieldCheck, title: "Sin otra contraseña", text: "Usamos tu cuenta de la Universidad y nunca vemos tu contraseña." },
   ],
   empresa: [
-    { icon: Search, title: "Busque por habilidades", text: "Filtre por programa, nivel, idioma, modalidad y ciudad." },
-    { icon: Eye, title: "Vea perfiles desde el primer día", text: "Sin nombre ni contacto hasta que la Facultad lo autorice." },
-    { icon: FileDown, title: "Exporte sus candidatos", text: "Ya autorizada, descargue listados y hojas de vida." },
+    { icon: Search, title: "Organizaciones", text: "Busque practicantes por habilidad, programa, idioma, modalidad y ciudad." },
+    { icon: Eye, title: "Cuentas con correo y contraseña", text: "Entre con Google o con su correo; la plataforma le muestra lo que corresponde a su cuenta." },
+    { icon: FileDown, title: "Hojas de vida y listados", text: "Con la autorización de la Facultad, descargue CV y exporte candidatos." },
   ],
 };
 
@@ -34,9 +34,9 @@ export function LoginPanel({ initial }: { initial: Tab }) {
       <aside className="relative hidden flex-col overflow-hidden bg-celeste p-10 lg:flex">
         <div className="bg-links absolute inset-0" />
         <div className="relative">
-          <p className="kicker">{tab === "estudiante" ? "Para estudiantes" : "Para empresas"}</p>
+          <p className="kicker">{tab === "estudiante" ? "Comunidad UNAL" : "Cuentas externas"}</p>
           <h1 className="display mt-3 text-3xl text-azul-oscuro">
-            {tab === "estudiante" ? "Tu talento, visible para quien lo busca" : "El talento de la FCEN, a su alcance"}
+            {tab === "estudiante" ? "Entra con tu cuenta de la Universidad" : "Entra con tu correo o con Google"}
           </h1>
           <ul key={tab} className="stagger mt-8 space-y-5">
             {BENEFITS[tab].map((b) => (
@@ -71,7 +71,7 @@ export function LoginPanel({ initial }: { initial: Tab }) {
               className={`relative z-10 flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-black transition-colors ${tab === t ? "text-azul" : "text-suave"}`}
             >
               {t === "estudiante" ? <GraduationCap className="h-4 w-4" /> : <BriefcaseBusiness className="h-4 w-4" />}
-              {t === "estudiante" ? "Estudiantes y Facultad" : "Empresas"}
+              {t === "estudiante" ? "Ingreso UNAL" : "Ingreso externo"}
             </button>
           ))}
         </div>
@@ -99,7 +99,7 @@ function StudentLogin() {
   return (
     <div>
       <p className="flex items-center gap-1.5 text-suave">
-        Entra con tu cuenta institucional <strong className="text-texto">@unal.edu.co</strong>.
+        Estudiantes, egresados y personal de la Facultad entran con su cuenta <strong className="text-texto">@unal.edu.co</strong>.
         <HelpTip>
           Usamos tu cuenta de la Universidad para saber que eres de la UNAL. No necesitas otra contraseña y nunca vemos la tuya.
         </HelpTip>
@@ -111,11 +111,11 @@ function StudentLogin() {
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         <div className="card-flat flex gap-3 p-4 text-sm">
           <GraduationCap className="h-5 w-5 shrink-0 text-azul-medio" aria-hidden="true" />
-          <span className="text-suave">Estudiantes de pregrado y posgrado, y egresados recientes.</span>
+          <span className="text-suave">Pregrado, posgrado y egresados recientes de la Facultad.</span>
         </div>
         <div className="card-flat flex gap-3 p-4 text-sm">
           <Building2 className="h-5 w-5 shrink-0 text-azul-medio" aria-hidden="true" />
-          <span className="text-suave">El personal de la Facultad también entra aquí; la coordinación le asigna su rol.</span>
+          <span className="text-suave">Personal de la Facultad: entra igual y la coordinación le asigna su rol.</span>
         </div>
       </div>
     </div>
@@ -174,7 +174,7 @@ function CompanyLogin() {
       </div>
       <p className="text-suave">
         {mode === "login"
-          ? "Ingrese con el correo y la contraseña de su organización."
+          ? "Ingrese con su correo y contraseña. Verá la interfaz que corresponde a su cuenta."
           : "Cree la cuenta de quien representará a su organización. Después registrará los datos de la empresa."}
       </p>
       <label className="field">
@@ -209,7 +209,7 @@ function CompanyLogin() {
       </button>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-borde pt-4 text-sm">
         <button type="button" className="font-black text-azul hover:underline" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
-          {mode === "login" ? "Crear una cuenta de empresa" : "Ya tengo cuenta"}
+          {mode === "login" ? "Crear una cuenta para mi organización" : "Ya tengo cuenta"}
         </button>
         {mode === "login" && (
           <span className="flex items-center gap-1 text-suave">
