@@ -113,7 +113,7 @@ export default async function AdminStudent({ params }: { params: Promise<{ id: s
         </div>
       </div>
 
-      <StudentDetailView detail={detail} viewer="la Facultad" photoUrl={signed.find((d) => d.kind === "foto")?.url ?? null} />
+      <StudentDetailView detail={detail} viewer="la Facultad" cvHref={`/cv/${id}`} photoUrl={signed.find((d) => d.kind === "foto")?.url ?? null} />
     </div>
   );
 }

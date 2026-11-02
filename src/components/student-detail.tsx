@@ -1,5 +1,5 @@
 import {
-  Award, BookOpen, CalendarDays, CheckCircle2, Clock, Code2, Compass, ExternalLink, Eye, Globe,
+  Award, BookOpen, CalendarDays, CheckCircle2, Clock, Code2, Compass, ExternalLink, Eye, FileDown, Globe,
   GraduationCap, HeartHandshake, Languages, Lock, Mail, MapPin, Network, Phone, Plane, Sparkles, Target, Timer, Trophy,
 } from "lucide-react";
 import type { ExperienceKind, StudentDetail } from "@/lib/types";
@@ -10,7 +10,6 @@ import {
 import { Avatar } from "./ui/avatar";
 import { HelpTip } from "./ui/help-tip";
 import { SkillIcon } from "./ui/skill-icon";
-import { PrintButton } from "./cv/print-button";
 
 export function LevelDots({ level }: { level: number }) {
   return (
@@ -52,12 +51,14 @@ export function StudentDetailView({
   actions,
   photoUrl,
   viewer,
+  cvHref,
 }: {
   detail: StudentDetail;
   hideContact?: boolean;
   actions?: React.ReactNode;
   photoUrl?: string | null;
   viewer?: string;
+  cvHref?: string;
 }) {
   const contact = !hideContact && detail.contact_visible ? detail.contact : null;
   const fresh = freshness(detail.last_confirmed_at);
@@ -68,7 +69,6 @@ export function StudentDetailView({
   const foreign = detail.languages.filter((l) => !/^espa/i.test(l.language));
   const mainLanguage = [...foreign].sort((a, b) => CEFR.indexOf(b.level) - CEFR.indexOf(a.level))[0];
   const status = detail.academic_status === "egresado" ? "Egresado reciente" : "Estudiante";
-  const fileName = `Hoja de vida ${contact?.full_name ?? detail.program ?? ""} - Talento FCEN`.trim();
 
   const stats = [
     detail.progress_pct !== null && {
@@ -134,7 +134,11 @@ export function StudentDetailView({
         )}
         <div className="ml-auto flex flex-wrap gap-2">
           {actions}
-          <PrintButton fileName={fileName} />
+          {cvHref && (
+            <a href={cvHref} download className="btn btn-primary">
+              <FileDown /> Descargar CV
+            </a>
+          )}
         </div>
       </div>
 

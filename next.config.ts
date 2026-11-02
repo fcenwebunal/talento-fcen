@@ -8,6 +8,9 @@ const frameAncestors = [
 ].join(" ");
 
 const nextConfig: NextConfig = {
+  // The CV PDF is rendered on the server with react-pdf, using the Ancízar fonts from public/fonts
+  serverExternalPackages: ["@react-pdf/renderer"],
+  outputFileTracingIncludes: { "/cv/[id]": ["./public/fonts/**"] },
   async headers() {
     return [
       {

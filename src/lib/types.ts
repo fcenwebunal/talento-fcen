@@ -91,6 +91,5 @@ export type StudentDetail = {
     linkedin_url: string | null;
     github_url: string | null;
     portfolio_url: string | null;
-    cv_path: string | null;
   } | null;
 };

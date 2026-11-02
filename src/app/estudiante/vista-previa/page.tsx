@@ -56,7 +56,7 @@ export default async function PreviewPage({ searchParams }: { searchParams: Prom
             No has aceptado compartir tu contacto, así que las empresas autorizadas también ven tu perfil sin nombre ni contacto.
           </p>
         )}
-        <StudentDetailView detail={shown} photoUrl={photoUrl} viewer={authorized ? "una empresa autorizada" : "una empresa registrada (perfil anónimo)"} />
+        <StudentDetailView detail={shown} photoUrl={photoUrl} cvHref={`/cv/${session.userId}?nivel=${authorized ? "autorizada" : "registrada"}`} viewer={authorized ? "una empresa autorizada" : "una empresa registrada (perfil anónimo)"} />
       </div>
     </>
   );

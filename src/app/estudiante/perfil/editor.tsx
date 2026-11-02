@@ -100,7 +100,7 @@ const SECTIONS: readonly { id: string; label: string; short: string; icon: Lucid
 type SectionId = string;
 
 const DOC_KINDS = [
-  { kind: "hoja_vida", label: "Hoja de vida en PDF (máximo 2 páginas)", help: "La ven las empresas autorizadas si aceptas compartir tu contacto." },
+  { kind: "hoja_vida", label: "Hoja de vida propia en PDF (opcional)", help: "Solo la ve la Facultad. Las empresas descargan el CV que se arma con tu perfil." },
   { kind: "historia_academica", label: "Historia académica del SIA", help: "Solo la ve la Facultad, para verificar tu avance." },
   { kind: "foto", label: "Fotografía tipo documento (opcional)", help: "Solo la ven las empresas autorizadas, si aceptas compartir tu contacto." },
   { kind: "certificado", label: "Certificados de idiomas o cursos (opcional)", help: "Solo los ve la Facultad." },

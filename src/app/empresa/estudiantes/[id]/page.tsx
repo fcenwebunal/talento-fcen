@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, FileDown, Lock } from "lucide-react";
+import { ArrowLeft, Lock } from "lucide-react";
 import { requireRole } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { StudentDetailView } from "@/components/student-detail";
@@ -43,15 +43,11 @@ export default async function CompanyStudentPage({ params }: { params: Promise<{
         <StudentDetailView
           detail={detail}
           photoUrl={photoUrl}
+          cvHref={`/cv/${id}`}
           viewer={session.level < 2 ? "empresa registrada (perfil anónimo)" : detail.contact_visible ? "empresa autorizada" : "empresa autorizada, sin contacto compartido"}
           actions={
             <>
               <FavoriteButton studentId={id} isFavorite={!!fav} />
-              {detail.contact?.cv_path && (
-                <a href={`/empresa/estudiantes/${id}/hoja-de-vida`} target="_blank" className="btn btn-secondary" title="La hoja de vida que subió el propio estudiante">
-                  <FileDown /> PDF del estudiante
-                </a>
-              )}
             </>
           }
         />
