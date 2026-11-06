@@ -30,3 +30,23 @@ export function isEmbedded() {
 export function scrollParentTo(top: number) {
   window.parent.postMessage({ type: "talento:scrollTo", top: Math.max(0, Math.round(top)) }, FCEN_ORIGIN);
 }
+
+// Retries briefly because after a route change the target section may not be rendered yet.
+export function scrollParentToId(id: string, tries = 40) {
+  const target = document.getElementById(id);
+  if (target) {
+    const margin = parseFloat(getComputedStyle(target).scrollMarginTop) || 0;
+    scrollParentTo(target.getBoundingClientRect().top + window.scrollY - margin);
+    return true;
+  }
+  if (tries > 0) setTimeout(() => scrollParentToId(id, tries - 1), 50);
+  return false;
+}
+
+export function hashId(hash: string) {
+  try {
+    return decodeURIComponent(hash.replace(/^#/, ""));
+  } catch {
+    return "";
+  }
+}

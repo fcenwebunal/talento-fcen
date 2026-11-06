@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { FCEN_ORIGIN } from "@/lib/config";
-import { scrollParentTo, setParentViewport } from "@/lib/embed-viewport";
+import { hashId, scrollParentToId, setParentViewport } from "@/lib/embed-viewport";
 
 // Talks to the TYPO3 page that hosts the iframe: reports the content height and route changes.
 export function EmbedBridge() {
@@ -34,12 +34,10 @@ export function EmbedBridge() {
     const onClick = (e: MouseEvent) => {
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const link = (e.target as Element | null)?.closest?.('a[href^="#"]');
-      const id = link ? decodeURIComponent(link.getAttribute("href")!.slice(1)) : "";
-      const target = id && document.getElementById(id);
-      if (!target) return;
+      const id = link ? hashId(link.getAttribute("href")!) : "";
+      if (!id || !document.getElementById(id)) return;
       e.preventDefault();
-      const margin = parseFloat(getComputedStyle(target).scrollMarginTop) || 0;
-      scrollParentTo(target.getBoundingClientRect().top + window.scrollY - margin);
+      scrollParentToId(id, 0);
       history.replaceState(history.state, "", `#${id}`);
     };
     document.addEventListener("click", onClick);
@@ -52,7 +50,10 @@ export function EmbedBridge() {
   }, []);
 
   useEffect(() => {
-    if (window.parent !== window) window.parent.postMessage({ type: "talento:navigate", path: pathname }, FCEN_ORIGIN);
+    if (window.parent === window) return;
+    window.parent.postMessage({ type: "talento:navigate", path: pathname }, FCEN_ORIGIN);
+    const id = hashId(window.location.hash);
+    if (id) scrollParentToId(id);
   }, [pathname, params]);
 
   return null;

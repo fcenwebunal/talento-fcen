@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import type { NavItem } from "./nav-items";
 import { Icon } from "./icon";
+import { hashId, isEmbedded, scrollParentToId } from "@/lib/embed-viewport";
 
 const normalize = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
@@ -49,6 +50,9 @@ export function CommandPalette({ items }: { items: NavItem[] }) {
     if (!item) return;
     setOpen(false);
     router.push(item.href);
+    // Same page with an anchor: no route change reaches EmbedBridge, so scroll the host page here.
+    const [path, hash] = item.href.split("#");
+    if (hash && isEmbedded() && path === window.location.pathname) scrollParentToId(hashId(hash));
   }
 
   if (!open) return null;
