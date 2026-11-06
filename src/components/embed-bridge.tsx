@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { FCEN_ORIGIN } from "@/lib/config";
+import { scrollParentTo, setParentViewport } from "@/lib/embed-viewport";
 
 // Talks to the TYPO3 page that hosts the iframe: reports the content height and route changes.
 export function EmbedBridge() {
@@ -21,7 +22,33 @@ export function EmbedBridge() {
     const observer = new ResizeObserver(send);
     observer.observe(document.body);
     send();
-    return () => observer.disconnect();
+
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin !== FCEN_ORIGIN || e.data?.type !== "talento:viewport") return;
+      const { top, height } = e.data;
+      if (typeof top === "number" && typeof height === "number") setParentViewport({ top, height });
+    };
+    window.addEventListener("message", onMessage);
+
+    // In-page anchors cannot scroll the host page from a cross-origin frame: ask the host to do it.
+    const onClick = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const link = (e.target as Element | null)?.closest?.('a[href^="#"]');
+      const id = link ? decodeURIComponent(link.getAttribute("href")!.slice(1)) : "";
+      const target = id && document.getElementById(id);
+      if (!target) return;
+      e.preventDefault();
+      const margin = parseFloat(getComputedStyle(target).scrollMarginTop) || 0;
+      scrollParentTo(target.getBoundingClientRect().top + window.scrollY - margin);
+      history.replaceState(history.state, "", `#${id}`);
+    };
+    document.addEventListener("click", onClick);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("message", onMessage);
+      document.removeEventListener("click", onClick);
+    };
   }, []);
 
   useEffect(() => {
