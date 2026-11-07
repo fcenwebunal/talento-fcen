@@ -14,7 +14,7 @@ export default async function CollectPage({ searchParams }: { searchParams: Prom
   const supabase = await createClient();
   const [students, { data: programs }, { data: skills }] = await Promise.all([
     collectStudents(supabase, filters),
-    supabase.from("programs").select("id, name").eq("active", true).order("sort"),
+    supabase.from("programs").select("id, name").eq("active", true).eq("level", "pregrado").order("sort"),
     supabase.from("skills").select("id, name").eq("active", true).eq("status", "approved").order("name"),
   ]);
   const withContact = students.filter((s) => s.name).length;

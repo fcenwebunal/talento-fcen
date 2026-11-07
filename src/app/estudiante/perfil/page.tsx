@@ -29,7 +29,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       supabase.from("courses").select("name, institution, year, hours, url").eq("student_id", id).order("id"),
       supabase.from("relevant_subjects").select("name, reason").eq("student_id", id).order("id"),
       supabase.from("documents").select("id, kind, path, file_name, created_at").eq("student_id", id).order("created_at", { ascending: false }),
-      supabase.from("programs").select("id, name, level, department").eq("active", true).order("sort"),
+      supabase.from("programs").select("id, name, level, department").eq("active", true).eq("level", "pregrado").order("sort"),
       // Approved skills plus the ones this student proposed and are still in review
       supabase.from("skills").select("id, name, domain_id, description, icon_path, status").eq("active", true).or(`status.eq.approved,proposed_by.eq.${id}`).order("name"),
       supabase.from("skill_domains").select("id, name").order("sort"),

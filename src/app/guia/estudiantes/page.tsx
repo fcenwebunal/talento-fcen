@@ -95,9 +95,6 @@ export default function StudentGuide() {
               <Pending>Norma vigente de trabajo de grado de la FCEN y modalidades admitidas en cada programa</Pending>
             </p>
             <ProgramPicker />
-            <p className="mt-3 text-sm text-suave">
-              Posgrados: <Pending>si la pasantía aplica en cada especialización, maestría o doctorado</Pending>
-            </p>
           </GuideSection>
 
           <GuideSection id="listo" kicker="Verificador" title="¿Estoy listo?">

@@ -67,11 +67,6 @@ const PROGRAM_CONTENT = {
     areas: ["Biotecnología y bioprocesos", "Laboratorio, calidad y control de procesos", "Medio ambiente y sostenibilidad", "Investigación y desarrollo"],
   },
 };
-PROGRAM_CONTENT["esp-estadistica"] = { ...PROGRAM_CONTENT.estadistica, headlines: ["Econometría y ciencia de datos para el sector financiero"] };
-PROGRAM_CONTENT["esp-actuaria-finanzas"] = { ...PROGRAM_CONTENT.matematicas, skills: ["Actuaría", "Matemática financiera", "Probabilidad", "Econometría", "R", "Python", "Excel avanzado", "SQL", "Modelos de regresión"], headlines: ["Actuaría, seguros y gestión de riesgo"] };
-PROGRAM_CONTENT["maestria-matematica-aplicada"] = { ...PROGRAM_CONTENT.matematicas, headlines: ["Modelación y simulación numérica avanzada"] };
-PROGRAM_CONTENT["maestria-fisica"] = { ...PROGRAM_CONTENT["ingenieria-fisica"], headlines: ["Física de materiales y técnicas de caracterización"] };
-PROGRAM_CONTENT["esp-nanotecnologia"] = { ...PROGRAM_CONTENT["ingenieria-fisica"], skills: ["Nanotecnología", "Caracterización de materiales", "Ciencia de materiales", "Óptica y optoelectrónica", "Python", "MATLAB u Octave"], headlines: ["Nanomateriales para aplicaciones industriales"] };
 
 const SOFT = ["Trabajo en equipo", "Comunicación oral y escrita", "Pensamiento analítico y resolución de problemas", "Liderazgo", "Adaptabilidad y aprendizaje autónomo", "Organización y manejo del tiempo", "Creatividad e innovación", "Orientación a resultados"];
 const CITIES = ["Manizales", "Manizales", "Manizales", "Villamaría", "Chinchiná", "Pereira", "Armenia"];
@@ -92,13 +87,13 @@ const STUDENTS = [
   ["Natalia Franco Osorio", "ciencias-computacion", "no_disponible", 140, 68],
   ["Sebastián Arias Quintero", "ingenieria-fisica", "disponible", 50, 84],
   ["Manuela Gómez Patiño", "matematicas", "disponible", 2, 86],
-  ["Felipe Londoño Vargas", "esp-estadistica", "disponible", 18, 60],
-  ["Carolina Betancur Ruiz", "esp-actuaria-finanzas", "disponible", 7, 55],
-  ["Alejandro Rendón Toro", "maestria-matematica-aplicada", "disponible", 33, 50],
-  ["Juliana Agudelo Correa", "maestria-fisica", "en_proceso", 45, 45],
-  ["David Soto Hincapié", "esp-nanotecnologia", "disponible", 14, 65],
-  ["Paula Andrea Montes Cano", "estadistica", "disponible", 70, 100, "egresado"],
-  ["Nicolás Bedoya Arenas", "ciencias-computacion", "disponible", 5, 100, "egresado"],
+  ["Felipe Londoño Vargas", "estadistica", "disponible", 18, 80],
+  ["Carolina Betancur Ruiz", "matematicas", "disponible", 7, 76],
+  ["Alejandro Rendón Toro", "matematicas", "disponible", 33, 82],
+  ["Juliana Agudelo Correa", "ingenieria-fisica", "en_proceso", 45, 79],
+  ["David Soto Hincapié", "ingenieria-fisica", "disponible", 14, 74],
+  ["Paula Andrea Montes Cano", "estadistica", "disponible", 70, 88],
+  ["Nicolás Bedoya Arenas", "ciencias-computacion", "disponible", 5, 90],
 ];
 
 const FACES = {

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Compass, GraduationCap, Languages, MapPin, RotateCcw, Search, SlidersHorizontal, Sparkles, Target, X } from "lucide-react";
 import type { Area, Program, Skill } from "@/lib/types";
-import { LEVEL_LABEL } from "@/lib/labels";
 import { HelpTip } from "./ui/help-tip";
 
 type Initial = {
@@ -117,16 +116,10 @@ export function SearchFilters({
 
         <Select name="programa" label="Programa" icon={GraduationCap} defaultValue={initial.program_ids[0] ? String(initial.program_ids[0]) : ""}>
           <option value="">Todos</option>
-          {(["pregrado", "especializacion", "maestria", "doctorado"] as const).map((level) => (
-            <optgroup key={level} label={LEVEL_LABEL[level]}>
-              {programs
-                .filter((p) => p.level === level)
-                .map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-            </optgroup>
+          {programs.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
           ))}
         </Select>
 

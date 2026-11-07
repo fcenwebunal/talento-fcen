@@ -21,7 +21,7 @@ export default function DataPolicyPage() {
         <section>
           <h2 className="text-xl font-black text-azul-oscuro">Finalidad</h2>
           <p>
-            Conectar a estudiantes y egresados recientes de la Facultad con organizaciones que buscan practicantes, y gestionar la
+            Conectar a estudiantes de pregrado de la Facultad con organizaciones que buscan practicantes, y gestionar la
             formalización de las prácticas. Los datos no se usan para otros fines.
           </p>
         </section>
@@ -65,8 +65,7 @@ export default function DataPolicyPage() {
         <section>
           <h2 className="text-xl font-black text-azul-oscuro">Vigencia de los perfiles</h2>
           <p>
-            Un perfil que no se confirma en 90 días deja de aparecer ante las empresas. Los egresados pueden usar la plataforma hasta 12 meses
-            después de su grado; luego el perfil se archiva.
+            Un perfil que no se confirma en 90 días deja de aparecer ante las empresas.
           </p>
         </section>
       </div>

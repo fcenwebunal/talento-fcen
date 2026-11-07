@@ -10,7 +10,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "Talento FCEN", template: "%s · Talento FCEN" },
   description:
-    "Conectamos a estudiantes y egresados recientes de la Facultad de Ciencias Exactas y Naturales de la UNAL Manizales con empresas que buscan su talento.",
+    "Conectamos a estudiantes de pregrado de la Facultad de Ciencias Exactas y Naturales de la UNAL Manizales con empresas que buscan su talento.",
   robots: { index: false, follow: false },
 };
 

@@ -22,9 +22,7 @@ const TALENT = [
   { name: "Ciencias de la Computación", items: "Desarrollo de software, ciencia de datos, seguridad informática, automatización" },
   { name: "Matemáticas", items: "Modelación, optimización, simulación, finanzas cuantitativas, docencia" },
   { name: "Ingeniería Física", items: "Instrumentación y metrología, materiales y óptica, prototipado, simulación" },
-  { name: "Ingeniería Biológica", items: "Bioprocesos, microbiología, control de calidad, I+D en alimentos y farmacéutica" },
-  { name: "Posgrados", items: "Actuaría y finanzas, estadística y ciencia de datos, nanotecnología, energía solar, física, matemática aplicada" },
-];
+  { name: "Ingeniería Biológica", items: "Bioprocesos, microbiología, control de calidad, I+D en alimentos y farmacéutica" },];
 
 export default function CompanyGuide() {
   return (

@@ -15,7 +15,7 @@ type Tab = "estudiante" | "empresa";
 
 const BENEFITS: Record<Tab, { icon: typeof Eye; title: string; text: string }[]> = {
   estudiante: [
-    { icon: Sparkles, title: "Estudiantes y egresados", text: "Muestra tus habilidades con nivel y evidencia, y decide quién te contacta." },
+    { icon: Sparkles, title: "Estudiantes de pregrado", text: "Muestra tus habilidades con nivel y evidencia, y decide quién te contacta." },
     { icon: BadgeCheck, title: "Personal de la Facultad", text: "Gestiona empresas, verifica perfiles y recoge datos con tu misma cuenta." },
     { icon: ShieldCheck, title: "Sin otra contraseña", text: "Usamos tu cuenta de la Universidad y nunca vemos tu contraseña." },
   ],
@@ -99,7 +99,7 @@ function StudentLogin() {
   return (
     <div>
       <p className="flex items-center gap-1.5 text-suave">
-        Estudiantes, egresados y personal de la Facultad entran con su cuenta <strong className="text-texto">@unal.edu.co</strong>.
+        Estudiantes y personal de la Facultad entran con su cuenta <strong className="text-texto">@unal.edu.co</strong>.
         <HelpTip>
           Usamos tu cuenta de la Universidad para saber que eres de la UNAL. No necesitas otra contraseña y nunca vemos la tuya.
         </HelpTip>
@@ -111,7 +111,7 @@ function StudentLogin() {
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         <div className="card-flat flex gap-3 p-4 text-sm">
           <GraduationCap className="h-5 w-5 shrink-0 text-azul-medio" aria-hidden="true" />
-          <span className="text-suave">Pregrado, posgrado y egresados recientes de la Facultad.</span>
+          <span className="text-suave">Estudiantes de pregrado de la Facultad que buscan su práctica.</span>
         </div>
         <div className="card-flat flex gap-3 p-4 text-sm">
           <Building2 className="h-5 w-5 shrink-0 text-azul-medio" aria-hidden="true" />

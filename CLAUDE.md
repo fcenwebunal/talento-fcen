@@ -56,7 +56,9 @@ Identidad UNAL (Ancizar Sans, paleta institucional) con un sistema propio en `sr
 
 ## Datos de demostración
 
-`scripts/demo-seed.mjs` crea 22 estudiantes ficticios (pregrado, posgrado y egresados, en todos los estados de disponibilidad) con foto ilustrada, hoja de vida e historia académica en PDF, y 9 empresas ficticias con logo en todos los estados, con favoritos, consultas y exportaciones. Marcas: correos de estudiantes `demo.*@unal.edu.co`, de empresas `demo.*@example.com`, NIT `DEMO-*`. **Se borran con `npm run demo:clean` antes de abrir la beta a usuarios reales.**
+`scripts/demo-seed.mjs` crea 22 estudiantes ficticios (en el script, todos de pregrado y activos desde el 2026-11-06; la base publicada puede conservar los 5 de posgrado y 2 egresados de la siembra anterior hasta resembrar), en todos los estados de disponibilidad) con foto ilustrada, hoja de vida e historia académica en PDF, y 9 empresas ficticias con logo en todos los estados, con favoritos, consultas y exportaciones. Marcas: correos de estudiantes `demo.*@unal.edu.co`, de empresas `demo.*@example.com`, NIT `DEMO-*`. **Se borran con `npm run demo:clean` antes de abrir la beta a usuarios reales.**
+
+Solo pregrado (2026-11-06): el código pide `.eq("level", "pregrado")` en las tres consultas de `programs` (perfil, búsqueda, Recoger datos), la búsqueda de empresas fija `levels: ["pregrado"]` en `src/lib/search.ts`, Recoger datos filtra `programs.level` y el perfil guarda siempre `academic_status = "activo"` (sin campo «Situación»). La base no cambió: los programas de posgrado siguen con `active = true` y el enum `academic_status` conserva `egresado`, así que volver atrás es revertir el commit.
 
 ## Estado (2026-10-31)
 
@@ -89,6 +91,6 @@ Beta **en línea** en https://talento-fcen--talentofcen.us-east4.hosted.app (Fir
 
 ## Ingreso y cuentas de prueba por rol (2026-11-02)
 
-- La pantalla de ingreso tiene dos pestañas: «Ingreso UNAL» (Google con cuenta @unal.edu.co: estudiantes, egresados y personal de la Facultad) e «Ingreso externo» (Google con cualquier cuenta o correo y contraseña; las cuentas nuevas son de organizaciones). Tras ingresar, `/panel` lleva a la interfaz del rol.
+- La pantalla de ingreso tiene dos pestañas: «Ingreso UNAL» (Google con cuenta @unal.edu.co: estudiantes y personal de la Facultad) e «Ingreso externo» (Google con cualquier cuenta o correo y contraseña; las cuentas nuevas son de organizaciones). Tras ingresar, `/panel` lleva a la interfaz del rol.
 - Cuentas de prueba, todas por «Ingreso externo» con la `DEMO_PASSWORD` de `.env.local` (no se escribe en ningún archivo): `estudiante.demo@fcen.test`, `empresa.demo@fcen.test` (empresa autorizada), `facultad.demo@fcen.test` (rol Facultad) y `admin.demo@fcen.test`. Se crean o se les restablece la contraseña con `npm run test:accounts`.
 

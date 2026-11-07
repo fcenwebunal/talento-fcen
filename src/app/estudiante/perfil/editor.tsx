@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Area, PapaVisibility, Program, Skill, SkillDomain, SoftSkill } from "@/lib/types";
-import { EXPERIENCE_KIND, LEVEL_LABEL, OUTPUT_KIND, PAPA_VISIBILITY, VERIFIED_LABEL } from "@/lib/labels";
+import { EXPERIENCE_KIND, OUTPUT_KIND, PAPA_VISIBILITY, VERIFIED_LABEL } from "@/lib/labels";
 import { HelpTip } from "@/components/ui/help-tip";
 import { ImageCropper } from "@/components/ui/image-cropper";
 import { ListEditor } from "./list-editor";
@@ -174,7 +174,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
           throw new Error("Adjunta tu historia académica (PDF o imagen) antes de guardar el avance y el PAPA: la Facultad los verifica con ella.");
         }
         await updateStudent({
-          program_id: student.program_id, academic_status: student.academic_status,
+          program_id: student.program_id, academic_status: "activo",
           graduation_date: student.graduation_date, papa_visibility: student.papa_visibility,
           progress_pct: student.progress_pct, papa: student.papa, practice_period: student.practice_period,
           emphasis: student.emphasis, honors: student.honors,
@@ -298,10 +298,6 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
   };
 
   const toggle = (list: number[], id: number) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
-  const programsByLevel = data.catalogs.programs.reduce<Record<string, Program[]>>((acc, pr) => {
-    (acc[pr.level] ??= []).push(pr);
-    return acc;
-  }, {});
 
   const current = SECTIONS.find((x) => x.id === section) ?? SECTIONS[0];
   const currentIndex = SECTIONS.indexOf(current);
@@ -423,27 +419,14 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               <Field label="Programa curricular">
                 <select className="input" value={student.program_id ?? ""} onChange={(e) => s("program_id", e.target.value ? Number(e.target.value) : null)}>
                   <option value="">Elegir…</option>
-                  {Object.entries(programsByLevel).map(([level, list]) => (
-                    <optgroup key={level} label={LEVEL_LABEL[level as keyof typeof LEVEL_LABEL]}>
-                      {list.map((pr) => (
-                        <option key={pr.id} value={pr.id}>
-                          {pr.name}
-                        </option>
-                      ))}
-                    </optgroup>
+                  {data.catalogs.programs.map((pr) => (
+                    <option key={pr.id} value={pr.id}>
+                      {pr.name}
+                    </option>
                   ))}
                 </select>
               </Field>
-              <Field label="Situación">
-                <select className="input" value={student.academic_status} onChange={(e) => s("academic_status", e.target.value as StudentRow["academic_status"])}>
-                  <option value="activo">Estudiante activo</option>
-                  <option value="egresado">Egresado reciente</option>
-                </select>
-              </Field>
-              <Field
-                label={student.academic_status === "egresado" ? "Fecha de grado" : "Fecha estimada de grado"}
-                help={student.academic_status === "egresado" ? "La plataforma te mantiene activo hasta 12 meses después de tu grado." : "Aproximada: el mes en que esperas graduarte."}
-              >
+              <Field label="Fecha estimada de grado" help="Aproximada: el mes en que esperas graduarte.">
                 <input className="input" type="date" value={text(student.graduation_date)} onChange={(e) => s("graduation_date", blank(e.target.value))} />
               </Field>
               <Field label="Porcentaje de avance en el plan de estudios" help={`Estado: ${VERIFIED_LABEL[student.progress_verified] ?? student.progress_verified}. Adjunta tu historia académica abajo para que la Facultad lo verifique.`}>

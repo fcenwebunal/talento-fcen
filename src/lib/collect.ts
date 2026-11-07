@@ -60,10 +60,11 @@ export async function collectStudents(supabase: SupabaseClient, filters: Collect
   let query = supabase
     .from("students")
     .select(
-      "id, academic_status, availability, consent_contact, progress_pct, progress_verified, papa, papa_visibility, practice_period, available_from, city, modalities, headline, profiles(full_name, email), programs(name, level), student_languages(language, level), student_skills(level, skills(name, status, skill_domains(name)))"
+      "id, academic_status, availability, consent_contact, progress_pct, progress_verified, papa, papa_visibility, practice_period, available_from, city, modalities, headline, profiles(full_name, email), programs!inner(name, level), student_languages(language, level), student_skills(level, skills(name, status, skill_domains(name)))"
     )
     .eq("consent_anonymous", true)
     .not("program_id", "is", null)
+    .eq("programs.level", "pregrado")
     .in("availability", filters.estado === "todos" ? ["disponible", "en_proceso"] : [filters.estado])
     .order("updated_at", { ascending: false })
     .limit(1000);

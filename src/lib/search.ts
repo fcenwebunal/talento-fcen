@@ -10,7 +10,7 @@ export function filtersFrom(params: SearchParams) {
   return {
     q: one(params.q),
     program_ids: list(params.programa).map(Number),
-    levels: list(params.nivel),
+    levels: ["pregrado"],
     skill_ids: list(params.habilidad).map(Number),
     require_all_skills: one(params.todas) === "1",
     min_skill_level: Number(one(params.nivel_habilidad)) || 1,
