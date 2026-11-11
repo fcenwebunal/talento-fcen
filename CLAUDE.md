@@ -16,7 +16,7 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 |---|---|
 | Aplicar migraciones | `set -a && . ./.env.local && set +a && npx supabase db push --linked --password "$SUPABASE_DB_PASSWORD" --yes` |
 | Configurar Auth (sitio, retornos, Google, sin confirmación por correo) | `npm run auth:configure` |
-| Prueba completa de roles y niveles de visibilidad (41 pruebas; crea cuentas desechables y borra todo su rastro, incluidos registros de actividad; el ingreso con Google se simula en SQL con reversión y usa `SUPABASE_ACCESS_TOKEN`) | `npm run test:smoke` |
+| Prueba completa de roles y niveles de visibilidad (46 pruebas; crea cuentas desechables y borra todo su rastro, incluidos registros de actividad; el ingreso con Google se simula en SQL con reversión y usa `SUPABASE_ACCESS_TOKEN`) | `npm run test:smoke` |
 | Cargar descripción e ícono de las habilidades del catálogo que no los tengan | `npm run skills:catalog` |
 | Dar un rol; si la persona no ha entrado, registra el correo y lo recibe en su primer ingreso con Google | `npm run role -- correo@unal.edu.co admin` |
 | Candidatos a práctica desde el SIA (cada semestre): cruzar los reportes `RE_MAT_PER_BAS` y `RE_MIG_PLA_EST_DATOS` (avance ≥ 75 % y sin tipología P) y registrarlos como estudiantes con programa, avance y PAPA | `npm run sia:candidates -- <RE_MAT.xlsx> <RE_MIG.xlsx> <salida.csv> [75]` y `npm run candidates:load -- <salida.csv>` (simula; `--confirm` carga). Reportes y CSV en `../recursos/sia/` (fuera de git) |
@@ -78,7 +78,7 @@ Solo pregrado (2026-11-06): el código pide `.eq("level", "pregrado")` en las tr
 
 ## Estado (2026-11-11)
 
-**En uso real** desde el 2026-11-11 (sin datos de prueba) en https://talento-fcen--talentofcen.us-east4.hosted.app (Firebase App Hosting, backend `talento-fcen`, `us-east4`; cada push a `main` despliega), sin etiqueta «Beta» en el pie. Google activo en Supabase. 41 pruebas de `test:smoke` en verde. La conexión de App Hosting con GitHub está autorizada por la cuenta `fcenwebunal` (dueña del repositorio); si se rehace, tiene que ser con esa cuenta. Pendiente: confirmar el avance mínimo para la práctica con la Vicedecanatura, y con un envío de correo configurado en Supabase, activar la confirmación por correo de las cuentas con contraseña.
+**En uso real** desde el 2026-11-11 (sin datos de prueba) en https://talento-fcen--talentofcen.us-east4.hosted.app (Firebase App Hosting, backend `talento-fcen`, `us-east4`; cada push a `main` despliega), sin etiqueta «Beta» en el pie. Google activo en Supabase. 46 pruebas de `test:smoke` en verde. La conexión de App Hosting con GitHub está autorizada por la cuenta `fcenwebunal` (dueña del repositorio); si se rehace, tiene que ser con esa cuenta. Pendiente: confirmar el avance mínimo para la práctica con la Vicedecanatura, y con un envío de correo configurado en Supabase, activar la confirmación por correo de las cuentas con contraseña.
 
 ## Habilidades: descripción, ícono y propuestas (2026-11-01)
 
