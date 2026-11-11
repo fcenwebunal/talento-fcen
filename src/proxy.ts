@@ -3,6 +3,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { COOKIE_OPTIONS, EMBED_COOKIE, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/config";
 
 export async function proxy(request: NextRequest) {
+  // Sign-in routes must not refresh a stored session: when it is stale (deleted account, token revoked by a sign-out
+  // inside the iframe) supabase-js clears its storage, PKCE code verifier included, and /auth/callback cannot finish.
+  if (request.nextUrl.pathname.startsWith("/auth/")) return NextResponse.next();
+
   // ?embed=1 marks the session as embedded in fcen.unal.edu.co (the cookie is partitioned per top-level site)
   const embedParam = request.nextUrl.searchParams.get("embed");
   if (embedParam === "1") request.cookies.set(EMBED_COOKIE, "1");
