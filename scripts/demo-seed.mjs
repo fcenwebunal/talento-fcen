@@ -1,4 +1,5 @@
 // Demo data for the beta: fictional students, companies, photos, logos, CVs and activity.
+// The project is the production database since 2026-11-11 (demo data removed): seeding needs ALLOW_DEMO_DATA=1 on purpose.
 // Run: node --env-file=.env.local scripts/demo-seed.mjs          (replaces previous demo data)
 //      node --env-file=.env.local scripts/demo-seed.mjs --clean  (only removes demo data)
 //      node --env-file=.env.local scripts/demo-seed.mjs --passwords  (sets DEMO_PASSWORD on every demo account)
@@ -481,6 +482,11 @@ async function seedCompanies(students) {
   }
   console.log("Favoritos, consultas y exportaciones de demostración listos");
   return created;
+}
+
+if (!process.argv.includes("--clean") && process.env.ALLOW_DEMO_DATA !== "1") {
+  console.error("Talento FCEN está en uso real: no se siembran datos de demostración en producción (ALLOW_DEMO_DATA=1 para forzarlo).");
+  process.exit(1);
 }
 
 if (process.argv.includes("--passwords")) {

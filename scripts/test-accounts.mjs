@@ -3,6 +3,12 @@
 // Run: node --env-file=.env.local scripts/test-accounts.mjs   (the password is never printed)
 import { createClient } from "@supabase/supabase-js";
 
+// Deleted on 2026-11-11 when the platform went into real use: a shared-password administrator is a risk in production.
+if (process.env.ALLOW_DEMO_DATA !== "1") {
+  console.error("Talento FCEN está en uso real: no se crean cuentas de prueba con contraseña compartida (ALLOW_DEMO_DATA=1 para forzarlo y bórralas al terminar).");
+  process.exit(1);
+}
+
 const admin = createClient("https://iwpnsyuvqvmdlsbkbzly.supabase.co", process.env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } });
 const password = process.env.DEMO_PASSWORD;
 if (!password) throw new Error("Falta DEMO_PASSWORD en .env.local");

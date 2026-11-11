@@ -16,12 +16,11 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 |---|---|
 | Aplicar migraciones | `set -a && . ./.env.local && set +a && npx supabase db push --linked --password "$SUPABASE_DB_PASSWORD" --yes` |
 | Configurar Auth (sitio, retornos, Google, sin confirmación por correo) | `npm run auth:configure` |
-| Prueba completa de niveles de visibilidad (crea y borra cuentas de prueba) | `npm run test:smoke` |
-| Revisar en producción las páginas de cada rol con las cuentas demo (usa `DEMO_PASSWORD`) | `npm run check:pages` |
+| Prueba completa de roles y niveles de visibilidad (41 pruebas; crea cuentas desechables y borra todo su rastro, incluidos registros de actividad; el ingreso con Google se simula en SQL con reversión y usa `SUPABASE_ACCESS_TOKEN`) | `npm run test:smoke` |
 | Cargar descripción e ícono de las habilidades del catálogo que no los tengan | `npm run skills:catalog` |
-| Completar en los estudiantes demo los datos de la hoja de vida (logros, PAPA, publicaciones…) | `npm run demo:cv` |
-| Dar un rol (la persona debe haber ingresado una vez) | `npm run role -- correo@unal.edu.co admin` |
-| Datos de demostración: crear (reemplaza los anteriores), borrar, fijar contraseña | `npm run demo:seed`, `npm run demo:clean`, `npm run demo:passwords` (usa `DEMO_PASSWORD` de `.env.local`) |
+| Dar un rol; si la persona no ha entrado, registra el correo y lo recibe en su primer ingreso con Google | `npm run role -- correo@unal.edu.co admin` |
+| Candidatos a práctica desde el SIA (cada semestre): cruzar los reportes `RE_MAT_PER_BAS` y `RE_MIG_PLA_EST_DATOS` (avance ≥ 75 % y sin tipología P) y registrarlos como estudiantes con programa, avance y PAPA | `npm run sia:candidates -- <RE_MAT.xlsx> <RE_MIG.xlsx> <salida.csv> [75]` y `npm run candidates:load -- <salida.csv>` (simula; `--confirm` carga). Reportes y CSV en `../recursos/sia/` (fuera de git) |
+| Datos de demostración y cuentas de prueba (desactivados desde el 2026-11-11: el proyecto es producción; exigen `ALLOW_DEMO_DATA=1` y hay que borrarlos al terminar) | `npm run demo:seed`, `npm run demo:clean`, `npm run demo:cv`, `npm run test:accounts`, `npm run check:pages` |
 | Compilar | `npx tsc --noEmit` y `npx next build` |
 | Servidor local | `exec node node_modules/next/dist/bin/next start -p 3000` en segundo plano. Con `npx next start` el proceso de Node queda huérfano al detener la tarea |
 
@@ -31,7 +30,7 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 - **La seguridad vive en la base** (RLS y funciones `security definer` en `supabase/migrations/`): niveles 0 público, 1 empresa registrada (anónimo), 2 empresa autorizada o Facultad (`public.access_level()`). Las empresas nunca leen tablas de estudiantes: solo `search_students`, `get_student_detail` y `export_students`. Disparadores protegen roles, estado de empresas y verificación del avance. `pg_cron` corre `run_daily_maintenance()` a las 06:00 hora de Colombia.
 - Roles: ver la sección «Roles (2026-11-11)». Toda cuenta nueva entra como «usuario»; los roles se dan en `/admin/usuarios` o con `npm run role`.
 - Archivos en Storage: bucket privado `documentos` (`<uid>/<tipo>/<archivo>`) y público `logos`.
-- La prueba `test:smoke` no puede simular un ingreso real con Google (la API de administración crea cuentas de correo): el rechazo de cuentas que no son `@unal.edu.co` se verifica con un ingreso real.
+- La API de administración solo crea cuentas de correo (ignora `app_metadata.provider`): por eso `test:smoke` simula el alta con Google insertando en `auth.users` dentro de un bloque `do` que termina en `raise exception` y se deshace entero.
 
 ## Incrustado en fcen.unal.edu.co (2026-11-01)
 
@@ -41,9 +40,8 @@ Plataforma que conecta a estudiantes de la FCEN (UNAL Manizales) con empresas: p
 - **Descargas** (2026-11-11): dentro del iframe, Chrome manda las peticiones de un `<a download>` **sin la cookie particionada**, así que las rutas con sesión respondían 401 y Chrome guardaba un archivo fallido con el nombre de la URL más `.txt` («El archivo no estaba disponible en el sitio»: `exportar.txt`, `<id del estudiante>.txt`). No dependía de la red. Toda descarga de una ruta propia va con `DownloadButton` (`components/ui/download-button.tsx`: `fetch` + blob, «Preparando…» y el mensaje de error de la ruta en pantalla; es un enlace sin `download`, así que un clic antes de que hidrate la página navega a la ruta, que también lleva la cookie y descarga), nunca con `<a download>`; las rutas responden sus errores en `text/plain` con un mensaje corto. Los documentos privados se firman al hacer clic (`DocumentLink`, `openInNewTab` de `lib/files.ts`, que abre la pestaña antes del `await` para que no la bloqueen). Un enlace en pestaña nueva hacia una ruta con sesión no sirve: fuera del iframe la cookie es de otra partición.
 - Google no carga dentro de un iframe: dentro de la FCEN el ingreso abre una ventana emergente (`/auth/popup`), el retorno (`/auth/callback?handoff=`) genera un enlace mágico con la secret key y lo deja en `login_handoffs`, y el iframe lo recoge por `/api/handoff` y llama `verifyOtp`. **Requiere el secreto `SUPABASE_SECRET_KEY` en App Hosting** (y su línea en `apphosting.yaml`); sin él ese ingreso muestra un aviso y lo demás funciona.
 - Cuentas de Google: la lista `google_admins` de `app_settings` entra como administración desde el primer ingreso; las demás entran como «usuario» salvo que un administrador haya registrado el correo (sección «Roles»). El botón de estudiantes pide `hd=unal.edu.co` y Google manda las cuentas ajenas al SSO de la UNAL.
-- Cuentas de prueba del usuario (2026-11-01): administración `judiazgom@unal.edu.co` (ya con rol admin), empresa `juanmanueldiazgomez247@gmail.com` (pestaña Empresas, «Continuar con Google»; tras ingresar registra su organización), estudiante `comunicacionesfcen_man@unal.edu.co`. `fcenwebunal@gmail.com` quedó como empresa sin organización registrada.
-- `/cuenta`: foto (bucket público `avatars`), nombre, cargo y descripción para cualquier rol; las empresas además editan su organización y logo.
-- Datos demo: correos terminados en `.demo@` (formato institucional, no coinciden con cuentas reales), logos PNG generados y subidos al bucket `logos`, rostros generados por IA en `scripts/demo-assets/rostros/`, empresas ficticias registradas en `app_settings.demo_company_ids`.
+- Cuentas: desde el 2026-11-11 solo existe `judiazgom@unal.edu.co` (administrador); `acompanamientofcen_man@unal.edu.co` está registrada como administradora y recibe el rol en su primer ingreso con Google. Las cuentas de prueba del usuario (`juanmanueldiazgomez247@gmail.com`, `fcenwebunal@gmail.com`, `comunicacionesfcen_man@unal.edu.co`) se borraron: si vuelven a entrar quedan como «usuario».
+- `/cuenta`: foto (bucket público `avatars`), nombre, cargo y descripción para cualquier rol; las empresas además editan su organización y logo. Es lo único que ve un «usuario».
 
 ## Roles (2026-11-11)
 
@@ -54,6 +52,7 @@ Decisiones del usuario: toda cuenta nueva, UNAL o externa, entra como **«usuari
 - `profiles.provider` guarda cómo entra cada cuenta; `/admin/usuarios` marca «correo sin verificar» en las de contraseña para que el administrador lo tenga en cuenta antes de darles un rol.
 - El disparador `profiles_role_rows` crea las filas de `students` y `student_private` cuando una cuenta pasa a estudiante, venga de donde venga el cambio. Quitar un rol no borra datos: `student_is_listed` exige el rol estudiante (las empresas dejan de ver el perfil) y `access_level` exige el rol empresa (una ex empresa pierde el acceso). Las listas de estudiantes del panel filtran `profiles.role = 'student'`.
 - `src/lib/roles.ts` tiene las etiquetas, el inicio de cada rol y los roles asignables (antes estaban copiados en tres archivos). `npm run test:smoke` prueba todo lo anterior con cuentas desechables.
+- **Estudiantes del SIA** (migración `20261111000013_invite_student_data.sql`, decisión del usuario del 2026-11-11): `role_invites.student_data` (`program` = slug de `programs`, `program_name`, `progress_pct`, `papa`, `source`) se aplica en el primer ingreso con Google como avance y PAPA verificados por la coordinación (`progress_verified = 'coordinacion'`); el estudiante igual tiene que aceptar el tratamiento de datos y la visibilidad para aparecer a las empresas. Los registros se cargan con `sia:candidates` y `candidates:load`; `/admin/usuarios` muestra programa y avance de cada registro pendiente. Primera carga: 44 candidatos de 2026-2S (29 de Ingeniería Física, 10 de Ciencias de la Computación y 5 de Matemáticas; Estadística e Ingeniería Biológica no tienen a nadie con avance ≥ 75 %). El avance mínimo de 75 % es el del análisis del usuario: falta confirmarlo con la Vicedecanatura (ver `../plan-beta.md`).
 
 ## Diseño (2026-11-01, segunda vuelta)
 
@@ -67,13 +66,15 @@ Identidad UNAL (Ancizar Sans, paleta institucional) con un sistema propio en `sr
 
 ## Datos de demostración
 
-`scripts/demo-seed.mjs` crea 22 estudiantes ficticios (en el script, todos de pregrado y activos desde el 2026-11-06; la base publicada puede conservar los 5 de posgrado y 2 egresados de la siembra anterior hasta resembrar), en todos los estados de disponibilidad) con foto ilustrada, hoja de vida e historia académica en PDF, y 9 empresas ficticias con logo en todos los estados, con favoritos, consultas y exportaciones. Marcas: correos de estudiantes `demo.*@unal.edu.co`, de empresas `demo.*@example.com`, NIT `DEMO-*`. **Se borran con `npm run demo:clean` antes de abrir la beta a usuarios reales.**
+**Borrados el 2026-11-11** al pasar a uso real, junto con las cuentas `@fcen.test`, las cuentas de prueba del usuario y toda la actividad de prueba (contactos, exportaciones, favoritos, historial). Respaldo completo previo (tablas en JSON, cuentas sin contraseñas y archivos de Storage) en `../respaldos-bd/2026-11-11_antes-de-limpiar/`, fuera de git. Se conservaron el catálogo de habilidades con sus íconos, programas, áreas y configuración.
+
+`scripts/demo-seed.mjs` crea 22 estudiantes ficticios con foto ilustrada, hoja de vida e historia académica en PDF, y 9 empresas ficticias con logo en todos los estados, con favoritos, consultas y exportaciones. Marcas: correos de estudiantes `demo.*@unal.edu.co`, de empresas `demo.*@example.com`, NIT `DEMO-*`. Como el proyecto es producción, sembrar exige `ALLOW_DEMO_DATA=1` y se borra con `npm run demo:clean` al terminar.
 
 Solo pregrado (2026-11-06): el código pide `.eq("level", "pregrado")` en las tres consultas de `programs` (perfil, búsqueda, Recoger datos), la búsqueda de empresas fija `levels: ["pregrado"]` en `src/lib/search.ts`, Recoger datos filtra `programs.level` y el perfil guarda siempre `academic_status = "activo"` (sin campo «Situación»). La base no cambió: los programas de posgrado siguen con `active = true` y el enum `academic_status` conserva `egresado`, así que volver atrás es revertir el commit.
 
-## Estado (2026-10-31)
+## Estado (2026-11-11)
 
-Beta **en línea** en https://talento-fcen--talentofcen.us-east4.hosted.app (Firebase App Hosting, backend `talento-fcen`, `us-east4`; cada push a `main` despliega). Google activo en Supabase. 22 verificaciones de visibilidad en verde. La conexión de App Hosting con GitHub está autorizada por la cuenta `fcenwebunal` (dueña del repositorio); si se rehace, tiene que ser con esa cuenta. Pendiente: verificar con un ingreso real que se rechazan cuentas de Google que no son `@unal.edu.co`.
+**En uso real** desde el 2026-11-11 (sin datos de prueba) en https://talento-fcen--talentofcen.us-east4.hosted.app (Firebase App Hosting, backend `talento-fcen`, `us-east4`; cada push a `main` despliega), sin etiqueta «Beta» en el pie. Google activo en Supabase. 41 pruebas de `test:smoke` en verde. La conexión de App Hosting con GitHub está autorizada por la cuenta `fcenwebunal` (dueña del repositorio); si se rehace, tiene que ser con esa cuenta. Pendiente: confirmar el avance mínimo para la práctica con la Vicedecanatura, y con un envío de correo configurado en Supabase, activar la confirmación por correo de las cuentas con contraseña.
 
 ## Habilidades: descripción, ícono y propuestas (2026-11-01)
 

@@ -20,7 +20,6 @@ export function SiteFooter() {
       <div className="wrap flex flex-wrap items-center justify-between gap-4 py-6 text-sm text-suave">
         <p>
           <span className="font-black text-azul-oscuro">Talento FCEN</span> · Facultad de Ciencias Exactas y Naturales, UNAL Manizales
-          <span className="chip chip-amarillo ml-2 py-0">Beta</span>
         </p>
         <nav className="flex flex-wrap gap-x-5 gap-y-1" aria-label="Pie de página">
           {LINKS.map((l) => (

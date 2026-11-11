@@ -1,4 +1,5 @@
 // Signs in with demo accounts and loads every role page on the deployed app, reporting status and render errors.
+// The demo accounts were deleted on 2026-11-11 (real use): it only works again with temporary demo data (ALLOW_DEMO_DATA=1).
 // Run: node --env-file=.env.local scripts/check-pages.mjs [baseUrl]   (uses DEMO_PASSWORD, never prints it)
 import { createServerClient } from "@supabase/ssr";
 

@@ -27,21 +27,27 @@ async function createAccount(email, { role } = {}) {
   return data.user.id;
 }
 // Simulates two Google sign-ups (one registered by an administrator) inside a block that always rolls back.
-async function googleSignupCheck(registered, unregistered) {
+async function googleSignupCheck(registered, unregistered, fromSia) {
   const sql = `do $$
 declare
   v_reg uuid := gen_random_uuid();
   v_new uuid := gen_random_uuid();
-  v_role_reg text; v_role_new text; v_left int;
+  v_sia uuid := gen_random_uuid();
+  v_role_reg text; v_role_new text; v_left int; v_sia_data text;
 begin
   insert into public.role_invites (email, role) values ('${registered}', 'staff');
+  insert into public.role_invites (email, role, student_data)
+    values ('${fromSia}', 'student', '{"program":"ingenieria-fisica","progress_pct":80.5,"papa":4.1,"source":"prueba"}');
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values
     (v_reg, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '${registered}', '{"provider":"google","providers":["google"]}', '{}', now(), now()),
-    (v_new, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '${unregistered}', '{"provider":"google","providers":["google"]}', '{}', now(), now());
+    (v_new, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '${unregistered}', '{"provider":"google","providers":["google"]}', '{}', now(), now()),
+    (v_sia, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '${fromSia}', '{"provider":"google","providers":["google"]}', '{}', now(), now());
   select role into v_role_reg from public.profiles where id = v_reg;
   select role into v_role_new from public.profiles where id = v_new;
-  select count(*) into v_left from public.role_invites where email = '${registered}';
-  raise exception 'SMOKE_RESULT registered=% unregistered=% invites_left=%', v_role_reg, v_role_new, v_left;
+  select count(*) into v_left from public.role_invites where email in ('${registered}', '${fromSia}');
+  select concat_ws('/', pr.role, p.slug, s.progress_pct, s.papa, s.progress_verified) into v_sia_data
+    from public.students s join public.profiles pr on pr.id = s.id left join public.programs p on p.id = s.program_id where s.id = v_sia;
+  raise exception 'SMOKE_RESULT registered=% unregistered=% invites_left=% sia=%', v_role_reg, v_role_new, v_left, v_sia_data;
 end $$;`;
   const res = await fetch("https://api.supabase.com/v1/projects/iwpnsyuvqvmdlsbkbzly/database/query", {
     method: "POST",
@@ -49,9 +55,9 @@ end $$;`;
     body: JSON.stringify({ query: sql }),
   });
   const text = await res.text();
-  const match = /SMOKE_RESULT registered=(\w+) unregistered=(\w+) invites_left=(\d+)/.exec(text);
+  const match = /SMOKE_RESULT registered=(\w+) unregistered=(\w+) invites_left=(\d+) sia=([\w./-]+)/.exec(text);
   if (!match) throw new Error(`Prueba de Google sin resultado: ${text.slice(0, 200)}`);
-  return { registered: match[1], unregistered: match[2], invitesLeft: Number(match[3]) };
+  return { registered: match[1], unregistered: match[2], invitesLeft: Number(match[3]), sia: match[4] };
 }
 
 async function signedIn(email) {
@@ -68,10 +74,11 @@ try {
   userIds.push(studentId);
   check("Una cuenta nueva con correo UNAL entra como usuario", (await roleOf(studentId)) === "user", await roleOf(studentId));
 
-  const google = await googleSignupCheck(invitedGoogle, `talento.prueba.${stamp}.google@unal.edu.co`);
+  const google = await googleSignupCheck(invitedGoogle, `talento.prueba.${stamp}.google@unal.edu.co`, `talento.prueba.${stamp}.sia@unal.edu.co`);
   check("Al entrar con Google sin registro previo queda como usuario", google.unregistered === "user", google.unregistered);
   check("Al entrar con Google recibe el rol que registró un administrador", google.registered === "staff", google.registered);
-  check("El registro usado se borra", google.invitesLeft === 0, String(google.invitesLeft));
+  check("Los registros usados se borran", google.invitesLeft === 0, String(google.invitesLeft));
+  check("Un estudiante registrado desde el SIA entra con programa, avance y PAPA verificados", google.sia === "student/ingenieria-fisica/80.50/4.1/coordinacion", google.sia);
 
   const staffId = await createAccount(staffEmail, { role: "staff" });
   const adminId = await createAccount(adminEmail, { role: "admin" });
@@ -206,6 +213,14 @@ try {
 } catch (e) {
   results.push(`ERROR ${e.message ?? e}`);
 } finally {
+  // Logs keep no foreign key to the throwaway accounts (or set it to null): delete them first so the real data stays clean
+  const traced = [...userIds, companyId].filter(Boolean);
+  if (traced.length) {
+    await admin.from("exports_log").delete().in("user_id", userIds);
+    if (companyId) await admin.from("exports_log").delete().eq("company_id", companyId);
+    await admin.from("status_history").delete().in("entity_id", traced);
+    await admin.from("contact_events").delete().in("user_id", userIds);
+  }
   if (companyId) await admin.from("companies").delete().eq("id", companyId);
   for (const id of userIds) await admin.auth.admin.deleteUser(id);
   await admin.from("role_invites").delete().like("email", "talento.prueba.%");

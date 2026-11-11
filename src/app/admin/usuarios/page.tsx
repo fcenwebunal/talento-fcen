@@ -15,7 +15,13 @@ export const metadata: Metadata = { title: "Usuarios y roles" };
 export const dynamic = "force-dynamic";
 
 type Profile = { id: string; email: string; full_name: string | null; role: Role; avatar_path: string | null; provider: string; created_at: string };
-type Invite = { email: string; role: Role; created_at: string; profiles: { email: string } | null };
+type Invite = {
+  email: string;
+  role: Role;
+  created_at: string;
+  student_data: { program_name?: string; progress_pct?: number; source?: string } | null;
+  profiles: { email: string } | null;
+};
 
 export default async function AdminUsers({ searchParams }: { searchParams: Promise<{ q?: string; rol?: string }> }) {
   const session = await requireRole(["staff", "admin"]);
@@ -32,7 +38,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
 
   const [{ data }, { data: invites }, ...counts] = await Promise.all([
     query,
-    supabase.from("role_invites").select("email, role, created_at, profiles(email)").order("created_at", { ascending: false }),
+    supabase.from("role_invites").select("email, role, created_at, student_data, profiles(email)").order("created_at", { ascending: false }),
     ...ROLES.map((r) => supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", r)),
   ]);
   const users = (data ?? []) as Profile[];
@@ -77,9 +83,15 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
               <li key={inv.email} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-2">
                 <span className="min-w-0 flex-1 truncate font-black text-azul-oscuro">{inv.email}</span>
                 <span className="chip chip-azul">{ROLE_LABEL[inv.role]}</span>
+                {inv.student_data?.program_name && (
+                  <span className="text-xs text-texto">
+                    {inv.student_data.program_name}
+                    {typeof inv.student_data.progress_pct === "number" ? ` · avance ${inv.student_data.progress_pct.toLocaleString("es-CO")} %` : ""}
+                  </span>
+                )}
                 <span className="text-xs text-suave">
                   {formatDate(inv.created_at)}
-                  {inv.profiles?.email ? ` · por ${inv.profiles.email}` : ""}
+                  {inv.profiles?.email ? ` · por ${inv.profiles.email}` : inv.student_data?.source ? ` · ${inv.student_data.source}` : ""}
                 </span>
                 {isAdmin && (
                   <form action={deleteInvite}>
