@@ -19,17 +19,41 @@ const results = [];
 const check = (name, ok, extra = "") => results.push(`${ok ? "OK  " : "FALLA"} ${name}${extra ? ` (${extra})` : ""}`);
 const roleOf = async (id) => (await admin.from("profiles").select("role").eq("id", id).single()).data?.role;
 
-// The admin API cannot sign in with Google; app_metadata.provider = google makes the trigger treat the account as one.
-async function createAccount(email, { google = false, role } = {}) {
-  const { data, error } = await admin.auth.admin.createUser({
-    email, password, email_confirm: true,
-    ...(google ? { app_metadata: { provider: "google" } } : {}),
-    user_metadata: { full_name: "Cuenta De Prueba" },
-  });
+// The admin API always creates email accounts (it ignores app_metadata.provider), so Google sign-ups are checked in SQL below.
+async function createAccount(email, { role } = {}) {
+  const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: "Cuenta De Prueba" } });
   if (error) throw error;
   if (role) await admin.from("profiles").update({ role }).eq("id", data.user.id);
   return data.user.id;
 }
+// Simulates two Google sign-ups (one registered by an administrator) inside a block that always rolls back.
+async function googleSignupCheck(registered, unregistered) {
+  const sql = `do $$
+declare
+  v_reg uuid := gen_random_uuid();
+  v_new uuid := gen_random_uuid();
+  v_role_reg text; v_role_new text; v_left int;
+begin
+  insert into public.role_invites (email, role) values ('${registered}', 'staff');
+  insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values
+    (v_reg, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '${registered}', '{"provider":"google","providers":["google"]}', '{}', now(), now()),
+    (v_new, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', '${unregistered}', '{"provider":"google","providers":["google"]}', '{}', now(), now());
+  select role into v_role_reg from public.profiles where id = v_reg;
+  select role into v_role_new from public.profiles where id = v_new;
+  select count(*) into v_left from public.role_invites where email = '${registered}';
+  raise exception 'SMOKE_RESULT registered=% unregistered=% invites_left=%', v_role_reg, v_role_new, v_left;
+end $$;`;
+  const res = await fetch("https://api.supabase.com/v1/projects/iwpnsyuvqvmdlsbkbzly/database/query", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${process.env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ query: sql }),
+  });
+  const text = await res.text();
+  const match = /SMOKE_RESULT registered=(\w+) unregistered=(\w+) invites_left=(\d+)/.exec(text);
+  if (!match) throw new Error(`Prueba de Google sin resultado: ${text.slice(0, 200)}`);
+  return { registered: match[1], unregistered: match[2], invitesLeft: Number(match[3]) };
+}
+
 async function signedIn(email) {
   const client = anonClient();
   const { error } = await client.auth.signInWithPassword({ email, password });
@@ -40,9 +64,14 @@ async function signedIn(email) {
 const userIds = [];
 let studentId, companyUserId, companyId;
 try {
-  studentId = await createAccount(studentEmail, { google: true });
+  studentId = await createAccount(studentEmail);
   userIds.push(studentId);
-  check("Una cuenta nueva de Google UNAL entra como usuario", (await roleOf(studentId)) === "user", await roleOf(studentId));
+  check("Una cuenta nueva con correo UNAL entra como usuario", (await roleOf(studentId)) === "user", await roleOf(studentId));
+
+  const google = await googleSignupCheck(invitedGoogle, `talento.prueba.${stamp}.google@unal.edu.co`);
+  check("Al entrar con Google sin registro previo queda como usuario", google.unregistered === "user", google.unregistered);
+  check("Al entrar con Google recibe el rol que registró un administrador", google.registered === "staff", google.registered);
+  check("El registro usado se borra", google.invitesLeft === 0, String(google.invitesLeft));
 
   const staffId = await createAccount(staffEmail, { role: "staff" });
   const adminId = await createAccount(adminEmail, { role: "admin" });
@@ -62,7 +91,7 @@ try {
   const up = await student.from("students").update({
     program_id: prog.id, headline: "Prueba automática", about: "Perfil de prueba", city: "Manizales",
     modalities: ["presencial", "hibrida"], dedication: "completo", practice_period: "2027-1",
-    consent_anonymous: true, consent_contact: true, availability: "disponible", progress_pct: 75,
+    consent_anonymous: true, consent_contact: true, availability: "disponible",
   }).eq("id", studentId);
   check("El estudiante actualiza su perfil", !up.error, up.error?.message);
   await student.from("student_skills").insert(skillRows.map((s, i) => ({ student_id: studentId, skill_id: s.id, level: (i % 3) + 1 })));
@@ -164,14 +193,8 @@ try {
   const exCompany = await company.rpc("search_students", { p_filters: {} });
   check("Si deja de ser empresa, pierde el acceso a la búsqueda", !!exCompany.error);
 
-  const inv1 = await boss.rpc("invite_user", { p_email: invitedGoogle, p_role: "staff" });
-  const inv2 = await boss.rpc("invite_user", { p_email: invitedTyped, p_role: "admin" });
-  check("Un administrador registra correos con su rol", inv1.data === "invited" && inv2.data === "invited", inv1.error?.message ?? inv2.error?.message);
-  const googleId = await createAccount(invitedGoogle, { google: true });
-  userIds.push(googleId);
-  check("Al entrar con Google recibe el rol registrado", (await roleOf(googleId)) === "staff", await roleOf(googleId));
-  const { count: leftInvite } = await admin.from("role_invites").select("email", { count: "exact", head: true }).eq("email", invitedGoogle);
-  check("El registro usado se borra", leftInvite === 0);
+  const inv = await boss.rpc("invite_user", { p_email: invitedTyped, p_role: "admin" });
+  check("Un administrador registra un correo con su rol", inv.data === "invited", inv.error?.message);
   const typedId = await createAccount(invitedTyped);
   userIds.push(typedId);
   check("Una cuenta con contraseña no toma el rol registrado (correo sin verificar)", (await roleOf(typedId)) === "user", await roleOf(typedId));
