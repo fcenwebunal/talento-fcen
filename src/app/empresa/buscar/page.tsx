@@ -11,6 +11,7 @@ import { studentPhotoUrls } from "@/lib/photos";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { HelpTip } from "@/components/ui/help-tip";
+import { DownloadButton } from "@/components/ui/download-button";
 import type { SearchRow } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Buscar talento" };
@@ -64,9 +65,9 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         actions={
           session.level === 2 &&
           total > 0 && (
-            <a href={`/empresa/exportar?${toQuery(params, { pagina: null })}`} className="btn btn-accent">
-              <Download /> Exportar a CSV
-            </a>
+            <DownloadButton href={`/empresa/exportar?${toQuery(params, { pagina: null })}`} icon={<Download />} className="btn-accent">
+              Exportar a CSV
+            </DownloadButton>
           )
         }
       />

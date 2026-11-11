@@ -8,6 +8,7 @@ import {
   formatDate, formatMonth, freshness,
 } from "@/lib/labels";
 import { Avatar } from "./ui/avatar";
+import { DownloadButton } from "./ui/download-button";
 import { HelpTip } from "./ui/help-tip";
 import { SkillIcon } from "./ui/skill-icon";
 
@@ -135,9 +136,9 @@ export function StudentDetailView({
         <div className="ml-auto flex flex-wrap gap-2">
           {actions}
           {cvHref && (
-            <a href={cvHref} download className="btn btn-primary">
-              <FileDown /> Descargar CV
-            </a>
+            <DownloadButton href={cvHref} icon={<FileDown />} className="btn-primary">
+              Descargar CV
+            </DownloadButton>
           )}
         </div>
       </div>

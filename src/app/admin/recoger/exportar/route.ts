@@ -35,7 +35,8 @@ function csvCell(value: unknown) {
 // The file is built on request and sent as a download; it is never stored. Each export is logged.
 export async function GET(request: NextRequest) {
   const session = await getSession();
-  if (!session || (session.role !== "staff" && session.role !== "admin")) return new NextResponse("Solo para la Facultad.", { status: 403 });
+  if (!session) return new NextResponse("Tu sesión terminó. Recarga la página e ingresa de nuevo para descargar.", { status: 401 });
+  if (session.role !== "staff" && session.role !== "admin") return new NextResponse("Solo para la Facultad.", { status: 403 });
   const params = Object.fromEntries(request.nextUrl.searchParams);
   const filters = filtersFrom(params);
   const format = params.formato === "pdf" ? "pdf" : "csv";

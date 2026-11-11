@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { StudentDetailView } from "@/components/student-detail";
+import { DocumentLink } from "@/components/ui/document-link";
 import { AVAILABILITY_LABEL, PAPA_VISIBILITY, formatDate } from "@/lib/labels";
 import type { Availability, StudentDetail } from "@/lib/types";
 import { setStudentAvailability, verifyProgress } from "../../actions";
@@ -35,12 +36,9 @@ export default async function AdminStudent({ params }: { params: Promise<{ id: s
   if (error || !data) notFound();
   const detail = data as StudentDetail;
 
-  const signed = await Promise.all(
-    (docs ?? []).map(async (d) => {
-      const { data: s } = await supabase.storage.from("documentos").createSignedUrl(d.path, 600);
-      return { ...d, url: s?.signedUrl ?? null };
-    })
-  );
+  const documents = docs ?? [];
+  const photoDoc = documents.find((d) => d.kind === "foto");
+  const photoUrl = photoDoc ? ((await supabase.storage.from("documentos").createSignedUrl(photoDoc.path, 3600)).data?.signedUrl ?? null) : null;
 
   return (
     <div className="space-y-6">
@@ -96,24 +94,20 @@ export default async function AdminStudent({ params }: { params: Promise<{ id: s
           </dl>
           <h3 className="mt-4 font-black text-azul-oscuro">Documentos</h3>
           <ul className="mt-1 space-y-1">
-            {signed.map((d, i) => (
+            {documents.map((d, i) => (
               <li key={i}>
-                {d.url ? (
-                  <a href={d.url} target="_blank" rel="noopener" className="text-azul-medio underline">
-                    {DOC_LABEL[d.kind] ?? d.kind}
-                  </a>
-                ) : (
-                  DOC_LABEL[d.kind]
-                )}{" "}
+                <DocumentLink path={d.path} className="text-azul-medio underline">
+                  {DOC_LABEL[d.kind] ?? d.kind}
+                </DocumentLink>{" "}
                 <span className="text-suave">· {formatDate(d.created_at)}</span>
               </li>
             ))}
-            {signed.length === 0 && <li className="text-suave">Sin documentos</li>}
+            {documents.length === 0 && <li className="text-suave">Sin documentos</li>}
           </ul>
         </div>
       </div>
 
-      <StudentDetailView detail={detail} viewer="la Facultad" cvHref={`/cv/${id}`} photoUrl={signed.find((d) => d.kind === "foto")?.url ?? null} />
+      <StudentDetailView detail={detail} viewer="la Facultad" cvHref={`/cv/${id}`} photoUrl={photoUrl} />
     </div>
   );
 }

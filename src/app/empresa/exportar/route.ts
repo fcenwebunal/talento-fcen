@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { localRedirect } from "@/lib/redirect";
 import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/session";
 import { filtersFrom } from "@/lib/search";
@@ -14,9 +13,14 @@ function csvCell(value: unknown) {
   return /[",\n;]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
+function message(text: string, status: number) {
+  return new NextResponse(text, { status, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
+}
+
 export async function GET(request: NextRequest) {
   const session = await getSession();
-  if (!session || session.level < 2) return localRedirect("/empresa");
+  if (!session) return message("Su sesión terminó. Recargue la página e ingrese de nuevo para exportar.", 401);
+  if (session.level < 2) return message("Para exportar, su empresa necesita la autorización de la Facultad.", 403);
 
   const params = Object.fromEntries(
     [...new Set(request.nextUrl.searchParams.keys())].map((k) => [k, request.nextUrl.searchParams.getAll(k)])
@@ -26,10 +30,9 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("export_students", { p_filters: filters });
   if (error) {
-    const message = /EXPORT_LIMIT/.test(error.message)
-      ? "Alcanzó el máximo de exportaciones de hoy."
-      : "No se pudo exportar.";
-    return new NextResponse(message, { status: 429, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+    return /EXPORT_LIMIT/.test(error.message)
+      ? message("Alcanzó el máximo de exportaciones de hoy.", 429)
+      : message("No se pudo exportar. Inténtelo de nuevo en unos minutos.", 500);
   }
 
   const rows = (data ?? []) as Record<string, unknown>[];

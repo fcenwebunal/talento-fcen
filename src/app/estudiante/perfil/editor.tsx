@@ -8,6 +8,7 @@ import {
   ShieldCheck, Sparkles, Trash2, TriangleAlert, UserRound, type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { openInNewTab } from "@/lib/files";
 import type { Area, PapaVisibility, Program, Skill, SkillDomain, SoftSkill } from "@/lib/types";
 import { EXPERIENCE_KIND, OUTPUT_KIND, PAPA_VISIBILITY, VERIFIED_LABEL } from "@/lib/labels";
 import { HelpTip } from "@/components/ui/help-tip";
@@ -250,8 +251,11 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
   }
 
   async function openDoc(doc: Doc) {
-    const { data: signed } = await supabase.storage.from("documentos").createSignedUrl(doc.path, 120);
-    if (signed?.signedUrl) window.open(signed.signedUrl, "_blank", "noopener");
+    const ok = await openInNewTab(async () => {
+      const { data: signed } = await supabase.storage.from("documentos").createSignedUrl(doc.path, 120);
+      return signed?.signedUrl ?? null;
+    });
+    if (!ok) setStatus({ tone: "error", text: "No se pudo abrir el archivo. Revisa tu conexión o permite las ventanas emergentes." });
   }
 
   const docCard = (d: (typeof DOC_KINDS)[number]) => {

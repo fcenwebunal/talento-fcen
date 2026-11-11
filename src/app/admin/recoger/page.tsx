@@ -3,6 +3,7 @@ import { Download, FileSpreadsheet, FileText, Filter, Lock } from "lucide-react"
 import { createClient } from "@/lib/supabase/server";
 import { collectStudents, filtersFrom } from "@/lib/collect";
 import { SKILL_LEVEL } from "@/lib/labels";
+import { DownloadButton } from "@/components/ui/download-button";
 import { AdminTitle } from "../admin-title";
 
 export const metadata: Metadata = { title: "Recoger datos" };
@@ -78,12 +79,12 @@ export default async function CollectPage({ searchParams }: { searchParams: Prom
             {withContact} con nombre y correo (aceptaron compartir su contacto); {students.length - withContact} como perfil anónimo.
           </p>
         </div>
-        <a href={`/admin/recoger/exportar?${query}&formato=csv`} download className={`btn btn-secondary ${students.length ? "" : "pointer-events-none opacity-50"}`}>
-          <FileSpreadsheet /> Descargar CSV
-        </a>
-        <a href={`/admin/recoger/exportar?${query}&formato=pdf`} download className={`btn btn-primary ${students.length ? "" : "pointer-events-none opacity-50"}`}>
-          <FileText /> Descargar PDF
-        </a>
+        <DownloadButton href={`/admin/recoger/exportar?${query}&formato=csv`} icon={<FileSpreadsheet />} className="btn-secondary" disabled={!students.length}>
+          Descargar CSV
+        </DownloadButton>
+        <DownloadButton href={`/admin/recoger/exportar?${query}&formato=pdf`} icon={<FileText />} className="btn-primary" disabled={!students.length}>
+          Descargar PDF
+        </DownloadButton>
       </div>
 
       {students.length > 0 && (
