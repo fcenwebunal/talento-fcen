@@ -76,7 +76,8 @@ function roleError(message = "") {
   return "No se pudo guardar. Inténtalo de nuevo.";
 }
 
-// The database (guard_profile) decides who may make each change: administrators any, the Facultad only «usuario» to student
+// The database (guard_profile) decides who may make each change: administrators any, the Facultad a «usuario» to
+// student, company or Facultad
 export async function changeRole(_prev: RoleActionState, formData: FormData): Promise<RoleActionState> {
   await requireRole(["staff", "admin"]);
   const role = formData.get("role");
@@ -90,7 +91,7 @@ export async function changeRole(_prev: RoleActionState, formData: FormData): Pr
 }
 
 export async function inviteUser(_prev: RoleActionState, formData: FormData): Promise<RoleActionState> {
-  await requireRole(["admin"]);
+  await requireRole(["staff", "admin"]);
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const role = formData.get("role");
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, message: "Escribe un correo válido." };
@@ -105,12 +106,15 @@ export async function inviteUser(_prev: RoleActionState, formData: FormData): Pr
     message:
       data === "updated"
         ? `${email} ya tenía cuenta: ahora es ${label}.`
-        : `${email} quedó registrado como ${label}. Tendrá ese rol la primera vez que entre con Google con ese correo.`,
+        : data === "changed"
+          ? `Rol del registro: ${label}.`
+          : `${email} quedó registrado como ${label}. Tendrá ese rol la primera vez que entre con Google con ese correo.`,
   };
 }
 
+// RLS (role_invites_delete) lets the Facultad remove only registrations with its own roles
 export async function deleteInvite(formData: FormData) {
-  await requireRole(["admin"]);
+  await requireRole(["staff", "admin"]);
   const supabase = await createClient();
   await supabase.from("role_invites").delete().eq("email", String(formData.get("email")));
   revalidatePath("/admin/usuarios");

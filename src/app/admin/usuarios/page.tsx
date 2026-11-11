@@ -4,12 +4,12 @@ import { KeyRound, MailPlus, Search, ShieldAlert, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/session";
 import { formatDate } from "@/lib/labels";
-import { ROLE_LABEL, ROLES, isRole } from "@/lib/roles";
+import { ROLE_LABEL, ROLES, assignableBy, isRole } from "@/lib/roles";
 import type { Role } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
 import { AdminTitle } from "../admin-title";
 import { deleteInvite } from "../actions";
-import { ApproveForm, InviteForm, RoleForm } from "./forms";
+import { InviteForm, InviteRoleForm, RoleForm } from "./forms";
 
 export const metadata: Metadata = { title: "Usuarios y roles" };
 export const dynamic = "force-dynamic";
@@ -26,6 +26,9 @@ type Invite = {
 export default async function AdminUsers({ searchParams }: { searchParams: Promise<{ q?: string; rol?: string }> }) {
   const session = await requireRole(["staff", "admin"]);
   const isAdmin = session.role === "admin";
+  const mine = assignableBy(session.role);
+  // Administrators change any role; the Facultad only gives its roles to a «usuario» or to a pending registration
+  const canEdit = (role: Role) => isAdmin || (role === "user" ? true : mine.includes(role));
   const { q, rol } = await searchParams;
   const filter = isRole(rol) ? rol : null;
   // Only plain text reaches the PostgREST «or» filter, whose syntax uses commas and parentheses
@@ -56,22 +59,20 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
       <p className="max-w-3xl text-sm text-suave">
         Toda cuenta nueva, de la UNAL o externa, entra como «Usuario» y solo puede editar su cuenta hasta que tenga un rol.{" "}
         {isAdmin
-          ? "La Facultad puede aprobar usuarios como estudiantes; los demás roles, y cualquier cambio de un rol ya asignado, los haces tú como administrador."
-          : "Puedes aprobar como estudiantes a los usuarios nuevos; los demás roles los asigna un administrador."}
+          ? "La Facultad puede pasar un usuario a estudiante, empresa o Facultad y registrar correos con esos roles; el rol de administrador y cualquier cambio de un rol ya asignado los haces tú como administrador."
+          : "Puedes pasar un usuario a estudiante, empresa o Facultad, y registrar correos con esos roles. El rol de administrador y los cambios de una cuenta que ya tiene rol los hace un administrador."}
       </p>
 
-      {isAdmin && (
-        <section className="card space-y-3" aria-labelledby="registrar">
-          <h2 id="registrar" className="flex items-center gap-2 font-black text-azul-oscuro">
-            <MailPlus className="h-5 w-5 text-azul-medio" aria-hidden="true" /> Registrar un usuario
-          </h2>
-          <p className="text-sm text-suave">
-            La persona recibe el rol la primera vez que entra con Google con ese correo (cuenta UNAL o cualquier cuenta de Google). Si ya tiene cuenta, el rol
-            cambia de inmediato.
-          </p>
-          <InviteForm />
-        </section>
-      )}
+      <section className="card space-y-3" aria-labelledby="registrar">
+        <h2 id="registrar" className="flex items-center gap-2 font-black text-azul-oscuro">
+          <MailPlus className="h-5 w-5 text-azul-medio" aria-hidden="true" /> Registrar un usuario
+        </h2>
+        <p className="text-sm text-suave">
+          La persona recibe el rol la primera vez que entra con Google con ese correo (cuenta UNAL o cualquier cuenta de Google). Si ya tiene cuenta y su rol
+          es «Usuario», el rol cambia de inmediato.
+        </p>
+        <InviteForm roles={mine} />
+      </section>
 
       {pendingInvites.length > 0 && (
         <section className="card space-y-3" aria-labelledby="registrados">
@@ -80,26 +81,32 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
           </h2>
           <ul className="divide-y divide-borde text-sm">
             {pendingInvites.map((inv) => (
-              <li key={inv.email} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-2">
-                <span className="min-w-0 flex-1 truncate font-black text-azul-oscuro">{inv.email}</span>
-                <span className="chip chip-azul">{ROLE_LABEL[inv.role]}</span>
-                {inv.student_data?.program_name && (
-                  <span className="text-xs text-texto">
-                    {inv.student_data.program_name}
-                    {typeof inv.student_data.progress_pct === "number" ? ` · avance ${inv.student_data.progress_pct.toLocaleString("es-CO")} %` : ""}
+              <li key={inv.email} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-2">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-black text-azul-oscuro">{inv.email}</span>
+                  <span className="block text-xs text-suave">
+                    {inv.student_data?.program_name && (
+                      <span className="text-texto">
+                        {inv.student_data.program_name}
+                        {typeof inv.student_data.progress_pct === "number" ? ` · avance ${inv.student_data.progress_pct.toLocaleString("es-CO")} % · ` : " · "}
+                      </span>
+                    )}
+                    {formatDate(inv.created_at)}
+                    {inv.profiles?.email ? ` · por ${inv.profiles.email}` : inv.student_data?.source ? ` · ${inv.student_data.source}` : ""}
                   </span>
-                )}
-                <span className="text-xs text-suave">
-                  {formatDate(inv.created_at)}
-                  {inv.profiles?.email ? ` · por ${inv.profiles.email}` : inv.student_data?.source ? ` · ${inv.student_data.source}` : ""}
                 </span>
-                {isAdmin && (
-                  <form action={deleteInvite}>
-                    <input type="hidden" name="email" value={inv.email} />
-                    <button className="btn btn-danger btn-sm" aria-label={`Quitar el registro de ${inv.email}`}>
-                      <Trash2 /> Quitar
-                    </button>
-                  </form>
+                {canEdit(inv.role) ? (
+                  <>
+                    <InviteRoleForm email={inv.email} role={inv.role} options={mine} />
+                    <form action={deleteInvite}>
+                      <input type="hidden" name="email" value={inv.email} />
+                      <button className="btn btn-danger btn-sm" aria-label={`Quitar el registro de ${inv.email}`}>
+                        <Trash2 /> Quitar
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <span className="chip chip-azul">{ROLE_LABEL[inv.role]}</span>
                 )}
               </li>
             ))}
@@ -164,9 +171,9 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
                   {u.id === session.userId ? (
                     <span className="text-sm">{ROLE_LABEL[u.role]} (tú)</span>
                   ) : isAdmin ? (
-                    <RoleForm userId={u.id} role={u.role} />
+                    <RoleForm userId={u.id} role={u.role} options={ROLES} />
                   ) : u.role === "user" ? (
-                    <ApproveForm userId={u.id} />
+                    <RoleForm userId={u.id} role={u.role} options={mine} />
                   ) : (
                     <span className="text-sm">{ROLE_LABEL[u.role]}</span>
                   )}

@@ -14,6 +14,7 @@ const staffEmail = `talento.prueba.${stamp}.facultad@example.com`;
 const adminEmail = `talento.prueba.${stamp}.admin@example.com`;
 const invitedGoogle = `talento.prueba.${stamp}.invitado@unal.edu.co`;
 const invitedTyped = `talento.prueba.${stamp}.escrito@unal.edu.co`;
+const invitedAdmin = `talento.prueba.${stamp}.admin-registrado@unal.edu.co`;
 const password = `Prueba-${stamp}-x`;
 const results = [];
 const check = (name, ok, extra = "") => results.push(`${ok ? "OK  " : "FALLA"} ${name}${extra ? ` (${extra})` : ""}`);
@@ -129,15 +130,30 @@ try {
   const selfRole = await company.from("profiles").update({ role: "company" }).eq("id", companyUserId);
   check("Un usuario no puede darse un rol", (await roleOf(companyUserId)) === "user", selfRole.error?.message ?? "sin error, pero sin cambio");
 
+  const staffAdmin = await staff.rpc("set_user_role", { p_user: companyUserId, p_role: "admin" });
+  check("La Facultad no puede dar el rol de administrador", !!staffAdmin.error && (await roleOf(companyUserId)) === "user", staffAdmin.error?.message);
   const staffCompany = await staff.rpc("set_user_role", { p_user: companyUserId, p_role: "company" });
-  check("La Facultad no puede asignar el rol de empresa", !!staffCompany.error && (await roleOf(companyUserId)) === "user", staffCompany.error?.message);
+  check("La Facultad pasa un usuario a empresa", !staffCompany.error && (await roleOf(companyUserId)) === "company", staffCompany.error?.message);
+  const staffChange = await staff.rpc("set_user_role", { p_user: companyUserId, p_role: "student" });
+  check("La Facultad no cambia el rol de una cuenta que ya tiene rol", !!staffChange.error && (await roleOf(companyUserId)) === "company", staffChange.error?.message);
+
   const staffInvite = await staff.rpc("invite_user", { p_email: invitedGoogle, p_role: "student" });
-  check("La Facultad no puede registrar usuarios", !!staffInvite.error);
+  check("La Facultad registra un correo como estudiante", staffInvite.data === "invited", staffInvite.error?.message);
+  const staffInviteAdmin = await staff.rpc("invite_user", { p_email: invitedAdmin, p_role: "admin" });
+  check("La Facultad no puede registrar administradores", !!staffInviteAdmin.error);
+  const bossInviteAdmin = await boss.rpc("invite_user", { p_email: invitedAdmin, p_role: "admin" });
+  const staffOverAdmin = await staff.rpc("invite_user", { p_email: invitedAdmin, p_role: "student" });
+  const { data: stillAdmin } = await admin.from("role_invites").select("role").eq("email", invitedAdmin).single();
+  check("La Facultad no cambia un registro de administrador", bossInviteAdmin.data === "invited" && !!staffOverAdmin.error && stillAdmin?.role === "admin", staffOverAdmin.error?.message);
+  await staff.from("role_invites").delete().in("email", [invitedAdmin, invitedGoogle]);
+  const { data: leftAfterStaff } = await admin.from("role_invites").select("email").in("email", [invitedAdmin, invitedGoogle]);
+  check("La Facultad quita registros con sus roles pero no los de administrador", leftAfterStaff?.length === 1 && leftAfterStaff[0].email === invitedAdmin);
+  const bossChange = await boss.rpc("invite_user", { p_email: invitedAdmin, p_role: "staff" });
+  const { data: changed } = await admin.from("role_invites").select("role").eq("email", invitedAdmin).single();
+  check("Un administrador cambia el rol de un registro pendiente", bossChange.data === "changed" && changed?.role === "staff", bossChange.error?.message);
+
   const bossSelf = await boss.rpc("set_user_role", { p_user: adminId, p_role: "student" });
   check("Un administrador no puede cambiar su propio rol", !!bossSelf.error && (await roleOf(adminId)) === "admin", bossSelf.error?.message);
-
-  const bossCompany = await boss.rpc("set_user_role", { p_user: companyUserId, p_role: "company" });
-  check("Un administrador asigna el rol de empresa", !bossCompany.error && (await roleOf(companyUserId)) === "company", bossCompany.error?.message);
 
   const reg = await company.rpc("register_company", {
     p_data: { name: "Empresa de Prueba SAS", nit: `900${String(stamp).slice(-6)}-1`, contact_name: "Contacto Prueba", terms_accepted: true },

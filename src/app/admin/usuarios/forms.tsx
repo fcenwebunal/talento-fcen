@@ -1,8 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { CheckCircle2, GraduationCap, Loader2, Save, TriangleAlert, UserPlus } from "lucide-react";
-import { ASSIGNABLE_ROLES, ROLE_HINT, ROLE_LABEL, ROLES } from "@/lib/roles";
+import { CheckCircle2, Loader2, Save, TriangleAlert, UserPlus } from "lucide-react";
+import { ROLE_HINT, ROLE_LABEL } from "@/lib/roles";
 import type { Role } from "@/lib/types";
 import { changeRole, inviteUser, type RoleActionState } from "../actions";
 
@@ -16,43 +16,58 @@ function Feedback({ state }: { state: RoleActionState }) {
   );
 }
 
-export function RoleForm({ userId, role }: { userId: string; role: Role }) {
+function RoleSelect({ role, options, label }: { role: Role; options: Role[]; label: string }) {
+  const choices = options.includes(role) ? options : [role, ...options];
+  return (
+    <select name="role" defaultValue={role} className="input py-1" aria-label={label}>
+      {choices.map((r) => (
+        <option key={r} value={r}>
+          {ROLE_LABEL[r]}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function SaveButton({ pending }: { pending: boolean }) {
+  return (
+    <button className="btn btn-secondary btn-sm" disabled={pending}>
+      {pending ? <Loader2 className="animate-spin" /> : <Save />} Guardar
+    </button>
+  );
+}
+
+// The role of an account; `options` are the roles the viewer may give (the database checks it again)
+export function RoleForm({ userId, role, options }: { userId: string; role: Role; options: Role[] }) {
   const [state, action, pending] = useActionState(changeRole, null);
   return (
     <form action={action} className="space-y-1">
       <input type="hidden" name="user_id" value={userId} />
       <div className="flex gap-2">
-        <select name="role" defaultValue={role} className="input py-1" aria-label="Rol">
-          {ROLES.map((r) => (
-            <option key={r} value={r}>
-              {ROLE_LABEL[r]}
-            </option>
-          ))}
-        </select>
-        <button className="btn btn-secondary btn-sm" disabled={pending}>
-          {pending ? <Loader2 className="animate-spin" /> : <Save />} Guardar
-        </button>
+        <RoleSelect role={role} options={options} label="Rol" />
+        <SaveButton pending={pending} />
       </div>
       <Feedback state={state} />
     </form>
   );
 }
 
-export function ApproveForm({ userId }: { userId: string }) {
-  const [state, action, pending] = useActionState(changeRole, null);
+// The role a pending registration will get on its first Google sign-in
+export function InviteRoleForm({ email, role, options }: { email: string; role: Role; options: Role[] }) {
+  const [state, action, pending] = useActionState(inviteUser, null);
   return (
     <form action={action} className="space-y-1">
-      <input type="hidden" name="user_id" value={userId} />
-      <input type="hidden" name="role" value="student" />
-      <button className="btn btn-primary btn-sm" disabled={pending}>
-        {pending ? <Loader2 className="animate-spin" /> : <GraduationCap />} Aprobar como estudiante
-      </button>
+      <input type="hidden" name="email" value={email} />
+      <div className="flex gap-2">
+        <RoleSelect role={role} options={options} label={`Rol de ${email}`} />
+        <SaveButton pending={pending} />
+      </div>
       <Feedback state={state} />
     </form>
   );
 }
 
-export function InviteForm() {
+export function InviteForm({ roles }: { roles: Role[] }) {
   const [state, action, pending] = useActionState(inviteUser, null);
   return (
     <form action={action} className="space-y-3">
@@ -64,7 +79,7 @@ export function InviteForm() {
         <label className="field">
           <span>Rol</span>
           <select name="role" defaultValue="student" className="input">
-            {ASSIGNABLE_ROLES.map((r) => (
+            {roles.map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABEL[r]}: {ROLE_HINT[r].toLowerCase()}
               </option>
