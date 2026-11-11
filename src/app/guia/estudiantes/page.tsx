@@ -311,7 +311,7 @@ export default function StudentGuide() {
           <section className="py-10">
             <div className="card-dark p-8">
               <p className="display text-2xl">¿Listo para empezar?</p>
-              <p className="mt-2 text-white/80">Crea tu perfil con tu cuenta @unal.edu.co.</p>
+              <p className="mt-2 text-white/80">Entra con tu cuenta @unal.edu.co; cuando la Facultad apruebe tu cuenta, creas tu perfil.</p>
               <Link href="/ingresar?como=estudiante" className="btn btn-accent mt-4">
                 Crear mi perfil
               </Link>

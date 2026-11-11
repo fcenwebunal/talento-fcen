@@ -36,12 +36,13 @@ type ToVerify = { id: string; progress_pct: number; progress_verified: string; p
 export default async function AdminHome() {
   const supabase = await createClient();
   const [{ data: students }, { data: companies }, { data: queue }, { data: toVerify }, { count: exports }, { count: views }] = await Promise.all([
-    supabase.from("students").select("availability, consent_anonymous, program_id, programs(name)"),
+    supabase.from("students").select("availability, consent_anonymous, program_id, programs(name), profiles!inner(role)").eq("profiles.role", "student"),
     supabase.from("companies").select("status"),
     supabase.from("companies").select("id, name, nit, city, sector, logo_path, created_at").eq("status", "en_revision").order("created_at").limit(6),
     supabase
       .from("students")
-      .select("id, progress_pct, progress_verified, profiles(full_name, avatar_path), programs(name)")
+      .select("id, progress_pct, progress_verified, profiles!inner(full_name, avatar_path, role), programs(name)")
+      .eq("profiles.role", "student")
       .neq("progress_verified", "coordinacion")
       .or("progress_pct.not.is.null,papa.not.is.null")
       .order("updated_at", { ascending: false })

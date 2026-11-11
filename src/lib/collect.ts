@@ -60,8 +60,9 @@ export async function collectStudents(supabase: SupabaseClient, filters: Collect
   let query = supabase
     .from("students")
     .select(
-      "id, academic_status, availability, consent_contact, progress_pct, progress_verified, papa, papa_visibility, practice_period, available_from, city, modalities, headline, profiles(full_name, email), programs!inner(name, level), student_languages(language, level), student_skills(level, skills(name, status, skill_domains(name)))"
+      "id, academic_status, availability, consent_contact, progress_pct, progress_verified, papa, papa_visibility, practice_period, available_from, city, modalities, headline, profiles!inner(full_name, email, role), programs!inner(name, level), student_languages(language, level), student_skills(level, skills(name, status, skill_domains(name)))"
     )
+    .eq("profiles.role", "student")
     .eq("consent_anonymous", true)
     .not("program_id", "is", null)
     .eq("programs.level", "pregrado")

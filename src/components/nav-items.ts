@@ -49,10 +49,14 @@ const STAFF: NavItem[] = [
   { label: "Habilidades propuestas", href: "/admin/propuestas", icon: "sparkles", group: "Administración", keywords: "revisión estudiantes" },
   { label: "Recoger datos de estudiantes", href: "/admin/recoger", icon: "file", group: "Administración", keywords: "exportar csv pdf resumen empresas" },
   { label: "Registros", href: "/admin/registros", icon: "history", group: "Administración", keywords: "exportaciones" },
-  { label: "Roles", href: "/admin/usuarios", icon: "key", group: "Administración" },
+  { label: "Usuarios y roles", href: "/admin/usuarios", icon: "key", group: "Administración", keywords: "roles permisos registrar" },
+  { label: "Usuarios por aprobar", href: "/admin/usuarios?rol=user", icon: "clock", group: "Administración", keywords: "nuevos pendientes" },
 ];
 
+const USER: NavItem[] = [{ label: "Mi cuenta", href: "/cuenta", icon: "user", group: "Mi cuenta", keywords: "foto nombre" }];
+
 export function navFor(role: Role | null): NavItem[] {
-  const own = role === "student" ? STUDENT : role === "company" ? COMPANY : role ? STAFF : [];
+  const own =
+    role === "student" ? STUDENT : role === "company" ? COMPANY : role === "staff" || role === "admin" ? STAFF : role === "user" ? USER : [];
   return [...own, ...PUBLIC, ...(role ? [] : [{ label: "Ingresar", href: "/ingresar", icon: "login" as const, group: "General" }])];
 }

@@ -48,7 +48,7 @@ export default function CompanyGuide() {
           <GuideSection id="como-funciona" kicker="Paso a paso" title="Cómo funciona">
             <Timeline
               steps={[
-                { title: "Regístrese", you: "Con los datos de su organización. Desde ese momento puede buscar perfiles anónimos por habilidad, programa, disponibilidad, modalidad y ciudad." },
+                { title: "Regístrese", you: "Cree su cuenta; cuando la Facultad le asigne el rol de empresa, registra los datos de su organización. Desde ese momento puede buscar perfiles anónimos por habilidad, programa, disponibilidad, modalidad y ciudad." },
                 { title: "Solicite la autorización", you: "La Facultad verifica la existencia de su organización (NIT y Cámara de Comercio, o la norma de creación si es una entidad pública) y la persona de contacto." },
                 { title: "Vea, contacte y exporte", you: "Ya autorizada, ve los datos de contacto de quienes lo permitieron, descarga hojas de vida y exporta listados para su proceso.", others: "La autorización dura 12 meses y se renueva." },
                 { title: "Seleccione", you: "Contacte y seleccione a sus candidatos con su propio proceso." },

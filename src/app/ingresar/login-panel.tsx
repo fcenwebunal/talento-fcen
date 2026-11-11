@@ -16,12 +16,12 @@ type Tab = "estudiante" | "empresa";
 const BENEFITS: Record<Tab, { icon: typeof Eye; title: string; text: string }[]> = {
   estudiante: [
     { icon: Sparkles, title: "Estudiantes de pregrado", text: "Muestra tus habilidades con nivel y evidencia, y decide quién te contacta." },
-    { icon: BadgeCheck, title: "Personal de la Facultad", text: "Gestiona empresas, verifica perfiles y recoge datos con tu misma cuenta." },
+    { icon: BadgeCheck, title: "Personal de la Facultad", text: "Gestiona empresas, verifica perfiles y recoge datos con tu misma cuenta, cuando la Facultad te asigne el rol." },
     { icon: ShieldCheck, title: "Sin otra contraseña", text: "Usamos tu cuenta de la Universidad y nunca vemos tu contraseña." },
   ],
   empresa: [
     { icon: Search, title: "Organizaciones", text: "Busque practicantes por habilidad, programa, idioma, modalidad y ciudad." },
-    { icon: Eye, title: "Cuentas con correo y contraseña", text: "Entre con Google o con su correo; la plataforma le muestra lo que corresponde a su cuenta." },
+    { icon: Eye, title: "Cuentas con correo y contraseña", text: "Entre con Google o con su correo. La Facultad revisa cada cuenta nueva y le asigna el rol de empresa." },
     { icon: FileDown, title: "Hojas de vida y listados", text: "Con la autorización de la Facultad, descargue CV y exporte candidatos." },
   ],
 };
@@ -111,11 +111,11 @@ function StudentLogin() {
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         <div className="card-flat flex gap-3 p-4 text-sm">
           <GraduationCap className="h-5 w-5 shrink-0 text-azul-medio" aria-hidden="true" />
-          <span className="text-suave">Estudiantes de pregrado de la Facultad que buscan su práctica.</span>
+          <span className="text-suave">Estudiantes de pregrado de la Facultad que buscan su práctica: la Facultad aprueba tu cuenta y luego creas tu perfil.</span>
         </div>
         <div className="card-flat flex gap-3 p-4 text-sm">
           <Building2 className="h-5 w-5 shrink-0 text-azul-medio" aria-hidden="true" />
-          <span className="text-suave">Personal de la Facultad: entra igual y la coordinación le asigna su rol.</span>
+          <span className="text-suave">Personal de la Facultad: entra igual y un administrador le asigna su rol.</span>
         </div>
       </div>
     </div>
@@ -150,7 +150,7 @@ function CompanyLogin() {
       setMode("login");
       return;
     }
-    router.replace(mode === "signup" ? "/empresa/registro" : "/panel");
+    router.replace("/panel");
     router.refresh();
   }
 
@@ -175,7 +175,7 @@ function CompanyLogin() {
       <p className="text-suave">
         {mode === "login"
           ? "Ingrese con su correo y contraseña. Verá la interfaz que corresponde a su cuenta."
-          : "Cree la cuenta de quien representará a su organización. Después registrará los datos de la empresa."}
+          : "Cree la cuenta de quien representará a su organización. La Facultad la revisa y le asigna el rol de empresa; entonces registrará los datos de la organización."}
       </p>
       <label className="field">
         <span>Correo</span>

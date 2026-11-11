@@ -3,6 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { CompanyStatus, Role } from "@/lib/types";
+import { ROLE_HOME } from "@/lib/roles";
 
 export type Session = {
   userId: string;
@@ -48,9 +49,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
 });
 
 export function homeFor(role: Role) {
-  if (role === "student") return "/estudiante";
-  if (role === "company") return "/empresa";
-  return "/admin";
+  return ROLE_HOME[role] ?? "/cuenta";
 }
 
 export async function requireRole(roles: Role[]) {

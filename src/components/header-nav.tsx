@@ -6,14 +6,12 @@ import { usePathname } from "next/navigation";
 import { BriefcaseBusiness, Blocks, GraduationCap, LayoutGrid, LogIn, LogOut, Maximize2, Menu, Search, X } from "lucide-react";
 import { PUBLIC_SITE } from "@/lib/config";
 import type { Role } from "@/lib/types";
+import { ROLE_HOME as HOME, ROLE_LABEL } from "@/lib/roles";
 import { Avatar } from "./ui/avatar";
 import { CommandPalette } from "./command-palette";
 import { navFor } from "./nav-items";
 
-const ROLE_LABEL: Record<Role, string> = { student: "Estudiante", company: "Empresa", staff: "Facultad", admin: "Administración" };
-const HOME: Record<Role, string> = { student: "/estudiante", company: "/empresa", staff: "/admin", admin: "/admin" };
-
-// Each guide is shown to visitors and to its own audience only; staff and admins see neither.
+// Each guide is shown to visitors, to accounts still without a role and to its own audience; staff and admins see neither.
 const LINKS: { href: string; label: string; icon: typeof Blocks; for?: Role }[] = [
   { href: "/guia/estudiantes", label: "Guía para estudiantes", icon: GraduationCap, for: "student" },
   { href: "/guia/empresas", label: "Guía para empresas", icon: BriefcaseBusiness, for: "company" },
@@ -30,7 +28,7 @@ export function HeaderNav({ role, name, email, avatarUrl, embedded = false }: { 
 
   const openPalette = () => window.dispatchEvent(new Event("open-palette"));
   const inApp = role ? pathname.startsWith(HOME[role]) : false;
-  const links = LINKS.filter((l) => !l.for || !role || l.for === role);
+  const links = LINKS.filter((l) => !l.for || !role || role === "user" || l.for === role);
 
   return (
     <>

@@ -28,7 +28,8 @@ export default async function AdminStudents({ searchParams }: { searchParams: Pr
   const supabase = await createClient();
   let query = supabase
     .from("students")
-    .select("id, availability, progress_pct, progress_verified, last_confirmed_at, consent_anonymous, consent_contact, updated_at, profiles(full_name, email, avatar_path), programs(name)")
+    .select("id, availability, progress_pct, progress_verified, last_confirmed_at, consent_anonymous, consent_contact, updated_at, profiles!inner(full_name, email, avatar_path, role), programs(name)")
+    .eq("profiles.role", "student")
     .order("updated_at", { ascending: false })
     .limit(300);
   if (estado) query = query.eq("availability", estado);

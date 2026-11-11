@@ -1,4 +1,4 @@
-export type Role = "student" | "company" | "staff" | "admin";
+export type Role = "user" | "student" | "company" | "staff" | "admin";
 export type ProgramLevel = "pregrado" | "especializacion" | "maestria" | "doctorado";
 export type Availability = "disponible" | "en_proceso" | "en_practica" | "sin_confirmar" | "no_disponible" | "archivado";
 export type CompanyStatus = "registrada" | "en_revision" | "autorizada" | "suspendida" | "rechazada";

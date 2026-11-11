@@ -1,10 +1,15 @@
 import { Suspense } from "react";
 import { LogOut } from "lucide-react";
 import type { Session } from "@/lib/session";
+import { ROLE_LABEL } from "@/lib/roles";
 import { Avatar } from "./ui/avatar";
 import { SideNav, MobileTabs, type SideItem } from "./side-nav";
 
-const ROLE_LABEL = { student: "Estudiante", company: "Empresa", staff: "Facultad", admin: "Administración" } as const;
+export const USER_NAV: SideItem[] = [
+  { href: "/cuenta", label: "Mi cuenta", icon: "account" },
+  { href: "/guia/estudiantes", label: "Guía para estudiantes", icon: "route", external: true },
+  { href: "/guia/empresas", label: "Guía para empresas", icon: "route", external: true },
+];
 
 export const STUDENT_NAV: SideItem[] = [
   { href: "/estudiante", label: "Inicio", icon: "dashboard", exact: true },
@@ -42,7 +47,7 @@ export const ADMIN_NAV: SideItem[] = [
   { href: "/admin/propuestas", label: "Propuestas", icon: "idea", badgeKey: "pendingSkills" },
   { href: "/admin/recoger", label: "Recoger datos", icon: "download" },
   { href: "/admin/registros", label: "Registros", icon: "history" },
-  { href: "/admin/usuarios", label: "Roles", icon: "key" },
+  { href: "/admin/usuarios", label: "Usuarios y roles", icon: "key", badgeKey: "pendingUsers" },
   { href: "/cuenta", label: "Mi cuenta", icon: "account" },
 ];
 
