@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { localRedirect } from "@/lib/redirect";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { expireAuthCookie, isAuthCookie } from "@/lib/auth-cookies";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -17,7 +18,16 @@ export async function GET(request: NextRequest) {
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error || !data.user) return localRedirect("/ingresar?error=auth");
+  if (error || !data.user) {
+    console.error("auth callback exchange", error?.code ?? error?.message);
+    return localRedirect("/ingresar?error=auth");
+  }
+  // The new session is partitioned: drop any older unpartitioned copy so the two never shadow each other
+  const finish = (path: string) => {
+    const response = localRedirect(path);
+    for (const c of request.cookies.getAll()) if (isAuthCookie(c.name)) expireAuthCookie(response, c.name, { settingNow: true });
+    return response;
+  };
 
   // Popup opened from the embedded app: leave a one-time token for the iframe to pick up.
   if (handoff && /^[a-f0-9]{64}$/.test(handoff) && data.user.email) {
@@ -27,15 +37,15 @@ export async function GET(request: NextRequest) {
       if (link?.properties?.hashed_token) {
         await admin.from("login_handoffs").upsert({ nonce: handoff, token_hash: link.properties.hashed_token, created_at: new Date().toISOString() });
       }
-      return localRedirect("/auth/listo");
+      return finish("/auth/listo");
     } catch {
-      return localRedirect("/ingresar?error=popup");
+      return finish("/ingresar?error=popup");
     }
   }
 
   if (como === "estudiante") {
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
-    if (profile?.role === "company") return localRedirect("/empresa/registro?aviso=no-unal");
+    if (profile?.role === "company") return finish("/empresa/registro?aviso=no-unal");
   }
-  return localRedirect("/panel");
+  return finish("/panel");
 }
