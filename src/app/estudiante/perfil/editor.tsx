@@ -108,7 +108,10 @@ const DOC_KINDS = [
   { kind: "certificado", label: "Certificados de idiomas o cursos (opcional)", help: "Solo los ve la Facultad." },
 ];
 
-const blank = (v: string) => (v.trim() === "" ? null : v.trim());
+// Keeps what is typed: trimming on every keystroke swallowed the space between words. save() trims.
+const blank = (v: string) => (v.trim() === "" ? null : v);
+const trimmed = <T extends object>(row: T) =>
+  Object.fromEntries(Object.entries(row).map(([k, v]) => [k, typeof v === "string" ? v.trim() : v])) as T;
 
 export function ProfileEditor({ data, initialSection }: { data: ProfileData; initialSection?: string }) {
   const router = useRouter();
@@ -149,12 +152,12 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
     const del = await supabase.from(table).delete().eq("student_id", data.id);
     if (del.error) throw del.error;
     if (rows.length === 0) return;
-    const ins = await supabase.from(table).insert(rows.map((r) => ({ ...r, student_id: data.id })));
+    const ins = await supabase.from(table).insert(rows.map((r) => ({ ...trimmed(r), student_id: data.id })));
     if (ins.error) throw ins.error;
   }
 
   async function updateStudent(fields: Partial<StudentRow>) {
-    const { error } = await supabase.from("students").update(fields).eq("id", data.id);
+    const { error } = await supabase.from("students").update(trimmed(fields)).eq("id", data.id);
     if (error) throw error;
   }
 
@@ -164,9 +167,9 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
     try {
       checkDates(section, priv.birth_date, student);
       if (section === "personales") {
-        const prof = await supabase.from("profiles").update({ full_name: blank(fullName) }).eq("id", data.id);
+        const prof = await supabase.from("profiles").update({ full_name: fullName.trim() || null }).eq("id", data.id);
         if (prof.error) throw prof.error;
-        const pr = await supabase.from("student_private").update(priv).eq("student_id", data.id);
+        const pr = await supabase.from("student_private").update(trimmed(priv)).eq("student_id", data.id);
         if (pr.error) throw pr.error;
         await updateStudent({
           city: student.city, linkedin_url: student.linkedin_url, github_url: student.github_url, portfolio_url: student.portfolio_url,
