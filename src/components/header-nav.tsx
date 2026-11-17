@@ -34,7 +34,7 @@ export function HeaderNav({ role, name, email, avatarUrl, embedded = false }: { 
     <>
       <header className={`appbar z-40 ${embedded ? "relative" : "sticky top-0"}`}>
         <div className="flex h-16 items-center gap-4 px-4 md:px-6">
-          <Link href={role ? HOME[role] : "/"} className="display shrink-0 text-lg text-azul-oscuro">
+          <Link href={role ? HOME[role] : "/"} className="appbar-brand display shrink-0 text-lg text-azul-oscuro">
             Talento <span className="text-verde-tinta">FCEN</span>
           </Link>
 

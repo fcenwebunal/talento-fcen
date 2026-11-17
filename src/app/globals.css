@@ -938,13 +938,6 @@ body {
   }
 }
 
-@keyframes fm-rise {
-  from {
-    opacity: 0;
-    transform: translateY(0.5rem);
-  }
-}
-
 @keyframes hand-pop {
   0%,
   70%,
@@ -1027,189 +1020,7 @@ body {
     background-size: 10rem 7.5rem;
   }
 
-  /* FCEN masthead, copied from the standard banner of fcen.unal.edu.co (sitio/eventos-fcen). The app fills its
-     iframe, so the band is simply full width; the text column keeps the site's 80/90/96% widths. */
-  .fcen-masthead {
-    --fm-accent: #7ab317;
-    --fm-navy: #0b2e59;
-    --fm-navy-deep: #082448;
-    --fm-navy-light: #174f86;
-    --fm-ink: #fff;
-    --fm-ink-soft: rgb(255 255 255 / 0.72);
-
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-    padding: 2.25rem 0 1.625rem;
-    color: var(--fm-ink);
-    text-align: left;
-    background:
-      radial-gradient(ellipse 55% 160% at 100% 100%, var(--fm-navy-light) 0%, rgb(23 79 134 / 0) 70%),
-      linear-gradient(100deg, var(--fm-navy-deep) 0%, var(--fm-navy) 55%);
-  }
-
-  .fcen-masthead::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background: repeating-radial-gradient(circle at calc(100% + 6rem) 50%, transparent 0 3.25rem, rgb(255 255 255 / 0.045) 3.25rem calc(3.25rem + 1px));
-    mask-image: linear-gradient(to left, #000 0%, rgb(0 0 0 / 0.45) 35%, transparent 75%);
-  }
-
-  .fcen-masthead::after {
-    content: "";
-    position: absolute;
-    inset: 0 0 auto;
-    z-index: -1;
-    height: 1.25rem;
-    background:
-      linear-gradient(90deg, var(--fm-accent) 0%, var(--fm-accent) 35%, transparent 90%) top / 100% 3px no-repeat,
-      linear-gradient(rgb(0 0 0 / 0.28), transparent);
-  }
-
-  .fcen-masthead .fm-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2.5rem;
-    width: min(80%, 82rem);
-    margin: 0 auto;
-  }
-
-  .fcen-masthead .fm-heading {
-    min-width: 0;
-    flex: 1 1 auto;
-  }
-
-  .fcen-masthead .fm-kicker {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    margin: 0 0 0.25rem;
-    font-size: 1rem;
-    line-height: 1.3;
-    letter-spacing: 0.01em;
-    color: var(--fm-ink-soft);
-  }
-
-  .fcen-masthead .fm-kicker::before {
-    content: "";
-    flex: none;
-    width: 1.125rem;
-    height: 2px;
-    border-radius: 1px;
-    background: var(--fm-accent);
-  }
-
-  .fcen-masthead .fm-title {
-    max-width: 30ch;
-    font-size: clamp(1.5rem, 1rem + 1.2vw, 2.125rem);
-    font-weight: 900;
-    line-height: 1.1;
-    letter-spacing: -0.012em;
-    text-wrap: balance;
-  }
-
-  .fcen-masthead .fm-accent {
-    color: var(--fm-accent);
-  }
-
-  .fcen-masthead .fm-brand {
-    display: flex;
-    flex: none;
-    align-items: center;
-    gap: 0.75rem;
-    margin-right: 3rem;
-    color: var(--fm-ink);
-    border-radius: 0.25rem;
-    transition: opacity 0.2s ease;
-  }
-
-  .fcen-masthead .fm-brand:hover {
-    opacity: 0.82;
-  }
-
-  .fcen-masthead .fm-brand-mark {
-    font-size: 1.875rem;
-    font-weight: 900;
-    line-height: 1;
-    letter-spacing: -0.02em;
-  }
-
-  .fcen-masthead .fm-brand-name {
-    display: flex;
-    flex-direction: column;
-    padding-left: 0.75rem;
-    border-left: 1px solid rgb(255 255 255 / 0.35);
-    font-size: 0.625rem;
-    line-height: 1.35;
-    letter-spacing: 0.01em;
-    color: var(--fm-ink-soft);
-  }
-
-  .fcen-masthead a:focus-visible {
-    outline: 2px solid var(--fm-accent);
-    outline-offset: 0.25rem;
-  }
-
-  .fcen-masthead .fm-kicker,
-  .fcen-masthead .fm-title,
-  .fcen-masthead .fm-brand {
-    animation: fm-rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  }
-
-  .fcen-masthead .fm-title {
-    animation-delay: 0.08s;
-  }
-
-  .fcen-masthead .fm-brand {
-    animation-delay: 0.2s;
-  }
-
-  @media (max-width: 991px) {
-    .fcen-masthead {
-      padding: 1.75rem 0 1.5rem;
-    }
-
-    .fcen-masthead .fm-inner {
-      width: 90%;
-    }
-
-    .fcen-masthead .fm-brand-name {
-      display: none;
-    }
-
-    .fcen-masthead .fm-brand-mark {
-      font-size: 1.5rem;
-    }
-  }
-
-  @media (max-width: 800px) {
-    .fcen-masthead .fm-inner {
-      width: 96%;
-    }
-  }
-
-  @media (max-width: 767px) {
-    .fcen-masthead {
-      padding: 1.125rem 0 1.25rem;
-    }
-
-    .fcen-masthead .fm-inner {
-      width: calc(96% - 2rem);
-    }
-
-    .fcen-masthead .fm-brand {
-      display: none;
-    }
-
-    .fcen-masthead .fm-kicker {
-      font-size: 0.9375rem;
-    }
-  }
-
-  /* Menu bar under the banner */
+  /* Top bar of the app: the app title on the left, the menu and the session */
   .appbar {
     background: rgb(255 255 255 / 0.94);
     backdrop-filter: blur(10px);
@@ -1735,7 +1546,15 @@ body.embed {
   padding-bottom: 2.5rem;
 }
 
-/* Keeps the menu's right end clear of the fixed "Servicios" tab of fcen.unal.edu.co, like the banner lockup */
+/* Wide screens of fcen.unal.edu.co: the UNAL logo ribbon hangs over the top left corner of the frame
+   (it reaches 15rem from the left edge), so the app title starts right after it */
+@media (min-width: 75rem) {
+  .embed .appbar-brand {
+    margin-left: 15rem;
+  }
+}
+
+/* Keeps the menu's right end clear of the fixed "Servicios" tab of fcen.unal.edu.co */
 @media (min-width: 768px) {
   .embed .appbar > div {
     padding-right: 3.5rem;
@@ -1768,7 +1587,6 @@ body.embed {
 
   .no-print,
   .appbar,
-  .fcen-masthead,
   .mobile-tabs {
     display: none !important;
   }

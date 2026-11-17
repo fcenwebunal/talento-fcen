@@ -19,7 +19,7 @@ export default async function HomePage() {
   return (
     <section className="relative overflow-hidden">
       <div className="bg-links absolute inset-0 opacity-70 [mask-image:radial-gradient(ellipse_at_70%_40%,#000_20%,transparent_70%)]" />
-      <div className="wrap relative grid min-h-[calc(100vh-15rem)] items-center gap-10 py-10 md:py-12 lg:grid-cols-[1.05fr_1fr]">
+      <div className="wrap relative grid min-h-[calc(100vh-7rem)] items-center gap-10 py-10 md:py-12 lg:grid-cols-[1.05fr_1fr]">
         <div className="stagger">
           <p className="kicker">Prácticas y talento FCEN</p>
           <h1 className="display mt-4 text-4xl text-azul-oscuro md:text-5xl">
