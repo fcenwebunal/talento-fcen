@@ -132,6 +132,8 @@ try {
 
   const staffAdmin = await staff.rpc("set_user_role", { p_user: companyUserId, p_role: "admin" });
   check("La Facultad no puede dar el rol de administrador", !!staffAdmin.error && (await roleOf(companyUserId)) === "user", staffAdmin.error?.message);
+  const staffStaff = await staff.rpc("set_user_role", { p_user: companyUserId, p_role: "staff" });
+  check("La Facultad no puede dar el rol Facultad", !!staffStaff.error && (await roleOf(companyUserId)) === "user", staffStaff.error?.message);
   const staffCompany = await staff.rpc("set_user_role", { p_user: companyUserId, p_role: "company" });
   check("La Facultad pasa un usuario a empresa", !staffCompany.error && (await roleOf(companyUserId)) === "company", staffCompany.error?.message);
   const staffChange = await staff.rpc("set_user_role", { p_user: companyUserId, p_role: "student" });
@@ -141,6 +143,8 @@ try {
   check("La Facultad registra un correo como estudiante", staffInvite.data === "invited", staffInvite.error?.message);
   const staffInviteAdmin = await staff.rpc("invite_user", { p_email: invitedAdmin, p_role: "admin" });
   check("La Facultad no puede registrar administradores", !!staffInviteAdmin.error);
+  const staffInviteStaff = await staff.rpc("invite_user", { p_email: invitedAdmin, p_role: "staff" });
+  check("La Facultad no puede registrar correos como Facultad", !!staffInviteStaff.error);
   const bossInviteAdmin = await boss.rpc("invite_user", { p_email: invitedAdmin, p_role: "admin" });
   const staffOverAdmin = await staff.rpc("invite_user", { p_email: invitedAdmin, p_role: "student" });
   const { data: stillAdmin } = await admin.from("role_invites").select("role").eq("email", invitedAdmin).single();

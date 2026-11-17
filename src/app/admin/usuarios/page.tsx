@@ -59,8 +59,8 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
       <p className="max-w-3xl text-sm text-suave">
         Toda cuenta nueva, de la UNAL o externa, entra como «Usuario» y solo puede editar su cuenta hasta que tenga un rol.{" "}
         {isAdmin
-          ? "La Facultad puede pasar un usuario a estudiante, empresa o Facultad y registrar correos con esos roles; el rol de administrador y cualquier cambio de un rol ya asignado los haces tú como administrador."
-          : "Puedes pasar un usuario a estudiante, empresa o Facultad, y registrar correos con esos roles. El rol de administrador y los cambios de una cuenta que ya tiene rol los hace un administrador."}
+          ? "La Facultad puede pasar un usuario a estudiante o empresa y registrar correos con esos roles; los roles de Facultad y administrador, y cualquier cambio de un rol ya asignado, los haces tú como administrador."
+          : "Puedes pasar un usuario a estudiante o empresa, y registrar correos con esos roles. Los roles de Facultad y administrador, y los cambios de una cuenta que ya tiene rol, los hace un administrador."}
       </p>
 
       <section className="card space-y-3" aria-labelledby="registrar">
