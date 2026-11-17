@@ -10,7 +10,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { openInNewTab } from "@/lib/files";
 import type { Area, PapaVisibility, Program, Skill, SkillDomain, SoftSkill } from "@/lib/types";
-import { EXPERIENCE_KIND, OUTPUT_KIND, PAPA_VISIBILITY, VERIFIED_LABEL } from "@/lib/labels";
+import { DATE_MAX, DATE_MIN, EXPERIENCE_KIND, OUTPUT_KIND, PAPA_VISIBILITY, VERIFIED_LABEL, isValidDate } from "@/lib/labels";
 import { HelpTip } from "@/components/ui/help-tip";
 import { ImageCropper } from "@/components/ui/image-cropper";
 import { ListEditor } from "./list-editor";
@@ -162,6 +162,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
     setSaving(true);
     setStatus(null);
     try {
+      checkDates(section, priv.birth_date, student);
       if (section === "personales") {
         const prof = await supabase.from("profiles").update({ full_name: blank(fullName) }).eq("id", data.id);
         if (prof.error) throw prof.error;
@@ -376,7 +377,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                 <input className="input" value={text(priv.doc_number)} onChange={(e) => p("doc_number", blank(e.target.value))} />
               </Field>
               <Field label="Fecha de nacimiento" lock>
-                <input className="input" type="date" value={text(priv.birth_date)} onChange={(e) => p("birth_date", blank(e.target.value))} />
+                <input className="input" type="date" min={DATE_MIN} max={DATE_MAX} value={text(priv.birth_date)} onChange={(e) => p("birth_date", blank(e.target.value))} />
               </Field>
               <Field label="Ciudad de residencia">
                 <input className="input" value={text(student.city)} onChange={(e) => s("city", blank(e.target.value))} />
@@ -431,7 +432,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                 </select>
               </Field>
               <Field label="Fecha estimada de grado" help="Aproximada: el mes en que esperas graduarte.">
-                <input className="input" type="date" value={text(student.graduation_date)} onChange={(e) => s("graduation_date", blank(e.target.value))} />
+                <input className="input" type="date" min={DATE_MIN} max={DATE_MAX} value={text(student.graduation_date)} onChange={(e) => s("graduation_date", blank(e.target.value))} />
               </Field>
               <Field label="Porcentaje de avance en el plan de estudios" help={`Estado: ${VERIFIED_LABEL[student.progress_verified] ?? student.progress_verified}. Adjunta tu historia académica abajo para que la Facultad lo verifique.`}>
                 <input className="input" type="number" min={0} max={100} step={0.1} value={student.progress_pct ?? ""} onChange={(e) => s("progress_pct", e.target.value === "" ? null : Number(e.target.value))} />
@@ -654,10 +655,10 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Fecha a partir de la cual puedes iniciar">
-                <input className="input" type="date" value={text(student.available_from)} onChange={(e) => s("available_from", blank(e.target.value))} />
+                <input className="input" type="date" min={DATE_MIN} max={DATE_MAX} value={text(student.available_from)} onChange={(e) => s("available_from", blank(e.target.value))} />
               </Field>
               <Field label="Fecha hasta la cual buscas práctica" help="Al pasar esta fecha, tu perfil sale de las búsquedas.">
-                <input className="input" type="date" value={text(student.available_until)} onChange={(e) => s("available_until", blank(e.target.value))} />
+                <input className="input" type="date" min={DATE_MIN} max={DATE_MAX} value={text(student.available_until)} onChange={(e) => s("available_until", blank(e.target.value))} />
               </Field>
               <Field label="Duración de la práctica (meses)">
                 <input className="input" type="number" min={1} max={24} value={student.duration_months ?? ""} onChange={(e) => s("duration_months", e.target.value ? Number(e.target.value) : null)} />
@@ -844,4 +845,21 @@ function Consent({ checked, onChange, label, disabled }: { checked: boolean; onC
       <span>{label}</span>
     </label>
   );
+}
+
+function checkDates(section: string, birthDate: string | null, student: { graduation_date: string | null; available_from: string | null; available_until: string | null }) {
+  const fields: Record<string, [string, string | null][]> = {
+    personales: [["Fecha de nacimiento", birthDate]],
+    academico: [["Fecha estimada de grado", student.graduation_date]],
+    disponibilidad: [
+      ["Fecha a partir de la cual puedes iniciar", student.available_from],
+      ["Fecha hasta la cual buscas práctica", student.available_until],
+    ],
+  };
+  for (const [label, value] of fields[section] ?? []) {
+    if (value && !isValidDate(value)) throw new Error(`Revisa «${label}»: el año debe tener cuatro cifras (por ejemplo, 2027).`);
+  }
+  if (section === "disponibilidad" && student.available_from && student.available_until && student.available_from > student.available_until) {
+    throw new Error("La fecha hasta la cual buscas práctica debe ser posterior a la fecha en que puedes iniciar.");
+  }
 }

@@ -93,6 +93,14 @@ export function freshness(iso: string | null) {
   return { text, tone: days < 30 ? ("good" as const) : ("warn" as const) };
 }
 
+// Date inputs let people type years of up to six digits (12027); profile dates stay between 1900 and 2100 (also in the database)
+export const DATE_MIN = "1900-01-01";
+export const DATE_MAX = "2100-12-31";
+
+export function isValidDate(iso: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(iso) && iso >= DATE_MIN && iso <= DATE_MAX;
+}
+
 export function formatDate(iso: string | null) {
   if (!iso) return "";
   return new Date(iso + (iso.length === 10 ? "T00:00:00" : "")).toLocaleDateString("es-CO", {

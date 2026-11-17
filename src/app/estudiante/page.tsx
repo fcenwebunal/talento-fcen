@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AlertTriangle, ArrowRight, BadgeCheck, CalendarDays, Check, Eye, PencilLine, RefreshCcw, Route } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/session";
-import { AVAILABILITY_LABEL, daysSince, freshness } from "@/lib/labels";
+import { AVAILABILITY_LABEL, DATE_MAX, DATE_MIN, daysSince, freshness } from "@/lib/labels";
 import { AVAILABILITY_DAYS } from "@/lib/config";
 import { PageHeader } from "@/components/ui/page-header";
 import { ProgressRing } from "@/components/ui/progress-ring";
@@ -140,7 +140,7 @@ export default async function StudentHome() {
               <option value="en_practica">Conseguí práctica</option>
               <option value="no_disponible">No estoy buscando por ahora</option>
             </select>
-            <input type="date" name="practice_end_date" defaultValue={s.practice_end_date ?? ""} className="input" aria-label="Si conseguiste práctica, fecha de fin" title="Si conseguiste práctica, ¿cuándo termina?" />
+            <input type="date" min={DATE_MIN} max={DATE_MAX} name="practice_end_date" defaultValue={s.practice_end_date ?? ""} className="input" aria-label="Si conseguiste práctica, fecha de fin" title="Si conseguiste práctica, ¿cuándo termina?" />
             <button className="btn btn-secondary btn-sm w-full">Guardar estado</button>
           </form>
         </section>
