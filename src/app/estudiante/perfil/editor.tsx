@@ -243,6 +243,24 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
     }
     setDocuments((prev) => [row as Doc, ...prev]);
     setStatus({ tone: "ok", text: "Archivo subido." });
+    if (kind === "foto") await inheritAccountPhoto(file);
+  }
+
+  // The CV photo becomes the account photo only while the account has none; an account photo never reaches the CV
+  async function inheritAccountPhoto(file: File) {
+    if (file.size > 2 * 1024 * 1024) return;
+    const { data: account } = await supabase.from("profiles").select("avatar_path").eq("id", data.id).single();
+    if (!account || account.avatar_path) return;
+    const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+    const path = `${data.id}/${Date.now()}.${ext}`;
+    const up = await supabase.storage.from("avatars").upload(path, file, { contentType: file.type });
+    if (up.error) return;
+    const { data: updated } = await supabase.from("profiles").update({ avatar_path: path }).eq("id", data.id).is("avatar_path", null).select("id");
+    if (!updated?.length) {
+      await supabase.storage.from("avatars").remove([path]);
+      return;
+    }
+    router.refresh();
   }
 
   async function removeDoc(doc: Doc) {
