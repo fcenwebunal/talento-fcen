@@ -10,7 +10,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { openInNewTab } from "@/lib/files";
 import type { Area, PapaVisibility, Program, Skill, SkillDomain, SoftSkill } from "@/lib/types";
-import { DATE_MAX, DATE_MIN, EXPERIENCE_KIND, OUTPUT_KIND, PAPA_VISIBILITY, VERIFIED_LABEL, isValidDate } from "@/lib/labels";
+import { BROKEN_NAME, DATE_MAX, DATE_MIN, EXPERIENCE_KIND, OUTPUT_KIND, PAPA_VISIBILITY, VERIFIED_LABEL, fileSlug, hasBrokenText, isValidDate } from "@/lib/labels";
 import { HelpTip } from "@/components/ui/help-tip";
 import { ImageCropper } from "@/components/ui/image-cropper";
 import { ListEditor } from "./list-editor";
@@ -167,6 +167,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
     try {
       checkDates(section, priv.birth_date, student);
       if (section === "personales") {
+        if (hasBrokenText(fullName)) throw new Error(BROKEN_NAME);
         const prof = await supabase.from("profiles").update({ full_name: fullName.trim() || null }).eq("id", data.id);
         if (prof.error) throw prof.error;
         const pr = await supabase.from("student_private").update(trimmed(priv)).eq("student_id", data.id);
@@ -228,7 +229,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
       setStatus({ tone: "error", text: "El archivo supera los 5 MB." });
       return;
     }
-    const safe = file.name.normalize("NFD").replace(/[^\w.\-]+/g, "_").slice(-80);
+    const safe = fileSlug(file.name).slice(-80);
     const path = `${data.id}/${kind}/${Date.now()}-${safe}`;
     const up = await supabase.storage.from("documentos").upload(path, file, { contentType: file.type });
     if (up.error) {
@@ -379,7 +380,8 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
             <PrivacyNote text="Tu documento, fecha de nacimiento, EPS y contacto de emergencia nunca los ve una empresa: solo la Facultad, para formalizar tu práctica." />
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Nombres y apellidos completos">
-                <input className="input" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                <input className="input" value={fullName} onChange={(e) => setFullName(e.target.value)} aria-invalid={hasBrokenText(fullName) || undefined} />
+                {hasBrokenText(fullName) && <span className="mt-1 block text-xs font-bold text-naranja">{BROKEN_NAME}</span>}
               </Field>
               <Field label="Correo institucional" help="Viene de tu cuenta y no se puede cambiar.">
                 <input className="input bg-superficie" value={data.email} readOnly />

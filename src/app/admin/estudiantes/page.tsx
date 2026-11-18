@@ -4,7 +4,7 @@ import { Filter, Search, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Avatar } from "@/components/ui/avatar";
 import { AdminTitle } from "../admin-title";
-import { AVAILABILITY_LABEL, VERIFIED_LABEL, formatDate } from "@/lib/labels";
+import { AVAILABILITY_LABEL, VERIFIED_LABEL, fold, formatDate } from "@/lib/labels";
 import type { Availability } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Estudiantes" };
@@ -35,9 +35,9 @@ export default async function AdminStudents({ searchParams }: { searchParams: Pr
   if (estado) query = query.eq("availability", estado);
   if (verificar) query = query.neq("progress_verified", "coordinacion").or("progress_pct.not.is.null,papa.not.is.null");
   const { data } = await query;
-  const needle = (q ?? "").toLowerCase();
+  const needle = fold((q ?? "").trim());
   const rows = ((data ?? []) as unknown as Row[]).filter(
-    (r) => !needle || `${r.profiles?.full_name ?? ""} ${r.profiles?.email ?? ""}`.toLowerCase().includes(needle)
+    (r) => !needle || fold(`${r.profiles?.full_name ?? ""} ${r.profiles?.email ?? ""}`).includes(needle)
   );
 
   // Account photo first (public bucket); otherwise the profile photo document, signed in one batch

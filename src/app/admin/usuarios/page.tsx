@@ -3,7 +3,7 @@ import Link from "next/link";
 import { KeyRound, MailPlus, Search, ShieldAlert, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/session";
-import { formatDate } from "@/lib/labels";
+import { fold, formatDate } from "@/lib/labels";
 import { ROLE_LABEL, ROLES, assignableBy, isRole } from "@/lib/roles";
 import type { Role } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
@@ -35,16 +35,21 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
   const needle = (q ?? "").replace(/[^\p{L}\p{N}@._\- ]/gu, "").trim();
   const supabase = await createClient();
 
-  let query = supabase.from("profiles").select("id, email, full_name, role, avatar_path, provider, created_at").order("created_at", { ascending: false }).limit(200);
+  // ilike is accent-sensitive («Mino» misses «Miño»): with a search, filter a wider set here with fold()
+  let query = supabase
+    .from("profiles")
+    .select("id, email, full_name, role, avatar_path, provider, created_at")
+    .order("created_at", { ascending: false })
+    .limit(needle ? 2000 : 200);
   if (filter) query = query.eq("role", filter);
-  if (needle) query = query.or(`email.ilike.%${needle}%,full_name.ilike.%${needle}%`);
 
   const [{ data }, { data: invites }, ...counts] = await Promise.all([
     query,
     supabase.from("role_invites").select("email, role, created_at, student_data, profiles(email)").order("created_at", { ascending: false }),
     ...ROLES.map((r) => supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", r)),
   ]);
-  const users = (data ?? []) as Profile[];
+  const folded = fold(needle);
+  const users = ((data ?? []) as Profile[]).filter((u) => !folded || fold(`${u.email} ${u.full_name ?? ""}`).includes(folded)).slice(0, 200);
   const pendingInvites = (invites ?? []) as unknown as Invite[];
   const countOf = Object.fromEntries(ROLES.map((r, i) => [r, counts[i].count ?? 0])) as Record<Role, number>;
   const total = ROLES.reduce((sum, r) => sum + countOf[r], 0);

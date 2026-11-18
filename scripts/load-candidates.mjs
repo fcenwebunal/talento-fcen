@@ -33,7 +33,7 @@ for (const r of rows) {
     tally.omitidos.push(`${r.email}: correo o programa no válido`);
     continue;
   }
-  const data = { program: r.program, program_name: r.program_name, progress_pct: Number(r.progress_pct), papa: r.papa ? Number(r.papa) : null, source };
+  const data = { program: r.program, program_name: r.program_name, progress_pct: Number(r.progress_pct), papa: r.papa ? Number(r.papa) : null, source, ...(r.nombre ? { name: r.nombre } : {}) };
   const profile = byEmail.get(r.email);
   if (profile && !["user", "student"].includes(profile.role)) {
     tally.omitidos.push(`${r.email}: ya tiene el rol ${profile.role}`);

@@ -106,6 +106,23 @@ export function formatList(value: string) {
   return value.split(/\s*[,;]\s*/).filter(Boolean).join(", ");
 }
 
+// Accent- and case-insensitive comparison («mino» finds «Miño», «jose» finds «José»)
+export function fold(value: string) {
+  return value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+}
+
+// Safe file name for Storage keys and downloads: no accents or ñ, only letters, digits, dots and dashes
+export function fileSlug(value: string, separator = "_") {
+  return fold(value).replace(/[^a-z0-9.\-]+/g, separator).replace(new RegExp(`^\\${separator}+|\\${separator}+$`, "g"), "");
+}
+
+// Some UNAL Google accounts bring their name broken from the university directory («Miï¿½o», «MuÃ±oz»)
+export function hasBrokenText(value: string | null | undefined) {
+  return !!value && /�|ï¿½|Ã[\u0080-¿‘-„]/.test(value);
+}
+
+export const BROKEN_NAME = "Tu nombre llegó de tu cuenta de Google con un carácter dañado: escribe bien la letra (por ejemplo, la ñ o la tilde) y guarda.";
+
 export function formatDate(iso: string | null) {
   if (!iso) return "";
   return new Date(iso + (iso.length === 10 ? "T00:00:00" : "")).toLocaleDateString("es-CO", {

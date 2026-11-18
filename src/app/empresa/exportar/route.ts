@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSession } from "@/lib/session";
 import { filtersFrom } from "@/lib/search";
+import { fileSlug } from "@/lib/labels";
 
 const COLUMNS = [
   "nombre", "correo", "programa", "nivel", "avance", "habilidades", "idiomas",
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
     COLUMNS.join(";"),
     ...rows.map((r) => COLUMNS.map((c) => csvCell(r[c])).join(";")),
   ];
-  const slug = owner.normalize("NFD").replace(/[^\w]+/g, "-").toLowerCase();
+  const slug = fileSlug(owner, "-");
 
   return new NextResponse("﻿" + lines.join("\r\n"), {
     headers: {

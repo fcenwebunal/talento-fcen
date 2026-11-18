@@ -6,6 +6,7 @@ import { Building2, Camera, CheckCircle2, ImageUp, Loader2, Save, TriangleAlert,
 import { createClient } from "@/lib/supabase/client";
 import { Avatar } from "@/components/ui/avatar";
 import { ImageCropper } from "@/components/ui/image-cropper";
+import { BROKEN_NAME, hasBrokenText } from "@/lib/labels";
 
 type Status = { tone: "ok" | "error"; text: string } | null;
 
@@ -65,6 +66,10 @@ export function AccountForm({
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (hasBrokenText(form.full_name)) {
+      setStatus({ tone: "error", text: BROKEN_NAME });
+      return;
+    }
     setSaving(true);
     setStatus(null);
     const { error } = await createClient()
@@ -97,7 +102,8 @@ export function AccountForm({
       </div>
       <label className="field">
         <span>Nombre completo</span>
-        <input className="input" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+        <input className="input" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} aria-invalid={hasBrokenText(form.full_name) || undefined} />
+        {hasBrokenText(form.full_name) && <span className="text-xs font-bold text-naranja">{BROKEN_NAME}</span>}
       </label>
       <label className="field">
         <span>{positionLabel}</span>
