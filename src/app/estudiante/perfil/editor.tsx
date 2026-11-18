@@ -716,7 +716,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Ciudades donde puedes hacer la práctica">
-                <input className="input" value={text(student.practice_cities)} onChange={(e) => s("practice_cities", blank(e.target.value))} />
+                <input className="input" placeholder="Por ejemplo: Manizales, Bogotá, Medellín" value={text(student.practice_cities)} onChange={(e) => s("practice_cities", blank(e.target.value))} />
               </Field>
               <Field label="¿Tienes disponibilidad para trasladarte de ciudad?">
                 <select
@@ -878,7 +878,7 @@ function checkDates(section: string, birthDate: string | null, student: { gradua
     ],
   };
   for (const [label, value] of fields[section] ?? []) {
-    if (value && !isValidDate(value)) throw new Error(`Revisa «${label}»: el año debe tener cuatro cifras (por ejemplo, 2027).`);
+    if (value && !isValidDate(value)) throw new Error(`Revisa «${label}»: la fecha no es válida (el año va con cuatro cifras, entre 1900 y 2100).`);
   }
   if (section === "disponibilidad" && student.available_from && student.available_until && student.available_from > student.available_until) {
     throw new Error("La fecha hasta la cual buscas práctica debe ser posterior a la fecha en que puedes iniciar.");

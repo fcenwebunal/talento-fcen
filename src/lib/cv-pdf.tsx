@@ -5,7 +5,7 @@ import { Circle, Document, Font, Image, Link, Page, Path, StyleSheet, Svg, Text,
 import type { ExperienceKind, StudentDetail } from "./types";
 import {
   AVAILABILITY_LABEL, DEDICATION_LABEL, EXPERIENCE_KIND, LEVEL_LABEL, MODALITY_LABEL, OUTPUT_KIND, SKILL_LEVEL, VERIFIED_LABEL,
-  formatDate, formatMonth, freshness,
+  formatDate, formatList, formatMonth, freshness,
 } from "./labels";
 import { PUBLIC_SITE } from "./config";
 
@@ -537,7 +537,7 @@ export function CvDocument({ detail, photo, generatedAt, f }: { detail: StudentD
             {detail.available_from && <KV s={s} k="Desde" v={formatDate(detail.available_from)} />}
             {detail.available_until && <KV s={s} k="Hasta" v={formatDate(detail.available_until)} />}
             {detail.duration_months && <KV s={s} k="Duración" v={`${detail.duration_months} meses`} />}
-            {detail.practice_cities && <KV s={s} k="Puede en" v={detail.practice_cities} />}
+            {detail.practice_cities && <KV s={s} k="Puede en" v={formatList(detail.practice_cities)} />}
             {detail.can_relocate !== null && <KV s={s} k="Se traslada" v={detail.can_relocate ? "Sí" : "No"} />}
           </View>
           {(detail.areas.length > 0 || detail.target_companies) && (

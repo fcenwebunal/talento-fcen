@@ -3,10 +3,7 @@ import {
   GraduationCap, HeartHandshake, Languages, Lock, Mail, MapPin, Network, Phone, Plane, Sparkles, Target, Timer, Trophy,
 } from "lucide-react";
 import type { ExperienceKind, StudentDetail } from "@/lib/types";
-import {
-  AVAILABILITY_LABEL, DEDICATION_LABEL, EXPERIENCE_KIND, LEVEL_LABEL, MODALITY_LABEL, OUTPUT_KIND, SKILL_LEVEL, VERIFIED_LABEL,
-  formatDate, formatMonth, freshness,
-} from "@/lib/labels";
+import { AVAILABILITY_LABEL, DEDICATION_LABEL, EXPERIENCE_KIND, formatDate, formatList, formatMonth, freshness, LEVEL_LABEL, MODALITY_LABEL, OUTPUT_KIND, SKILL_LEVEL, VERIFIED_LABEL } from "@/lib/labels";
 import { Avatar } from "./ui/avatar";
 import { DownloadButton } from "./ui/download-button";
 import { HelpTip } from "./ui/help-tip";
@@ -318,8 +315,14 @@ export function StudentDetailView({
                 <div className="min-w-0">
                   <p className="font-black leading-snug text-azul-oscuro">{detail.program}</p>
                   <p className="text-xs text-suave">
-                    Universidad Nacional de Colombia, Sede Manizales · {detail.program_level ? LEVEL_LABEL[detail.program_level] : ""} · {status}
-                    {detail.graduation_date ? ` · ${detail.academic_status === "egresado" ? "grado" : "grado estimado"} ${formatMonth(detail.graduation_date)}` : ""}
+                    {[
+                      "Universidad Nacional de Colombia, Sede Manizales",
+                      detail.program_level ? LEVEL_LABEL[detail.program_level] : null,
+                      status,
+                      detail.graduation_date ? `${detail.academic_status === "egresado" ? "grado" : "grado estimado"} ${formatMonth(detail.graduation_date)}` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </p>
                 </div>
               </div>
@@ -475,7 +478,7 @@ export function StudentDetailView({
                 {detail.available_from && <Row icon={CalendarDays} k="Desde" v={formatDate(detail.available_from)} />}
                 {detail.available_until && <Row icon={Clock} k="Hasta" v={formatDate(detail.available_until)} />}
                 {detail.duration_months && <Row icon={Timer} k="Duración" v={`${detail.duration_months} meses`} />}
-                {detail.practice_cities && <Row icon={MapPin} k="Puede en" v={detail.practice_cities} />}
+                {detail.practice_cities && <Row icon={MapPin} k="Puede en" v={formatList(detail.practice_cities)} />}
                 {detail.can_relocate !== null && <Row icon={Plane} k="Se traslada" v={detail.can_relocate ? "Sí" : "No"} />}
               </dl>
             </Section>

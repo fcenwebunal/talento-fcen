@@ -101,6 +101,11 @@ export function isValidDate(iso: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(iso) && iso >= DATE_MIN && iso <= DATE_MAX;
 }
 
+// Lists typed in one field («Manizales,Bogotá ; Cali») shown as «Manizales, Bogotá, Cali»
+export function formatList(value: string) {
+  return value.split(/\s*[,;]\s*/).filter(Boolean).join(", ");
+}
+
 export function formatDate(iso: string | null) {
   if (!iso) return "";
   return new Date(iso + (iso.length === 10 ? "T00:00:00" : "")).toLocaleDateString("es-CO", {
