@@ -71,6 +71,7 @@ async function signedIn(email) {
 
 const userIds = [];
 let studentId, companyUserId, companyId;
+const callIds = [];
 try {
   studentId = await createAccount(studentEmail);
   userIds.push(studentId);
@@ -167,6 +168,62 @@ try {
   companyId = reg.data;
   check("La empresa registra su organización", !reg.error, reg.error?.message);
 
+  // Convocatorias abiertas: the company stays registered (level 1) on purpose, applying alone opens the CV to it
+  const { data: progFis } = await staff.from("programs").select("id").eq("slug", "ingenieria-fisica").single();
+  const deadline = new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10);
+  const baseCall = { company_name: "Empresa de Prueba SAS", title: "Práctica de prueba automática", deadline, min_progress: 75, languages: [{ language: "Inglés", level: "A2" }] };
+  const callA = await staff.rpc("save_call", { p_id: null, p_data: { ...baseCall, status: "publicada", company_id: companyId }, p_programs: [prog.id], p_skills: [{ skill_id: skillRows[0].id, level: 2 }] });
+  const callB = await staff.rpc("save_call", { p_id: null, p_data: { ...baseCall, status: "publicada" }, p_programs: [progFis.id], p_skills: [] });
+  const callDraft = await staff.rpc("save_call", { p_id: null, p_data: { ...baseCall, status: "borrador" }, p_programs: [], p_skills: [] });
+  callIds.push(callA.data, callB.data, callDraft.data);
+  check("La Facultad crea y publica convocatorias", !callA.error && !callB.error && !callDraft.error, callA.error?.message);
+  const { data: anonCalls } = await anonClient().from("calls").select("id").in("id", callIds);
+  const anonIds = (anonCalls ?? []).map((c) => c.id);
+  check("Sin sesión se ven las publicadas y no los borradores", anonIds.includes(callA.data) && !anonIds.includes(callDraft.data));
+  const studentSave = await student.rpc("save_call", { p_id: null, p_data: baseCall, p_programs: [], p_skills: [] });
+  check("Un estudiante no puede crear convocatorias", !!studentSave.error);
+  const r0 = await student.rpc("call_readiness", { p_call: callA.data });
+  check("Sin idioma ni declaración de veracidad la hoja de vida mínima no está completa", r0.data?.profile_ok === false && r0.data?.can_apply === false);
+  const ap0 = await student.rpc("apply_to_call", { p_call: callA.data });
+  check("Con la hoja de vida incompleta no puede postularse", /PROFILE_INCOMPLETE/.test(ap0.error?.message ?? ""), ap0.error?.message);
+  await student.from("student_languages").insert({ student_id: studentId, language: "Inglés", level: "B1" });
+  await student.from("students").update({ truthful_declared: true }).eq("id", studentId);
+  const ap1 = await student.rpc("apply_to_call", { p_call: callA.data });
+  check("Sin el avance mínimo no puede postularse si la convocatoria lo exige", /REQUIREMENTS_NOT_MET/.test(ap1.error?.message ?? ""), ap1.error?.message);
+  await admin.from("students").update({ progress_pct: 80 }).eq("id", studentId);
+  const apB = await student.rpc("apply_to_call", { p_call: callB.data });
+  check("No puede postularse a una convocatoria de otro programa que exige requisitos", /REQUIREMENTS_NOT_MET/.test(apB.error?.message ?? ""), apB.error?.message);
+  const ap2 = await student.rpc("apply_to_call", { p_call: callA.data, p_message: "Mensaje de prueba" });
+  check("El estudiante se postula", !ap2.error, ap2.error?.message);
+  const apDup = await student.rpc("apply_to_call", { p_call: callA.data });
+  check("No se puede postular dos veces", /ALREADY_APPLIED/.test(apDup.error?.message ?? ""), apDup.error?.message);
+  const direct = await student.from("applications").insert({ call_id: callB.data, student_id: studentId, meets_requirements: true, consent_version: "x" });
+  check("Nadie inserta postulaciones por fuera de la función", !!direct.error);
+  const studentList = await student.rpc("call_applicants", { p_call: callA.data });
+  check("Un estudiante no ve a los demás postulantes", !!studentList.error);
+  const compList = await company.rpc("call_applicants", { p_call: callA.data });
+  check("La empresa vinculada ve a su postulante aunque aún no esté autorizada", compList.data?.length === 1 && compList.data[0].full_name === "Estudiante De Prueba", compList.error?.message);
+  const compDetail = await company.rpc("get_student_detail", { p_student: studentId });
+  check("La empresa ve la hoja de vida completa de quien se postuló", compDetail.data?.contact_visible === true && compDetail.data?.contact?.full_name === "Estudiante De Prueba", compDetail.error?.message);
+  const compOther = await company.rpc("call_applicants", { p_call: callB.data });
+  check("La empresa no ve postulantes de convocatorias ajenas", !!compOther.error);
+  const appId = compList.data?.[0]?.id;
+  const setSt = await staff.from("applications").update({ status: "enviada", staff_note: "nota interna de prueba" }).eq("id", appId);
+  const compList2 = await company.rpc("call_applicants", { p_call: callA.data });
+  check("La Facultad cambia el estado y la empresa no ve la nota interna", !setSt.error && compList2.data?.[0]?.status === "enviada" && compList2.data?.[0]?.staff_note === null, setSt.error?.message);
+  const studentSt = await student.from("applications").update({ status: "seleccionada" }).eq("id", appId);
+  const { data: stNow } = await admin.from("applications").select("status").eq("id", appId).single();
+  check("El estudiante no cambia el estado de su postulación", stNow?.status === "enviada", studentSt.error?.message ?? "sin error, pero sin cambio");
+  const delCall = await staff.from("calls").delete().eq("id", callA.data);
+  const { data: stillCall } = await admin.from("calls").select("id").eq("id", callA.data);
+  check("Una convocatoria con postulantes no se puede borrar", !!delCall.error && stillCall?.length === 1);
+  const wd = await student.rpc("withdraw_application", { p_call: callA.data });
+  const compList3 = await company.rpc("call_applicants", { p_call: callA.data });
+  const compDetail2 = await company.rpc("get_student_detail", { p_student: studentId });
+  check("Si el estudiante se retira, la empresa deja de verlo y de ver su contacto", !wd.error && compList3.data?.length === 0 && compDetail2.data?.contact_visible !== true, wd.error?.message);
+  const ap3 = await student.rpc("apply_to_call", { p_call: callA.data });
+  check("Tras retirarse puede volver a postularse", !ap3.error, ap3.error?.message);
+
   const lvl1 = await company.rpc("search_students", { p_filters: { skill_ids: skillRows.map((s) => s.id) } });
   const row1 = (lvl1.data ?? []).find((r) => r.student_id === studentId);
   check("Nivel 1: encuentra el perfil por habilidades", !!row1, `${lvl1.data?.length ?? 0} resultados`);
@@ -242,6 +299,11 @@ try {
     if (companyId) await admin.from("exports_log").delete().eq("company_id", companyId);
     await admin.from("status_history").delete().in("entity_id", traced);
     await admin.from("contact_events").delete().in("user_id", userIds);
+  }
+  const ownCalls = callIds.filter(Boolean);
+  if (ownCalls.length) {
+    await admin.from("applications").delete().in("call_id", ownCalls);
+    await admin.from("calls").delete().in("id", ownCalls);
   }
   if (companyId) await admin.from("companies").delete().eq("id", companyId);
   for (const id of userIds) await admin.auth.admin.deleteUser(id);
