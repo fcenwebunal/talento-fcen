@@ -69,7 +69,7 @@ export function AppShell({
   const title = session.role === "company" ? session.company?.name ?? "Mi empresa" : session.fullName ?? session.email;
 
   return (
-    <div className="grid min-h-[calc(100vh-4rem)] lg:grid-cols-[16rem_1fr]">
+    <div className="grid min-h-[calc(100vh-4rem)] grid-cols-[minmax(0,1fr)] lg:grid-cols-[16rem_1fr]">
       <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] flex-col border-r border-borde bg-white lg:flex">
         <div className="flex items-center gap-3 border-b border-borde p-4">
           <Avatar name={title} seed={session.company?.id ?? session.email} src={session.avatarUrl} size={52} square={session.role === "company"} />
