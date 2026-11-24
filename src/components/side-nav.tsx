@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   Building2, CircleUserRound, Download, Eye, History, KeyRound, LayoutDashboard, Lightbulb, ListChecks, Megaphone, Route, Search, Send, Star, UserRoundPen, Users, type LucideIcon,
@@ -92,22 +93,44 @@ export function SideNav({ items, badges }: { items: SideItem[]; badges: Record<s
 
 export function MobileTabs({ items, badges }: { items: SideItem[]; badges: Record<string, number> }) {
   const isActive = useActive();
-  const tabs = items.slice(0, 5);
+  const tabs = items.filter((i) => !i.external);
+  const ref = useRef<HTMLElement>(null);
+  const [edges, setEdges] = useState({ start: false, end: false });
+
+  const updateEdges = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    setEdges({ start: el.scrollLeft > 4, end: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 });
+  }, []);
+
+  const activeHref = tabs.find(isActive)?.href;
+
+  useEffect(() => {
+    const el = ref.current;
+    const current = el?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (el && current) el.scrollLeft = current.offsetLeft - (el.clientWidth - current.offsetWidth) / 2;
+    updateEdges();
+    window.addEventListener("resize", updateEdges);
+    return () => window.removeEventListener("resize", updateEdges);
+  }, [activeHref, updateEdges]);
+
   return (
-    <nav className="mobile-tabs fixed inset-x-0 bottom-0 z-30 grid border-t border-borde bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }} aria-label="Mi espacio">
-      {tabs.map((item) => {
-        const Icon = ICONS[item.icon] ?? LayoutDashboard;
-        const active = isActive(item);
-        const badge = item.badgeKey ? badges[item.badgeKey] : 0;
-        return (
-          <Link key={item.href} href={item.href} className={`relative flex flex-col items-center gap-1 py-2 text-[0.6875rem] font-black ${active ? "text-azul" : "text-suave"}`}>
-            {active && <span className="absolute inset-x-6 top-0 h-0.5 rounded-b bg-verde" />}
-            <Icon className="h-5 w-5" aria-hidden="true" />
-            <span className="truncate">{item.label}</span>
-            {badge > 0 && <span className="absolute right-[calc(50%-1.25rem)] top-1 h-2 w-2 rounded-full bg-amarillo" />}
-          </Link>
-        );
-      })}
-    </nav>
+    <div className={`mobile-tabs fixed inset-x-0 bottom-0 z-30 border-t border-borde bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden ${edges.start ? "fade-start" : ""} ${edges.end ? "fade-end" : ""}`}>
+      <nav ref={ref} onScroll={updateEdges} className="mobile-tabs-track flex overflow-x-auto" aria-label="Mi espacio">
+        {tabs.map((item) => {
+          const Icon = ICONS[item.icon] ?? LayoutDashboard;
+          const active = isActive(item);
+          const badge = item.badgeKey ? badges[item.badgeKey] : 0;
+          return (
+            <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`relative flex min-w-[5.25rem] flex-1 shrink-0 flex-col items-center gap-1 px-2 py-2 text-[0.6875rem] font-black ${active ? "text-azul" : "text-suave"}`}>
+              {active && <span className="absolute inset-x-6 top-0 h-0.5 rounded-b bg-verde" />}
+              <Icon className="h-5 w-5" aria-hidden="true" />
+              <span className="whitespace-nowrap">{item.label}</span>
+              {badge > 0 && <span className="absolute right-[calc(50%-1.25rem)] top-1 h-2 w-2 rounded-full bg-amarillo" />}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
   );
 }

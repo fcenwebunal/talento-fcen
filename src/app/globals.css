@@ -1523,6 +1523,32 @@ body {
   }
 }
 
+/* Mobile tab bar: every option fits by sliding sideways; the faded edge shows there is more */
+.mobile-tabs-track {
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+
+.mobile-tabs-track::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-tabs-track > a {
+  scroll-snap-align: start;
+}
+
+.mobile-tabs.fade-end .mobile-tabs-track {
+  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+}
+
+.mobile-tabs.fade-start .mobile-tabs-track {
+  mask-image: linear-gradient(to right, transparent, #000 2.5rem);
+}
+
+.mobile-tabs.fade-start.fade-end .mobile-tabs-track {
+  mask-image: linear-gradient(to right, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent);
+}
+
 /* Embedded in fcen.unal.edu.co: the iframe grows with the content, so nothing sticks to the viewport */
 .embed [class*="min-h-[calc(100vh"],
 .embed .min-h-screen,
