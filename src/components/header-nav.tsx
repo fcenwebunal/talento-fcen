@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BriefcaseBusiness, Blocks, GraduationCap, LayoutGrid, LogIn, LogOut, Maximize2, Menu, Search, X } from "lucide-react";
+import { BriefcaseBusiness, Blocks, GraduationCap, LayoutGrid, LogIn, LogOut, Maximize2, Megaphone, Menu, Search, X } from "lucide-react";
 import { PUBLIC_SITE } from "@/lib/config";
 import type { Role } from "@/lib/types";
 import { ROLE_HOME as HOME, ROLE_LABEL } from "@/lib/roles";
@@ -16,6 +16,7 @@ const LINKS: { href: string; label: string; icon: typeof Blocks; for?: Role }[] 
   { href: "/guia/estudiantes", label: "Guía para estudiantes", icon: GraduationCap, for: "student" },
   { href: "/guia/empresas", label: "Guía para empresas", icon: BriefcaseBusiness, for: "company" },
   { href: "/habilidades", label: "Habilidades", icon: Blocks },
+  { href: "/convocatorias", label: "Convocatorias", icon: Megaphone },
 ];
 
 const ICON_BUTTON = "flex items-center rounded-lg p-2 text-azul-oscuro/70 transition-colors hover:bg-celeste hover:text-azul-oscuro";

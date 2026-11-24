@@ -26,14 +26,17 @@ export const STUDENT_NAV: SideItem[] = [
       { href: "/estudiante/perfil?seccion=documentos", label: "Documentos", param: "documentos" },
     ],
   },
+  { href: "/estudiante/postulaciones", label: "Postulaciones", icon: "send" },
   { href: "/estudiante/vista-previa", label: "Cómo me ven", icon: "eye" },
   { href: "/cuenta", label: "Mi cuenta", icon: "account" },
+  { href: "/convocatorias", label: "Convocatorias abiertas", icon: "megaphone", external: true },
   { href: "/guia/estudiantes", label: "Guía de prácticas", icon: "route", external: true },
 ];
 
 export const COMPANY_NAV: SideItem[] = [
   { href: "/empresa", label: "Inicio", icon: "dashboard", exact: true },
   { href: "/empresa/buscar", label: "Buscar talento", icon: "search" },
+  { href: "/empresa/convocatorias", label: "Convocatorias", icon: "megaphone" },
   { href: "/empresa/favoritos", label: "Favoritos", icon: "star" },
   { href: "/cuenta", label: "Mi cuenta y empresa", icon: "account" },
   { href: "/guia/empresas", label: "Cómo vincular", icon: "route", external: true },
@@ -43,6 +46,7 @@ export const ADMIN_NAV: SideItem[] = [
   { href: "/admin", label: "Resumen", icon: "dashboard", exact: true },
   { href: "/admin/empresas", label: "Empresas", icon: "building", badgeKey: "pendingCompanies" },
   { href: "/admin/estudiantes", label: "Estudiantes", icon: "users", badgeKey: "pendingProgress" },
+  { href: "/admin/convocatorias", label: "Convocatorias", icon: "megaphone", badgeKey: "newApplications" },
   { href: "/admin/catalogo", label: "Habilidades", icon: "list" },
   { href: "/admin/propuestas", label: "Propuestas", icon: "idea", badgeKey: "pendingSkills" },
   { href: "/admin/recoger", label: "Recoger datos", icon: "download" },

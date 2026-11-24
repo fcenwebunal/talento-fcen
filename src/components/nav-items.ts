@@ -3,7 +3,7 @@ import type { Role } from "@/lib/types";
 export type IconName =
   | "home" | "student" | "company" | "skills" | "shield" | "login" | "dashboard" | "user" | "graduation"
   | "sparkles" | "briefcase" | "calendar" | "file" | "eye" | "search" | "star" | "check" | "users"
-  | "building" | "list" | "history" | "key" | "route" | "help" | "scale" | "clock";
+  | "building" | "list" | "history" | "key" | "route" | "help" | "scale" | "clock" | "megaphone" | "send";
 
 export type NavItem = { label: string; href: string; icon: IconName; group: string; keywords?: string };
 
@@ -19,6 +19,7 @@ const PUBLIC: NavItem[] = [
   { label: "Guía para empresas", href: "/guia/empresas", icon: "company", group: "Guías" },
   { label: "Requisitos para empresas", href: "/guia/empresas#requisitos", icon: "building", group: "Guías", keywords: "arl tutor" },
   { label: "Catálogo de habilidades", href: "/habilidades", icon: "skills", group: "General" },
+  { label: "Convocatorias abiertas", href: "/convocatorias", icon: "megaphone", group: "General", keywords: "ofertas practicas vacantes postular" },
   { label: "Tratamiento de datos personales", href: "/datos-personales", icon: "shield", group: "General", keywords: "privacidad" },
 ];
 
@@ -31,12 +32,14 @@ const STUDENT: NavItem[] = [
   { label: "Intereses y disponibilidad", href: "/estudiante/perfil?seccion=disponibilidad", icon: "calendar", group: "Editar perfil" },
   { label: "Documentos y autorización", href: "/estudiante/perfil?seccion=documentos", icon: "file", group: "Editar perfil", keywords: "hoja de vida consentimiento" },
   { label: "Cómo me ven las empresas", href: "/estudiante/vista-previa", icon: "eye", group: "Mi perfil" },
+  { label: "Mis postulaciones", href: "/estudiante/postulaciones", icon: "send", group: "Mi perfil", keywords: "convocatorias ofertas estado" },
 ];
 
 const COMPANY: NavItem[] = [
   { label: "Mi empresa", href: "/empresa", icon: "dashboard", group: "Empresa", keywords: "autorización" },
   { label: "Buscar talento", href: "/empresa/buscar", icon: "search", group: "Empresa", keywords: "perfiles estudiantes" },
   { label: "Favoritos", href: "/empresa/favoritos", icon: "star", group: "Empresa" },
+  { label: "Mis convocatorias", href: "/empresa/convocatorias", icon: "megaphone", group: "Empresa", keywords: "postulantes ofertas" },
 ];
 
 const STAFF: NavItem[] = [
@@ -44,6 +47,8 @@ const STAFF: NavItem[] = [
   { label: "Empresas", href: "/admin/empresas", icon: "building", group: "Administración" },
   { label: "Empresas por autorizar", href: "/admin/empresas?estado=en_revision", icon: "clock", group: "Administración", keywords: "revisión" },
   { label: "Estudiantes", href: "/admin/estudiantes", icon: "users", group: "Administración" },
+  { label: "Convocatorias", href: "/admin/convocatorias", icon: "megaphone", group: "Administración", keywords: "ofertas postulantes" },
+  { label: "Nueva convocatoria", href: "/admin/convocatorias/nueva", icon: "megaphone", group: "Administración", keywords: "publicar oferta" },
   { label: "Avance por verificar", href: "/admin/estudiantes?verificar=1", icon: "check", group: "Administración" },
   { label: "Catálogo de habilidades", href: "/admin/catalogo", icon: "list", group: "Administración" },
   { label: "Habilidades propuestas", href: "/admin/propuestas", icon: "sparkles", group: "Administración", keywords: "revisión estudiantes" },

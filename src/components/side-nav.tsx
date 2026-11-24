@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
-  Building2, CircleUserRound, Download, Eye, History, KeyRound, LayoutDashboard, Lightbulb, ListChecks, Route, Search, Star, UserRoundPen, Users, type LucideIcon,
+  Building2, CircleUserRound, Download, Eye, History, KeyRound, LayoutDashboard, Lightbulb, ListChecks, Megaphone, Route, Search, Send, Star, UserRoundPen, Users, type LucideIcon,
 } from "lucide-react";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -21,6 +21,8 @@ const ICONS: Record<string, LucideIcon> = {
   idea: Lightbulb,
   download: Download,
   account: CircleUserRound,
+  megaphone: Megaphone,
+  send: Send,
 };
 
 export type SideItem = {

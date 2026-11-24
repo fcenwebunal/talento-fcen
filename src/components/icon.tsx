@@ -1,7 +1,7 @@
 import {
   BadgeCheck, Blocks, Briefcase, Building2, CalendarDays, CircleHelp, Clock, Eye, FileText, GraduationCap,
   History, House, KeyRound, LayoutDashboard, ListChecks, LogIn, Route, Scale, Search, ShieldCheck, Sparkles,
-  Star, UserRound, Users, BriefcaseBusiness,
+  Star, UserRound, Users, BriefcaseBusiness, Megaphone, Send,
   type LucideIcon,
 } from "lucide-react";
 import type { IconName } from "./nav-items";
@@ -33,6 +33,8 @@ export const ICONS: Record<IconName, LucideIcon> = {
   help: CircleHelp,
   scale: Scale,
   clock: Clock,
+  megaphone: Megaphone,
+  send: Send,
 };
 
 export function Icon({ name, className }: { name: IconName; className?: string }) {

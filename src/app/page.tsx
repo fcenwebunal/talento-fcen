@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, BookOpen, Building2, GraduationCap, ShieldCheck } from "lucide-react";
+import { ArrowRight, BookOpen, Building2, GraduationCap, Megaphone, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getSession, homeFor } from "@/lib/session";
 import { Counter } from "@/components/ui/counter";
 import { ConnectionNetwork } from "@/components/ui/connect-art";
+import { todayCo } from "@/lib/calls";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,10 @@ export default async function HomePage() {
   if (session) redirect(homeFor(session.role));
 
   const supabase = await createClient();
-  const { data } = await supabase.rpc("public_stats");
+  const [{ data }, { count: openCalls }] = await Promise.all([
+    supabase.rpc("public_stats"),
+    supabase.from("calls").select("id", { count: "exact", head: true }).eq("status", "publicada").gte("deadline", todayCo()),
+  ]);
   const stats = data as { students_listed: number; companies_authorized: number } | null;
 
   return (
@@ -67,6 +71,9 @@ export default async function HomePage() {
               </strong>{" "}
               empresas autorizadas
             </span>
+            <Link href="/convocatorias" className="inline-flex items-center gap-1.5 font-black text-azul hover:underline">
+              <Megaphone className="h-4 w-4" aria-hidden="true" /> {openCalls ? `${openCalls} ${openCalls === 1 ? "convocatoria abierta" : "convocatorias abiertas"}` : "Convocatorias"}
+            </Link>
             <Link href="/guia/estudiantes" className="inline-flex items-center gap-1.5 font-black text-azul hover:underline">
               <BookOpen className="h-4 w-4" aria-hidden="true" /> ¿Cómo funciona?
             </Link>
