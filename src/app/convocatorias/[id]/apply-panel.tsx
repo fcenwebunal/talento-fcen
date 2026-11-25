@@ -117,7 +117,7 @@ export function ApplyPanel({ callId, companyName, viewer, readiness }: { callId:
       </div>
 
       <section>
-        <h3 className="text-xs font-black uppercase tracking-widest text-suave">Hoja de vida mínima</h3>
+        <h3 className="text-xs font-black uppercase tracking-widest text-suave">Lo obligatorio de tu hoja de vida</h3>
         <ul className="mt-2 space-y-1.5">
           {profile.map((i) => (
             <Item key={i.key} item={i} required />

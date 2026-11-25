@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { openInNewTab } from "@/lib/files";
 import type { Area, PapaVisibility, Program, Skill, SkillDomain, SoftSkill } from "@/lib/types";
 import { BROKEN_NAME, DATE_MAX, DATE_MIN, EXPERIENCE_KIND, OUTPUT_KIND, PAPA_VISIBILITY, VERIFIED_LABEL, fileSlug, hasBrokenText, isValidDate } from "@/lib/labels";
+import { LISTED_RULE, missingBySection, missingRequired, requirementLabel, type RequirementItem } from "@/lib/requirements";
 import { HelpTip } from "@/components/ui/help-tip";
 import { ImageCropper } from "@/components/ui/image-cropper";
 import { ListEditor } from "./list-editor";
@@ -87,6 +88,7 @@ export type ProfileData = {
   outputs: Output[];
   subjects: Subject[];
   documents: Doc[];
+  checklist: RequirementItem[];
   catalogs: { programs: Program[]; skills: Skill[]; domains: SkillDomain[]; softSkills: SoftSkill[]; areas: Area[] };
 };
 
@@ -101,10 +103,10 @@ const SECTIONS: readonly { id: string; label: string; short: string; icon: Lucid
 
 type SectionId = string;
 
-const DOC_KINDS = [
-  { kind: "hoja_vida", label: "Hoja de vida propia en PDF (opcional)", help: "Solo la ve la Facultad. Las empresas descargan el CV que se arma con tu perfil." },
-  { kind: "historia_academica", label: "Historia académica del SIA", help: "Solo la ve la Facultad, para verificar tu avance y tu PAPA." },
-  { kind: "foto", label: "Fotografía tipo documento (opcional)", help: "Solo la ven las empresas autorizadas, si aceptas compartir tu contacto." },
+const DOC_KINDS: { kind: string; label: string; help: string; reqKey?: string }[] = [
+  { kind: "hoja_vida", label: "Hoja de vida propia en PDF", help: "Solo la ve la Facultad. Las empresas descargan el CV que se arma con tu perfil.", reqKey: "hoja_vida" },
+  { kind: "historia_academica", label: "Historia académica del SIA", help: "Solo la ve la Facultad, para verificar tu avance y tu PAPA.", reqKey: "historia" },
+  { kind: "foto", label: "Fotografía tipo documento", help: "Solo la ven las empresas autorizadas, si aceptas compartir tu contacto.", reqKey: "foto" },
   { kind: "certificado", label: "Certificados de idiomas o cursos (opcional)", help: "Solo los ve la Facultad." },
 ];
 
@@ -138,8 +140,12 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
   const [cropping, setCropping] = useState<File | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>(data.subjects);
   const [documents, setDocuments] = useState<Doc[]>(data.documents);
-  const [status, setStatus] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
+  const [status, setStatus] = useState<{ tone: "ok" | "warn" | "error"; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [checklist, setChecklist] = useState<RequirementItem[]>(data.checklist);
+  const missing = missingBySection(checklist);
+  const missingTotal = Object.values(missing).reduce((n, list) => n + list.length, 0);
+  const reqOf = (key: string) => checklist.find((i) => i.key === key && i.required);
   const [savedAcademic, setSavedAcademic] = useState({ progress: data.student!.progress_pct, papa: data.student!.papa });
   const recentRecord = documents.some((d) => d.kind === "historia_academica" && Date.now() - new Date(d.created_at).getTime() < 120 * 86_400_000);
   const academicChanged = student.progress_pct !== savedAcademic.progress || student.papa !== savedAcademic.papa;
@@ -159,6 +165,19 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
   async function updateStudent(fields: Partial<StudentRow>) {
     const { error } = await supabase.from("students").update(trimmed(fields)).eq("id", data.id);
     if (error) throw error;
+  }
+
+  async function refreshChecklist() {
+    const { data: fresh } = await supabase.rpc("profile_checklist");
+    const items = (fresh as RequirementItem[] | null) ?? checklist;
+    setChecklist(items);
+    return items;
+  }
+
+  function goTo(id: string) {
+    setSection(id);
+    setStatus(null);
+    window.history.replaceState(null, "", `?seccion=${id}`);
   }
 
   async function save() {
@@ -214,7 +233,14 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
           truthful_declared: student.truthful_declared,
         });
       }
-      setStatus({ tone: "ok", text: "Cambios guardados." });
+      const fresh = await refreshChecklist();
+      const left = missingRequired(fresh);
+      const here = left.filter((i) => i.section === section);
+      setStatus(
+        here.length
+          ? { tone: "warn", text: `Guardado. Aún falta lo obligatorio de esta sección: ${here.map(requirementLabel).join("; ")}.` }
+          : { tone: "ok", text: left.length ? "Cambios guardados." : "Cambios guardados. Tu hoja de vida tiene todo lo obligatorio." }
+      );
       router.refresh();
     } catch (e) {
       const message = e instanceof Error ? e.message : (e as { message?: string })?.message;
@@ -247,6 +273,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
     }
     setDocuments((prev) => [row as Doc, ...prev]);
     setStatus({ tone: "ok", text: "Archivo subido." });
+    await refreshChecklist();
     if (kind === "foto") await inheritAccountPhoto(file);
   }
 
@@ -271,6 +298,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
     await supabase.storage.from("documentos").remove([doc.path]);
     await supabase.from("documents").delete().eq("id", doc.id);
     setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
+    await refreshChecklist();
   }
 
   async function openDoc(doc: Doc) {
@@ -288,6 +316,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
         <p className="flex items-center gap-2 font-black text-azul-oscuro">
           <FileText className="h-4 w-4 text-azul-medio" aria-hidden="true" />
           {d.label}
+          {d.reqKey && (reqOf(d.reqKey) ? <ReqMark item={reqOf(d.reqKey)} /> : d.kind !== "historia_academica" && <span className="font-normal text-suave">(opcional)</span>)}
           <HelpTip>{d.help}</HelpTip>
         </p>
         {docs.length > 0 && (
@@ -329,20 +358,42 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
   const current = SECTIONS.find((x) => x.id === section) ?? SECTIONS[0];
   const currentIndex = SECTIONS.indexOf(current);
 
+  const sectionMissing = missing[section] ?? [];
+
   return (
+    <div className="space-y-5">
+    {missingTotal > 0 ? (
+      <div className="flex flex-wrap items-start gap-3 rounded-[1rem_1rem_1rem_0.25rem] border border-amarillo/40 bg-amarillo/15 p-4 text-sm" role="status">
+        <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amarillo-tinta" aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <p className="font-black text-azul-oscuro">
+            {missingTotal === 1 ? "Te falta 1 dato obligatorio" : `Te faltan ${missingTotal} datos obligatorios`} en tu hoja de vida.
+          </p>
+          <p className="text-suave">{LISTED_RULE} Los campos obligatorios llevan <span className="font-black text-naranja">*</span>.</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {SECTIONS.filter((sec) => missing[sec.id]?.length).map((sec) => (
+              <button key={sec.id} type="button" onClick={() => goTo(sec.id)} className="chip chip-amarillo hover:brightness-95">
+                {sec.short}: {missing[sec.id].length}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    ) : checklist.some((i) => i.required) ? (
+      <p className="flex items-center gap-2 rounded-[1rem_1rem_1rem_0.25rem] bg-verde-claro px-4 py-3 text-sm font-black text-verde-tinta">
+        <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" /> Tu hoja de vida tiene todo lo obligatorio.
+      </p>
+    ) : null}
     <div className="grid gap-6 lg:grid-cols-[17rem_1fr]">
       <nav className="lg:sticky lg:top-24 lg:self-start" aria-label="Secciones del perfil">
         <div className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
           {SECTIONS.map((sec, i) => {
             const active = section === sec.id;
+            const left = missing[sec.id]?.length ?? 0;
             return (
               <button
                 key={sec.id}
-                onClick={() => {
-                  setSection(sec.id);
-                  setStatus(null);
-                  window.history.replaceState(null, "", `?seccion=${sec.id}`);
-                }}
+                onClick={() => goTo(sec.id)}
                 className={`group relative flex shrink-0 items-center gap-3 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] px-3 py-2.5 text-left text-sm transition-all ${active ? "bg-azul text-white shadow-lg" : "bg-white text-azul-oscuro shadow-sm hover:bg-celeste"}`}
               >
                 <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${active ? "bg-white/15" : "bg-celeste text-azul"}`}>
@@ -353,6 +404,15 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                   <span className="lg:hidden">{sec.short}</span>
                   <span className="hidden lg:inline">{sec.label}</span>
                 </span>
+                {left > 0 && (
+                  <span
+                    className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-naranja px-1.5 text-[0.6875rem] font-black text-white"
+                    title={`${left} obligatorio${left === 1 ? "" : "s"} sin completar`}
+                  >
+                    {left}
+                    <span className="sr-only"> obligatorios sin completar</span>
+                  </span>
+                )}
               </button>
             );
           })}
@@ -373,20 +433,25 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
             </p>
             <h2 className="display text-2xl text-azul-oscuro">{current.label}</h2>
             <p className="text-sm text-suave">{current.intro}</p>
+            {sectionMissing.length > 0 && (
+              <p className="mt-2 text-sm text-naranja">
+                <strong>Falta lo obligatorio:</strong> {sectionMissing.map(requirementLabel).join("; ")}.
+              </p>
+            )}
           </div>
         </header>
         {section === "personales" && (
           <div className="space-y-6">
             <PrivacyNote text="Tu documento, fecha de nacimiento, EPS y contacto de emergencia nunca los ve una empresa: solo la Facultad, para formalizar tu práctica." />
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Nombres y apellidos completos">
+              <Field label="Nombres y apellidos completos" req={reqOf("nombre")}>
                 <input className="input" value={fullName} onChange={(e) => setFullName(e.target.value)} aria-invalid={hasBrokenText(fullName) || undefined} />
                 {hasBrokenText(fullName) && <span className="mt-1 block text-xs font-bold text-naranja">{BROKEN_NAME}</span>}
               </Field>
               <Field label="Correo institucional" help="Viene de tu cuenta y no se puede cambiar.">
                 <input className="input bg-superficie" value={data.email} readOnly />
               </Field>
-              <Field label="Tipo de documento" lock>
+              <Field label="Tipo de documento" lock req={reqOf("documento")}>
                 <select className="input" value={text(priv.doc_type)} onChange={(e) => p("doc_type", blank(e.target.value))}>
                   <option value="">Elegir…</option>
                   <option>Cédula de ciudadanía</option>
@@ -396,36 +461,36 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                   <option>Permiso por protección temporal</option>
                 </select>
               </Field>
-              <Field label="Número de documento" lock>
+              <Field label="Número de documento" lock req={reqOf("documento")}>
                 <input className="input" value={text(priv.doc_number)} onChange={(e) => p("doc_number", blank(e.target.value))} />
               </Field>
-              <Field label="Fecha de nacimiento" lock>
+              <Field label="Fecha de nacimiento" lock req={reqOf("nacimiento")}>
                 <input className="input" type="date" min={DATE_MIN} max={DATE_MAX} value={text(priv.birth_date)} onChange={(e) => p("birth_date", blank(e.target.value))} />
               </Field>
-              <Field label="Ciudad de residencia">
+              <Field label="Ciudad de residencia" req={reqOf("ciudad")}>
                 <input className="input" value={text(student.city)} onChange={(e) => s("city", blank(e.target.value))} />
               </Field>
-              <Field label="Teléfono" help="Lo ven las empresas autorizadas si aceptas compartir tu contacto.">
+              <Field label="Teléfono" req={reqOf("telefono")} help="Lo ven las empresas autorizadas si aceptas compartir tu contacto.">
                 <input className="input" type="tel" value={text(priv.phone)} onChange={(e) => p("phone", blank(e.target.value))} />
               </Field>
-              <Field label="Correo personal" lock>
+              <Field label="Correo personal" lock req={reqOf("correo_personal")}>
                 <input className="input" type="email" value={text(priv.personal_email)} onChange={(e) => p("personal_email", blank(e.target.value))} />
               </Field>
-              <Field label="LinkedIn">
+              <Field label="LinkedIn" req={reqOf("enlaces")} help={reqOf("enlaces") ? "Basta con uno: LinkedIn, GitHub o portafolio." : undefined}>
                 <input className="input" type="url" placeholder="https://www.linkedin.com/in/…" value={text(student.linkedin_url)} onChange={(e) => s("linkedin_url", blank(e.target.value))} />
               </Field>
-              <Field label="GitHub">
+              <Field label="GitHub" req={reqOf("enlaces")}>
                 <input className="input" type="url" placeholder="https://github.com/…" value={text(student.github_url)} onChange={(e) => s("github_url", blank(e.target.value))} />
               </Field>
-              <Field label="Portafolio o sitio personal">
+              <Field label="Portafolio o sitio personal" req={reqOf("enlaces")}>
                 <input className="input" type="url" value={text(student.portfolio_url)} onChange={(e) => s("portfolio_url", blank(e.target.value))} />
               </Field>
-              <Field label="EPS a la que estás afiliado" lock>
+              <Field label="EPS a la que estás afiliado" lock req={reqOf("eps")}>
                 <input className="input" value={text(priv.eps)} onChange={(e) => p("eps", blank(e.target.value))} />
               </Field>
             </div>
             <div>
-              <h3 className="font-black text-azul-oscuro">Contacto de emergencia</h3>
+              <h3 className="flex items-center gap-1.5 font-black text-azul-oscuro">Contacto de emergencia <ReqMark item={reqOf("emergencia")} /></h3>
               <div className="mt-3 grid gap-4 md:grid-cols-3">
                 <Field label="Nombre" lock>
                   <input className="input" value={text(priv.emergency_name)} onChange={(e) => p("emergency_name", blank(e.target.value))} />
@@ -444,7 +509,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
         {section === "academico" && (
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Programa curricular">
+              <Field label="Programa curricular" req={reqOf("programa")}>
                 <select className="input" value={student.program_id ?? ""} onChange={(e) => s("program_id", e.target.value ? Number(e.target.value) : null)}>
                   <option value="">Elegir…</option>
                   {data.catalogs.programs.map((pr) => (
@@ -454,16 +519,16 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                   ))}
                 </select>
               </Field>
-              <Field label="Fecha estimada de grado" help="Aproximada: el mes en que esperas graduarte.">
+              <Field label="Fecha estimada de grado" req={reqOf("grado")} help="Aproximada: el mes en que esperas graduarte.">
                 <input className="input" type="date" min={DATE_MIN} max={DATE_MAX} value={text(student.graduation_date)} onChange={(e) => s("graduation_date", blank(e.target.value))} />
               </Field>
-              <Field label="Porcentaje de avance en el plan de estudios" help={`Estado: ${VERIFIED_LABEL[student.progress_verified] ?? student.progress_verified}. Adjunta tu historia académica abajo para que la Facultad lo verifique.`}>
+              <Field label="Porcentaje de avance en el plan de estudios" req={reqOf("avance")} help={`Estado: ${VERIFIED_LABEL[student.progress_verified] ?? student.progress_verified}. Adjunta tu historia académica abajo para que la Facultad lo verifique.`}>
                 <input className="input" type="number" min={0} max={100} step={0.1} value={student.progress_pct ?? ""} onChange={(e) => s("progress_pct", e.target.value === "" ? null : Number(e.target.value))} />
               </Field>
-              <Field label="Periodo académico de la práctica" help="Por ejemplo, 2027-1.">
+              <Field label="Periodo académico de la práctica" req={reqOf("periodo")} help="Por ejemplo, 2027-1.">
                 <input className="input" placeholder="2027-1" value={text(student.practice_period)} onChange={(e) => s("practice_period", blank(e.target.value))} />
               </Field>
-              <Field label="PAPA" help="Tu promedio acumulado (P.A.P.A.) como aparece en el SIA. La Facultad lo verifica con tu historia académica; tú decides quién lo ve en tu hoja de vida.">
+              <Field label="PAPA" req={reqOf("papa")} help="Tu promedio acumulado (P.A.P.A.) como aparece en el SIA. La Facultad lo verifica con tu historia académica; tú decides quién lo ve en tu hoja de vida.">
                 <div className="flex flex-wrap items-center gap-2">
                   <input
                     className="input w-24"
@@ -485,13 +550,13 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                   </select>
                 </div>
               </Field>
-              <Field label="Líneas de profundización o énfasis">
+              <Field label="Líneas de profundización o énfasis" req={reqOf("enfasis")}>
                 <input className="input" value={text(student.emphasis)} onChange={(e) => s("emphasis", blank(e.target.value))} />
               </Field>
             </div>
             <div className={`rounded-[1rem_1rem_1rem_0.25rem] p-3 ${academicChanged && !recentRecord ? "bg-amarillo/15" : "bg-celeste"}`}>
               <p className="mb-2 text-sm">
-                <strong className="text-azul-oscuro">Historia académica para verificar tu avance y tu PAPA.</strong>{" "}
+                <strong className="text-azul-oscuro">Historia académica para verificar tu avance y tu PAPA.</strong> <ReqMark item={reqOf("historia")} />{" "}
                 <span className="text-suave">
                   {recentRecord
                     ? "Ya adjuntaste una este semestre. Si cambias los valores, sube la más reciente."
@@ -500,11 +565,11 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               </p>
               {docCard(DOC_KINDS.find((d) => d.kind === "historia_academica")!)}
             </div>
-            <Field label="Reconocimientos académicos, becas o distinciones (si aplica)" help="Las monitorías y los semilleros van en Experiencia, con su tipo.">
+            <Field label={reqOf("reconocimientos") ? "Reconocimientos académicos, becas o distinciones" : "Reconocimientos académicos, becas o distinciones (si aplica)"} req={reqOf("reconocimientos")} help="Las monitorías y los semilleros van en Experiencia, con su tipo.">
               <textarea className="input" value={text(student.honors)} onChange={(e) => s("honors", blank(e.target.value))} />
             </Field>
             <div>
-              <h3 className="font-black text-azul-oscuro">Asignaturas más relevantes para la práctica (máximo 5)</h3>
+              <h3 className="flex flex-wrap items-center gap-1.5 font-black text-azul-oscuro">Asignaturas más relevantes para la práctica (máximo 5) <ReqMark item={reqOf("asignaturas")} /></h3>
               <div className="mt-3">
                 <ListEditor
                   items={subjects}
@@ -524,15 +589,16 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
 
         {section === "perfil" && (
           <div className="space-y-6">
-            <Field label="Titular" help="Una línea que te presente. Ejemplo: «Estudiante de Estadística con experiencia en encuestas y R».">
+            <Field label="Titular" req={reqOf("titular")} help="Una línea que te presente. Ejemplo: «Estudiante de Estadística con experiencia en encuestas y R».">
               <input className="input" maxLength={140} value={text(student.headline)} onChange={(e) => s("headline", blank(e.target.value))} />
             </Field>
-            <Field label="Perfil profesional" help="De 4 a 6 líneas: quién eres, qué sabes hacer y qué aportas. No incluyas datos de contacto: las empresas sin autorización también leen este texto.">
+            <Field label="Perfil profesional" req={reqOf("perfil")} help="De 4 a 6 líneas: quién eres, qué sabes hacer y qué aportas. No incluyas datos de contacto: las empresas sin autorización también leen este texto.">
               <textarea className="input min-h-32" maxLength={1200} value={text(student.about)} onChange={(e) => s("about", blank(e.target.value))} />
             </Field>
             <div>
               <h3 className="flex items-center gap-1 font-black text-azul-oscuro">
                 Logros destacados (hasta 3)
+                <ReqMark item={reqOf("logros")} />
                 <HelpTip>Lo que más miran las empresas. Usa la fórmula «Logré X, medido por Y, haciendo Z». Ejemplo: «Reduje en 30 % el tiempo de limpieza de datos de una encuesta automatizándola en R».</HelpTip>
               </h3>
               <div className="mt-3 space-y-2">
@@ -541,7 +607,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                     key={i}
                     className="input"
                     maxLength={220}
-                    placeholder={["Logré…, medido por…, haciendo…", "Segundo logro (opcional)", "Tercer logro (opcional)"][i]}
+                    placeholder={i === 0 ? "Logré…, medido por…, haciendo…" : i < (reqOf("logros")?.min ?? 1) ? (i === 1 ? "Segundo logro" : "Tercer logro") : i === 1 ? "Segundo logro (opcional)" : "Tercer logro (opcional)"}
                     value={student.highlights[i] ?? ""}
                     onChange={(e) => {
                       const next = [0, 1, 2].map((j) => (j === i ? e.target.value : student.highlights[j] ?? ""));
@@ -552,14 +618,14 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               </div>
             </div>
             <div>
-              <h3 className="font-black text-azul-oscuro">Competencias técnicas</h3>
+              <h3 className="flex flex-wrap items-center gap-1.5 font-black text-azul-oscuro">Competencias técnicas <ReqMark item={reqOf("habilidades")} /></h3>
               <p className="mt-1 text-sm text-suave">Elige del catálogo e indica tu nivel. Una habilidad con evidencia vale más que una lista larga.</p>
               <div className="mt-3">
                 <SkillsPicker catalog={data.catalogs.skills} domains={data.catalogs.domains} value={skills} onChange={setSkills} />
               </div>
             </div>
             <div>
-              <h3 className="font-black text-azul-oscuro">Competencias transversales</h3>
+              <h3 className="flex flex-wrap items-center gap-1.5 font-black text-azul-oscuro">Competencias transversales <ReqMark item={reqOf("transversales")} /></h3>
               <p className="mt-1 text-sm text-suave">Marca las 3 a 5 que mejor te describen ({softSkills.length} marcadas).</p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 {data.catalogs.softSkills.map((x) => (
@@ -580,7 +646,12 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
 
         {section === "experiencia" && (
           <div className="space-y-8">
-            <Block title="Experiencia" help="Trabajos, prácticas previas, monitorías, semilleros, voluntariados o extensión. Si no tienes, déjalo en blanco.">
+            {reqOf("experiencia_o_proyectos") && (
+              <p className="rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] bg-celeste p-3 text-sm text-azul-oscuro">
+                <ReqMark item={reqOf("experiencia_o_proyectos")} /> Agrega al menos {reqOf("experiencia_o_proyectos")?.min} entre experiencia y proyectos: cuentan los dos.
+              </p>
+            )}
+            <Block title="Experiencia" req={reqOf("experiencia")} help={`Trabajos, prácticas previas, monitorías, semilleros, voluntariados o extensión.${reqOf("experiencia") || reqOf("experiencia_o_proyectos") ? "" : " Si no tienes, déjalo en blanco."}`}>
               <ListEditor
                 items={experiences}
                 onChange={setExperiences}
@@ -596,7 +667,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                 ]}
               />
             </Block>
-            <Block title="Proyectos académicos, de investigación o personales" help="Cuenta qué hiciste tú y qué resultado obtuviste. El enlace solo lo ven las empresas autorizadas.">
+            <Block title="Proyectos académicos, de investigación o personales" req={reqOf("proyectos")} help="Cuenta qué hiciste tú y qué resultado obtuviste. El enlace solo lo ven las empresas autorizadas.">
               <ListEditor
                 items={projects}
                 onChange={setProjects}
@@ -612,7 +683,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                 ]}
               />
             </Block>
-            <Block title="Cursos y certificaciones" help="El enlace para verificar el certificado solo lo ven las empresas autorizadas.">
+            <Block title="Cursos y certificaciones" req={reqOf("cursos")} help="El enlace para verificar el certificado solo lo ven las empresas autorizadas.">
               <ListEditor
                 items={courses}
                 onChange={setCourses}
@@ -627,7 +698,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                 ]}
               />
             </Block>
-            <Block title="Publicaciones y eventos" help="Artículos, ponencias, pósteres y eventos académicos. El título y el enlace solo los ven las empresas autorizadas: identifican a quien los escribió.">
+            <Block title="Publicaciones y eventos" req={reqOf("publicaciones")} help="Artículos, ponencias, pósteres y eventos académicos. El título y el enlace solo los ven las empresas autorizadas: identifican a quien los escribió.">
               <ListEditor
                 items={outputs}
                 onChange={setOutputs}
@@ -642,7 +713,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                 ]}
               />
             </Block>
-            <Block title="Idiomas">
+            <Block title="Idiomas" req={reqOf("idiomas")}>
               <ListEditor
                 items={languages}
                 onChange={setLanguages}
@@ -661,7 +732,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
         {section === "disponibilidad" && (
           <div className="space-y-6">
             <div>
-              <h3 className="font-black text-azul-oscuro">Áreas en las que te gustaría hacer la práctica</h3>
+              <h3 className="flex flex-wrap items-center gap-1.5 font-black text-azul-oscuro">Áreas en las que te gustaría hacer la práctica <ReqMark item={reqOf("areas")} /></h3>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 {data.catalogs.areas.map((a) => (
                   <label key={a.id} className="flex items-center gap-2 text-sm">
@@ -677,16 +748,16 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Fecha a partir de la cual puedes iniciar">
+              <Field label="Fecha a partir de la cual puedes iniciar" req={reqOf("inicio")}>
                 <input className="input" type="date" min={DATE_MIN} max={DATE_MAX} value={text(student.available_from)} onChange={(e) => s("available_from", blank(e.target.value))} />
               </Field>
-              <Field label="Fecha hasta la cual buscas práctica" help="Al pasar esta fecha, tu perfil sale de las búsquedas.">
+              <Field label="Fecha hasta la cual buscas práctica" req={reqOf("hasta")} help="Al pasar esta fecha, tu perfil sale de las búsquedas.">
                 <input className="input" type="date" min={DATE_MIN} max={DATE_MAX} value={text(student.available_until)} onChange={(e) => s("available_until", blank(e.target.value))} />
               </Field>
-              <Field label="Duración de la práctica (meses)">
+              <Field label="Duración de la práctica (meses)" req={reqOf("duracion")}>
                 <input className="input" type="number" min={1} max={24} value={student.duration_months ?? ""} onChange={(e) => s("duration_months", e.target.value ? Number(e.target.value) : null)} />
               </Field>
-              <Field label="Dedicación">
+              <Field label="Dedicación" req={reqOf("dedicacion")}>
                 <select className="input" value={text(student.dedication)} onChange={(e) => s("dedication", blank(e.target.value))}>
                   <option value="">Elegir…</option>
                   <option value="completo">Tiempo completo</option>
@@ -696,7 +767,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               </Field>
             </div>
             <div>
-              <span className="text-sm font-black">Modalidad aceptada</span>
+              <span className="text-sm font-black">Modalidad aceptada <ReqMark item={reqOf("modalidad")} /></span>
               <div className="mt-2 flex flex-wrap gap-4">
                 {[
                   ["presencial", "Presencial"],
@@ -717,10 +788,10 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Ciudades donde puedes hacer la práctica">
+              <Field label="Ciudades donde puedes hacer la práctica" req={reqOf("ciudades_practica")}>
                 <input className="input" placeholder="Por ejemplo: Manizales, Bogotá, Medellín" value={text(student.practice_cities)} onChange={(e) => s("practice_cities", blank(e.target.value))} />
               </Field>
-              <Field label="¿Tienes disponibilidad para trasladarte de ciudad?">
+              <Field label="¿Tienes disponibilidad para trasladarte de ciudad?" req={reqOf("traslado")}>
                 <select
                   className="input"
                   value={student.can_relocate === null ? "" : student.can_relocate ? "si" : "no"}
@@ -732,10 +803,10 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
                 </select>
               </Field>
             </div>
-            <Field label="Sectores u organizaciones que te interesan" help="Aparece en tu hoja de vida. Ejemplo: banca y seguros, agroindustria del café.">
+            <Field label="Sectores u organizaciones que te interesan" req={reqOf("sectores")} help="Aparece en tu hoja de vida. Ejemplo: banca y seguros, agroindustria del café.">
               <input className="input" value={text(student.target_companies)} onChange={(e) => s("target_companies", blank(e.target.value))} />
             </Field>
-            <Field label="¿Por qué quieres hacer la práctica y qué esperas aprender?" help="Máximo 5 líneas.">
+            <Field label="¿Por qué quieres hacer la práctica y qué esperas aprender?" req={reqOf("motivacion")} help="Máximo 5 líneas.">
               <textarea className="input" maxLength={800} value={text(student.motivation)} onChange={(e) => s("motivation", blank(e.target.value))} />
             </Field>
           </div>
@@ -777,6 +848,7 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
               <Consent
                 checked={student.truthful_declared}
                 onChange={(v) => s("truthful_declared", v)}
+                req={reqOf("veracidad")}
                 label="Declaro que la información suministrada es veraz y puede ser verificada."
               />
             </div>
@@ -802,25 +874,39 @@ export function ProfileEditor({ data, initialSection }: { data: ProfileData; ini
           )}
           {status && (
             <p
-              className={`ml-auto flex items-center gap-2 text-sm font-black ${status.tone === "ok" ? "text-verde-tinta" : "text-naranja"}`}
+              className={`ml-auto flex items-center gap-2 text-sm font-black ${status.tone === "ok" ? "text-verde-tinta" : status.tone === "warn" ? "text-amarillo-tinta" : "text-naranja"}`}
               style={{ animation: "pop 0.35s var(--ease-out) both" }}
               role="status"
             >
-              {status.tone === "ok" ? <CheckCircle2 className="h-4 w-4" /> : <TriangleAlert className="h-4 w-4" />}
+              {status.tone === "ok" ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <TriangleAlert className="h-4 w-4 shrink-0" />}
               {status.text}
             </p>
           )}
         </div>
       </div>
     </div>
+    </div>
   );
 }
 
-function Field({ label, help, tip, lock, children }: { label: string; help?: string; tip?: string; lock?: boolean; children: React.ReactNode }) {
+function ReqMark({ item }: { item?: RequirementItem }) {
+  if (!item) return null;
+  const count = item.max !== null && item.min !== null;
+  return (
+    <span className="font-black text-naranja" title={count ? `Obligatorio: al menos ${item.min}` : "Obligatorio"}>
+      *
+      {count && <span className="ml-1 text-xs">al menos {item.min}</span>}
+      <span className="sr-only">(obligatorio)</span>
+    </span>
+  );
+}
+
+function Field({ label, help, tip, lock, req, children }: { label: string; help?: string; tip?: string; lock?: boolean; req?: RequirementItem; children: React.ReactNode }) {
   return (
     <label className="field">
       <span className="flex flex-wrap items-center gap-1.5">
         {label}
+        <ReqMark item={req} />
         {tip && <HelpTip>{tip}</HelpTip>}
         {lock && (
           <span className="chip ml-auto px-2 py-0 text-[0.6875rem]" title="Este dato nunca lo ve una empresa">
@@ -834,12 +920,13 @@ function Field({ label, help, tip, lock, children }: { label: string; help?: str
   );
 }
 
-function Block({ title, help, children }: { title: string; help?: string; children: React.ReactNode }) {
+function Block({ title, help, req, children }: { title: string; help?: string; req?: RequirementItem; children: React.ReactNode }) {
   return (
     <div>
       <h3 className="flex items-center gap-2 font-black text-azul-oscuro">
         <span className="h-4 w-1 rounded-r bg-verde" aria-hidden="true" />
         {title}
+        <ReqMark item={req} />
         {help && <HelpTip>{help}</HelpTip>}
       </h3>
       <div className="mt-3">{children}</div>
@@ -856,7 +943,7 @@ function PrivacyNote({ text }: { text: string }) {
   );
 }
 
-function Consent({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
+function Consent({ checked, onChange, label, disabled, req }: { checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean; req?: RequirementItem }) {
   return (
     <label
       className={`flex cursor-pointer items-start gap-3 rounded-[0.875rem_0.875rem_0.875rem_0.1875rem] border p-4 text-sm transition-colors ${checked ? "border-verde bg-verde-claro" : "border-borde bg-white hover:border-azul"} ${disabled ? "pointer-events-none opacity-50" : ""}`}
@@ -865,7 +952,9 @@ function Consent({ checked, onChange, label, disabled }: { checked: boolean; onC
         {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
       </span>
       <input type="checkbox" className="sr-only" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
-      <span>{label}</span>
+      <span>
+        {label} <ReqMark item={req} />
+      </span>
     </label>
   );
 }

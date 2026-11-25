@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, TriangleAlert } from "lucide-react";
+import { SECTION_LABEL, missingRequired, requirementLabel, type RequirementItem } from "@/lib/requirements";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -24,13 +25,15 @@ const DOC_LABEL: Record<string, string> = {
 export default async function AdminStudent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data, error }, { data: priv }, { data: docs }, { data: history }, { data: papaRow }] = await Promise.all([
+  const [{ data, error }, { data: priv }, { data: docs }, { data: history }, { data: papaRow }, { data: checklist }] = await Promise.all([
     supabase.rpc("get_student_detail", { p_student: id }),
     supabase.from("student_private").select("*").eq("student_id", id).single(),
     supabase.from("documents").select("kind, path, file_name, created_at").eq("student_id", id).order("created_at", { ascending: false }),
     supabase.from("status_history").select("from_status, to_status, created_at").eq("entity", "student").eq("entity_id", id).order("created_at", { ascending: false }).limit(20),
     supabase.from("students").select("papa").eq("id", id).single(),
+    supabase.rpc("profile_checklist", { p_student: id }),
   ]);
+  const missing = missingRequired((checklist as RequirementItem[] | null) ?? []);
   // The CV hides the PAPA when the student chose «nadie»; staff still records it here
   const papa = papaRow?.papa as number | null | undefined;
   if (error || !data) notFound();
@@ -45,6 +48,25 @@ export default async function AdminStudent({ params }: { params: Promise<{ id: s
       <Link href="/admin/estudiantes" className="no-print text-sm text-suave hover:text-azul">
         <ArrowLeft className="mr-1 inline h-4 w-4 align-[-0.2rem]" aria-hidden="true" /> Estudiantes
       </Link>
+
+      {missing.length > 0 ? (
+        <div className="no-print flex gap-3 rounded-[1rem_1rem_1rem_0.25rem] border border-amarillo/40 bg-amarillo/15 p-4 text-sm">
+          <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amarillo-tinta" aria-hidden="true" />
+          <div>
+            <p className="font-black text-azul-oscuro">
+              Hoja de vida incompleta: no aparece ante las empresas ni puede postularse a convocatorias.
+            </p>
+            <p className="mt-1 text-suave">
+              Falta: {missing.map((i) => `${requirementLabel(i)} (${SECTION_LABEL[i.section] ?? i.section})`).join("; ")}.{" "}
+              <Link href="/admin/hoja-de-vida" className="font-black text-azul hover:underline">Qué es obligatorio</Link>
+            </p>
+          </div>
+        </div>
+      ) : (
+        <p className="no-print flex items-center gap-2 rounded-[1rem_1rem_1rem_0.25rem] bg-verde-claro px-4 py-3 text-sm font-black text-verde-tinta">
+          <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" /> La hoja de vida tiene todo lo obligatorio.
+        </p>
+      )}
 
       <div className="no-print grid gap-6 lg:grid-cols-3">
         <form action={verifyProgress} className="card space-y-3">

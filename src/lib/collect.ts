@@ -5,7 +5,7 @@ import { PUBLIC_SITE } from "./config";
 import type { Availability, ProgramLevel } from "./types";
 
 // «Recoger datos»: summary of the students companies can see, for the Faculty to send out. Same rules as the
-// company views: only listed students (consent, program, looking for a practice); name and email only for those who
+// company views: only listed students (consent, program, looking for a practice, CV with everything required); name and email only for those who
 // agreed to share their contact; PAPA only when the student shows it to authorized companies.
 
 export type CollectFilters = { programa: number | null; estado: "disponible" | "en_proceso" | "todos"; habilidad: number | null };
@@ -74,10 +74,12 @@ export async function collectStudents(supabase: SupabaseClient, filters: Collect
     const { data: withSkill } = await supabase.from("student_skills").select("student_id").eq("skill_id", filters.habilidad);
     query = query.in("id", (withSkill ?? []).map((r) => r.student_id));
   }
-  const { data, error } = await query;
+  const [{ data, error }, { data: missingRows }] = await Promise.all([query, supabase.rpc("profile_missing")]);
   if (error) throw error;
+  // Companies only see complete CVs (student_is_listed), so the summary leaves the rest out too
+  const incomplete = new Set(((missingRows ?? []) as { student_id: string; missing: number }[]).filter((m) => m.missing > 0).map((m) => m.student_id));
 
-  return ((data ?? []) as unknown as Row[]).map((r) => ({
+  return ((data ?? []) as unknown as Row[]).filter((r) => !incomplete.has(r.id)).map((r) => ({
     id: r.id,
     name: r.consent_contact ? r.profiles?.full_name ?? null : null,
     email: r.consent_contact ? r.profiles?.email ?? null : null,

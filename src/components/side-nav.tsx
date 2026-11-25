@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
-  Building2, CircleUserRound, Download, Ellipsis, X, Eye, History, KeyRound, LayoutDashboard, Lightbulb, ListChecks, Megaphone, Route, Search, Send, Star, UserRoundPen, Users, type LucideIcon,
+  Building2, CircleUserRound, ClipboardCheck, Download, Ellipsis, X, Eye, History, KeyRound, LayoutDashboard, Lightbulb, ListChecks, Megaphone, Route, Search, Send, Star, UserRoundPen, Users, type LucideIcon,
 } from "lucide-react";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -24,6 +24,7 @@ const ICONS: Record<string, LucideIcon> = {
   account: CircleUserRound,
   megaphone: Megaphone,
   send: Send,
+  clipboard: ClipboardCheck,
 };
 
 export type SideItem = {

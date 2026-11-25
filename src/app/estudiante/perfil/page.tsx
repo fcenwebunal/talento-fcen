@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/session";
 import Link from "next/link";
 import { Eye, PencilLine } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
+import type { RequirementItem } from "@/lib/requirements";
 import { ProfileEditor, type ProfileData } from "./editor";
 
 export const metadata: Metadata = { title: "Editar mi perfil" };
@@ -15,7 +16,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const supabase = await createClient();
   const id = session.userId;
 
-  const [student, priv, profile, skills, soft, areas, languages, experiences, projects, courses, subjects, documents, programs, catalog, domains, softCatalog, areaCatalog, outputs] =
+  const [student, priv, profile, skills, soft, areas, languages, experiences, projects, courses, subjects, documents, programs, catalog, domains, softCatalog, areaCatalog, outputs, checklist] =
     await Promise.all([
       supabase.from("students").select("*").eq("id", id).single(),
       supabase.from("student_private").select("*").eq("student_id", id).single(),
@@ -36,6 +37,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       supabase.from("soft_skills").select("id, name").order("sort"),
       supabase.from("areas").select("id, name").eq("active", true).order("sort"),
       supabase.from("student_outputs").select("kind, title, venue, year, url").eq("student_id", id).order("id"),
+      supabase.rpc("profile_checklist"),
     ]);
 
   const data: ProfileData = {
@@ -54,6 +56,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     outputs: outputs.data ?? [],
     subjects: subjects.data ?? [],
     documents: documents.data ?? [],
+    checklist: (checklist.data as RequirementItem[] | null) ?? [],
     catalogs: {
       programs: programs.data ?? [],
       skills: catalog.data ?? [],

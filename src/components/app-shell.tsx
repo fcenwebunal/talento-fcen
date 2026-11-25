@@ -46,6 +46,7 @@ export const ADMIN_NAV: SideItem[] = [
   { href: "/admin", label: "Resumen", icon: "dashboard", exact: true },
   { href: "/admin/empresas", label: "Empresas", icon: "building", badgeKey: "pendingCompanies" },
   { href: "/admin/estudiantes", label: "Estudiantes", icon: "users", badgeKey: "pendingProgress" },
+  { href: "/admin/hoja-de-vida", label: "Hoja de vida obligatoria", icon: "clipboard" },
   { href: "/admin/convocatorias", label: "Convocatorias", icon: "megaphone", badgeKey: "newApplications" },
   { href: "/admin/catalogo", label: "Habilidades", icon: "list" },
   { href: "/admin/propuestas", label: "Propuestas", icon: "idea", badgeKey: "pendingSkills" },

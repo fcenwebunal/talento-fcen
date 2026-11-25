@@ -70,7 +70,7 @@ async function signedIn(email) {
 }
 
 const userIds = [];
-let studentId, companyUserId, companyId;
+let studentId, companyUserId, companyId, reqBackup, staffId;
 const callIds = [];
 try {
   studentId = await createAccount(studentEmail);
@@ -84,7 +84,7 @@ try {
   check("Un estudiante registrado desde el SIA entra con programa, avance y PAPA verificados", google.sia === "student/ingenieria-fisica/80.50/4.1/coordinacion", google.sia);
   check("Un nombre que Google manda dañado («Muï¿½oz») se repara con el del SIA", google.siaName === "Ana Muñoz Peña", google.siaName);
 
-  const staffId = await createAccount(staffEmail, { role: "staff" });
+  staffId = await createAccount(staffEmail, { role: "staff" });
   const adminId = await createAccount(adminEmail, { role: "admin" });
   userIds.push(staffId, adminId);
   const staff = await signedIn(staffEmail);
@@ -237,6 +237,36 @@ try {
   const exp1 = await company.rpc("export_students", { p_filters: {} });
   check("Nivel 1: no puede exportar", !!exp1.error);
 
+  // Required CV data. «transversales» is used because every real student visible today already has 3 of them,
+  // so the few seconds it stays required hide nobody real. The original configuration is restored in finally.
+  const { data: reqRows } = await admin.from("profile_requirements").select("key, required, min_count");
+  reqBackup = reqRows;
+  const staffReq = await staff.rpc("set_profile_requirements", { p_items: [{ key: "transversales", required: true, min: 3 }] });
+  check("La Facultad no cambia lo obligatorio de la hoja de vida", /ADMIN_ONLY/.test(staffReq.error?.message ?? ""), staffReq.error?.message);
+  const studentReq = await student.rpc("set_profile_requirements", { p_items: [{ key: "transversales", required: true, min: 3 }] });
+  check("Un estudiante no cambia lo obligatorio", !!studentReq.error);
+  const directReq = await boss.from("profile_requirements").update({ required: true }).eq("key", "transversales").select("key");
+  check("Nadie cambia la tabla de requisitos por fuera de la función", !directReq.data?.length);
+  const otherChecklist = await student.rpc("profile_checklist", { p_student: staffId });
+  check("Un estudiante no lee lo que le falta a otra cuenta", !!otherChecklist.error);
+  const bossReq = await boss.rpc("set_profile_requirements", { p_items: [{ key: "transversales", required: true, min: 3 }] });
+  check("Un administrador marca un dato como obligatorio", bossReq.data === 1, bossReq.error?.message);
+  const own = await student.rpc("profile_checklist");
+  const soft = (own.data ?? []).find((i) => i.key === "transversales");
+  check("El estudiante ve el dato obligatorio que le falta", soft?.required === true && soft?.ok === false && soft?.min === 3, JSON.stringify(soft));
+  const hidden = await company.rpc("search_students", { p_filters: { skill_ids: skillRows.map((s) => s.id) } });
+  check("Con un obligatorio sin llenar, las empresas no ven la hoja de vida", !(hidden.data ?? []).some((r) => r.student_id === studentId));
+  const rReq = await student.rpc("call_readiness", { p_call: callA.data });
+  check("Con un obligatorio sin llenar no puede postularse", rReq.data?.profile_ok === false && (rReq.data?.profile ?? []).some((i) => i.key === "transversales" && !i.ok));
+  const missingList = await staff.rpc("profile_missing");
+  check("La Facultad ve qué le falta a cada estudiante", (missingList.data ?? []).some((m) => m.student_id === studentId && m.missing === 1), missingList.error?.message);
+  const { data: softCatalog } = await student.from("soft_skills").select("id").limit(3);
+  await student.from("student_soft_skills").insert(softCatalog.map((x) => ({ student_id: studentId, soft_skill_id: x.id })));
+  const shown = await company.rpc("search_students", { p_filters: { skill_ids: skillRows.map((s) => s.id) } });
+  check("Al completarlo, la hoja de vida vuelve a aparecer", (shown.data ?? []).some((r) => r.student_id === studentId));
+  const restore = await boss.rpc("set_profile_requirements", { p_items: reqBackup.map((r) => ({ key: r.key, required: r.required, min: r.min_count })) });
+  check("Un administrador devuelve la configuración", !restore.error, restore.error?.message);
+
   const selfAuth = await company.from("companies").update({ status: "autorizada" }).eq("id", companyId);
   const { data: stAfter } = await admin.from("companies").select("status").eq("id", companyId).single();
   check("La empresa no puede autorizarse sola", stAfter.status === "registrada", selfAuth.error?.message);
@@ -292,6 +322,9 @@ try {
 } catch (e) {
   results.push(`ERROR ${e.message ?? e}`);
 } finally {
+  if (reqBackup) {
+    for (const r of reqBackup) await admin.from("profile_requirements").update({ required: r.required, min_count: r.min_count }).eq("key", r.key);
+  }
   // Logs keep no foreign key to the throwaway accounts (or set it to null): delete them first so the real data stays clean
   const traced = [...userIds, companyId].filter(Boolean);
   if (traced.length) {

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/session";
 import { AVAILABILITY_LABEL, DATE_MAX, DATE_MIN, daysSince, freshness } from "@/lib/labels";
 import { AVAILABILITY_DAYS } from "@/lib/config";
+import { LISTED_RULE, PROFILE_SECTIONS, requirementLabel, type RequirementItem } from "@/lib/requirements";
 import { PageHeader } from "@/components/ui/page-header";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { HelpTip } from "@/components/ui/help-tip";
@@ -20,31 +21,24 @@ export default async function StudentHome() {
   const session = await requireRole(["student"]);
   const supabase = await createClient();
 
-  const [{ data: s }, { data: priv }, skills, soft, langs] = await Promise.all([
+  const [{ data: s }, { data: status }] = await Promise.all([
     supabase.from("students").select("*, programs(name)").eq("id", session.userId).single(),
-    supabase.from("student_private").select("phone").eq("student_id", session.userId).single(),
-    supabase.from("student_skills").select("skill_id", { count: "exact", head: true }).eq("student_id", session.userId),
-    supabase.from("student_soft_skills").select("soft_skill_id", { count: "exact", head: true }).eq("student_id", session.userId),
-    supabase.from("student_languages").select("id", { count: "exact", head: true }).eq("student_id", session.userId),
+    supabase.rpc("profile_checklist"),
   ]);
   if (!s) return null;
 
-  const checklist = [
-    { done: !!s.program_id && s.progress_pct !== null, label: "Programa y avance", section: "academico" },
-    { done: !!priv?.phone && !!s.city, label: "Datos de contacto", section: "personales" },
-    { done: !!s.headline && !!s.about, label: "Titular y perfil profesional", section: "perfil" },
-    { done: (skills.count ?? 0) >= 3, label: "Al menos 3 habilidades", section: "perfil" },
-    { done: (soft.count ?? 0) >= 3, label: "Competencias transversales", section: "perfil" },
-    { done: (langs.count ?? 0) >= 1, label: "Idiomas", section: "experiencia" },
-    { done: s.modalities.length > 0 && !!s.dedication && !!s.practice_period, label: "Disponibilidad", section: "disponibilidad" },
-    { done: s.consent_anonymous, label: "Autorización para aparecer", section: "documentos" },
-  ];
-  const done = checklist.filter((c) => c.done).length;
-  const pct = Math.round((done / checklist.length) * 100);
-  const pendingItem = checklist.find((c) => !c.done);
+  const required = ((status as RequirementItem[] | null) ?? []).filter((i) => i.required);
+  const missing = required.filter((i) => !i.ok);
+  const checklist = PROFILE_SECTIONS.map((sec) => {
+    const items = required.filter((i) => i.section === sec.id);
+    const left = items.filter((i) => !i.ok);
+    return { section: sec.id, label: sec.label, total: items.length, left };
+  }).filter((c) => c.total > 0);
+  const pct = required.length ? Math.round(((required.length - missing.length) / required.length) * 100) : 100;
+  const pendingItem = missing[0];
   const days = daysSince(s.last_confirmed_at);
   const fresh = freshness(s.last_confirmed_at);
-  const listed = s.consent_anonymous && s.program_id && ["disponible", "en_proceso"].includes(s.availability);
+  const listed = missing.length === 0 && s.consent_anonymous && s.program_id && ["disponible", "en_proceso"].includes(s.availability);
   const program = (s.programs as { name: string } | null)?.name;
   const nearExpiry = s.availability === "disponible" && days !== null && days >= AVAILABILITY_DAYS - 15;
   const routeStep = s.availability === "en_practica" ? 6 : s.availability === "en_proceso" ? 3 : listed ? 2 : 1;
@@ -52,7 +46,13 @@ export default async function StudentHome() {
   const next = nearExpiry || s.availability === "sin_confirmar"
     ? { title: "Confirma que sigues buscando práctica", text: "Tu perfil deja de aparecer ante las empresas si no lo confirmas.", confirm: true }
     : pendingItem
-      ? { title: `Completa: ${pendingItem.label.toLowerCase()}`, text: `Te faltan ${checklist.length - done} pasos para un perfil completo.`, href: `/estudiante/perfil?seccion=${pendingItem.section}` }
+      ? {
+          title: "Completa lo obligatorio de tu hoja de vida",
+          text: `${missing.length === 1 ? "Te falta 1 dato" : `Te faltan ${missing.length} datos`}, empezando por «${requirementLabel(pendingItem)}». ${LISTED_RULE}`,
+          href: `/estudiante/perfil?seccion=${pendingItem.section}`,
+        }
+      : !s.consent_anonymous
+        ? { title: "Autoriza aparecer ante las empresas", text: "Tu hoja de vida ya tiene todo lo obligatorio. Falta tu autorización para que las empresas te encuentren.", href: "/estudiante/perfil?seccion=documentos" }
       : !listed
         ? { title: "Marca que estás disponible", text: "Así tu perfil aparece en las búsquedas de las empresas.", confirm: true }
         : { title: "Tu perfil está listo y visible", text: "Revisa cómo te ven las empresas y prepara tu carta de aceptación cuando te contacten.", href: "/estudiante/vista-previa" };
@@ -149,19 +149,32 @@ export default async function StudentHome() {
           <div className="flex flex-wrap items-center gap-6">
             <ProgressRing value={pct} size={104} label="completo" />
             <div className="min-w-0 flex-1">
-              <h2 className="font-black text-azul-oscuro">Tu perfil</h2>
-              <ul className="mt-3 grid gap-1.5 sm:grid-cols-2">
-                {checklist.map((c) => (
-                  <li key={c.label}>
-                    <Link href={`/estudiante/perfil?seccion=${c.section}`} className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-celeste ${c.done ? "text-verde-tinta" : "text-texto"}`}>
-                      <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${c.done ? "bg-verde text-white" : "border-2 border-borde"}`}>
-                        {c.done && <Check className="h-3 w-3" strokeWidth={3} />}
-                      </span>
-                      {c.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <h2 className="flex items-center gap-2 font-black text-azul-oscuro">
+                Lo obligatorio de tu hoja de vida
+                <HelpTip>La Facultad define qué datos son obligatorios. {LISTED_RULE}</HelpTip>
+              </h2>
+              {checklist.length === 0 ? (
+                <p className="mt-2 text-sm text-suave">Por ahora la Facultad no exige datos obligatorios. Completa tu perfil para presentarte mejor.</p>
+              ) : (
+                <ul className="mt-3 grid gap-1.5 sm:grid-cols-2">
+                  {checklist.map((c) => {
+                    const done = c.left.length === 0;
+                    return (
+                      <li key={c.section}>
+                        <Link href={`/estudiante/perfil?seccion=${c.section}`} className={`flex items-start gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-celeste ${done ? "text-verde-tinta" : "text-texto"}`}>
+                          <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${done ? "bg-verde text-white" : "border-2 border-borde"}`}>
+                            {done && <Check className="h-3 w-3" strokeWidth={3} />}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block">{c.label}</span>
+                            {!done && <span className="block text-xs text-naranja">Falta: {c.left.map(requirementLabel).join("; ")}</span>}
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           </div>
         </section>

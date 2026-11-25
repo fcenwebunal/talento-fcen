@@ -47,6 +47,8 @@ const STAFF: NavItem[] = [
   { label: "Empresas", href: "/admin/empresas", icon: "building", group: "Administración" },
   { label: "Empresas por autorizar", href: "/admin/empresas?estado=en_revision", icon: "clock", group: "Administración", keywords: "revisión" },
   { label: "Estudiantes", href: "/admin/estudiantes", icon: "users", group: "Administración" },
+  { label: "Hoja de vida obligatoria", href: "/admin/hoja-de-vida", icon: "check", group: "Administración", keywords: "campos secciones requisitos obligatorios perfil incompleto" },
+  { label: "Hojas de vida incompletas", href: "/admin/estudiantes?incompleta=1", icon: "users", group: "Administración", keywords: "faltan obligatorios" },
   { label: "Convocatorias", href: "/admin/convocatorias", icon: "megaphone", group: "Administración", keywords: "ofertas postulantes" },
   { label: "Nueva convocatoria", href: "/admin/convocatorias/nueva", icon: "megaphone", group: "Administración", keywords: "publicar oferta" },
   { label: "Avance por verificar", href: "/admin/estudiantes?verificar=1", icon: "check", group: "Administración" },

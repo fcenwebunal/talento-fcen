@@ -23,8 +23,8 @@ type Row = {
   programs: { name: string } | null;
 };
 
-export default async function AdminStudents({ searchParams }: { searchParams: Promise<{ estado?: string; q?: string; verificar?: string }> }) {
-  const { estado, q, verificar } = await searchParams;
+export default async function AdminStudents({ searchParams }: { searchParams: Promise<{ estado?: string; q?: string; verificar?: string; incompleta?: string }> }) {
+  const { estado, q, verificar, incompleta } = await searchParams;
   const supabase = await createClient();
   let query = supabase
     .from("students")
@@ -34,10 +34,13 @@ export default async function AdminStudents({ searchParams }: { searchParams: Pr
     .limit(300);
   if (estado) query = query.eq("availability", estado);
   if (verificar) query = query.neq("progress_verified", "coordinacion").or("progress_pct.not.is.null,papa.not.is.null");
-  const { data } = await query;
+  const [{ data }, { data: missingRows }] = await Promise.all([query, supabase.rpc("profile_missing")]);
+  const missingById = new Map(((missingRows ?? []) as { student_id: string; missing: number; missing_labels: string[] }[]).map((m) => [m.student_id, m]));
   const needle = fold((q ?? "").trim());
   const rows = ((data ?? []) as unknown as Row[]).filter(
-    (r) => !needle || fold(`${r.profiles?.full_name ?? ""} ${r.profiles?.email ?? ""}`).includes(needle)
+    (r) =>
+      (!needle || fold(`${r.profiles?.full_name ?? ""} ${r.profiles?.email ?? ""}`).includes(needle)) &&
+      (!incompleta || (missingById.get(r.id)?.missing ?? 0) > 0)
   );
 
   // Account photo first (public bucket); otherwise the profile photo document, signed in one batch
@@ -79,6 +82,9 @@ export default async function AdminStudents({ searchParams }: { searchParams: Pr
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="verificar" value="1" defaultChecked={!!verificar} /> Avance por verificar
         </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="incompleta" value="1" defaultChecked={!!incompleta} /> Hoja de vida incompleta
+        </label>
         <button className="btn btn-primary">
           <Filter /> Filtrar
         </button>
@@ -91,6 +97,7 @@ export default async function AdminStudents({ searchParams }: { searchParams: Pr
               <th>Programa</th>
               <th>Estado</th>
               <th>Avance</th>
+              <th>Hoja de vida</th>
               <th>Autorizaciones</th>
               <th>Actualizado</th>
             </tr>
@@ -117,8 +124,17 @@ export default async function AdminStudents({ searchParams }: { searchParams: Pr
                   {r.progress_pct !== null ? `${r.progress_pct}%` : "—"}
                   <p className="text-xs text-suave">{VERIFIED_LABEL[r.progress_verified]}</p>
                 </td>
+                <td>
+                  {(missingById.get(r.id)?.missing ?? 0) === 0 ? (
+                    <span className="chip chip-verde">Completa</span>
+                  ) : (
+                    <span className="chip chip-amarillo" title={`Falta: ${missingById.get(r.id)!.missing_labels.join("; ")}`}>
+                      Faltan {missingById.get(r.id)!.missing}
+                    </span>
+                  )}
+                </td>
                 <td className="text-xs">
-                  {r.consent_anonymous ? "Aparece" : "No aparece"}
+                  {r.consent_anonymous ? "Acepta aparecer" : "No acepta aparecer"}
                   <br />
                   {r.consent_contact ? "Comparte contacto" : "Sin contacto"}
                 </td>

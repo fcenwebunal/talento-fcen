@@ -35,8 +35,8 @@ type ToVerify = { id: string; progress_pct: number; progress_verified: string; p
 
 export default async function AdminHome() {
   const supabase = await createClient();
-  const [{ data: students }, { data: companies }, { data: queue }, { data: toVerify }, { count: exports }, { count: views }] = await Promise.all([
-    supabase.from("students").select("availability, consent_anonymous, program_id, programs(name), profiles!inner(role)").eq("profiles.role", "student"),
+  const [{ data: students }, { data: companies }, { data: queue }, { data: toVerify }, { count: exports }, { count: views }, { data: missingRows }] = await Promise.all([
+    supabase.from("students").select("id, availability, consent_anonymous, program_id, programs(name), profiles!inner(role)").eq("profiles.role", "student"),
     supabase.from("companies").select("status"),
     supabase.from("companies").select("id, name, nit, city, sector, logo_path, created_at").eq("status", "en_revision").order("created_at").limit(6),
     supabase
@@ -49,11 +49,15 @@ export default async function AdminHome() {
       .limit(6),
     supabase.from("exports_log").select("id", { count: "exact", head: true }),
     supabase.from("contact_events").select("id", { count: "exact", head: true }),
+    supabase.rpc("profile_missing"),
   ]);
+  const incomplete = new Set(((missingRows ?? []) as { student_id: string; missing: number }[]).filter((m) => m.missing > 0).map((m) => m.student_id));
 
   const byAvailability = countBy((students ?? []).map((s) => s.availability as Availability));
   const byStatus = countBy((companies ?? []).map((c) => c.status as CompanyStatus));
-  const listed = (students ?? []).filter((s) => s.consent_anonymous && ["disponible", "en_proceso"].includes(s.availability)).length;
+  const listed = ((students ?? []) as { id: string; consent_anonymous: boolean; program_id: number | null; availability: string }[]).filter(
+    (s) => s.consent_anonymous && s.program_id && ["disponible", "en_proceso"].includes(s.availability) && !incomplete.has(s.id)
+  ).length;
   const programs = countBy(((students ?? []) as unknown as { programs: { name: string } | null }[]).map((r) => r.programs?.name ?? "Sin programa"));
   const programMax = Math.max(1, ...Object.values(programs).map(Number));
   const verifyRows = (toVerify ?? []) as unknown as ToVerify[];
